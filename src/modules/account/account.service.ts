@@ -15,11 +15,16 @@ import { SendSolDto } from './dto/send-sol.dto';
 
 @Injectable()
 export class AccountService {
+  getKeypair(privateKey: string): any {
+    const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+    return keypair;
+  }
+
   async checkBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
       const { privateKey, network } = balanceCheckDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+      const keypair = this.getKeypair(privateKey);
       const balance = await connection.getBalance(keypair.publicKey);
       return balance / LAMPORTS_PER_SOL;
     } catch (error) {
@@ -32,7 +37,7 @@ export class AccountService {
       const { network, privateKey, recipientPublicKey, amount } = sendSolDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
-      const from = Keypair.fromSecretKey(bs58.decode(privateKey));
+      const from = this.getKeypair(privateKey);
       const to = bs58.decode(recipientPublicKey);
       // Add transfer instruction to transaction
       const transaction = new Transaction().add(

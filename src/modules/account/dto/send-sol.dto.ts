@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Network } from 'src/dto/netwotk.dto';
+import { Network } from '../../../dto/netwotk.dto';
 
 export class SendSolDto {
   @IsNotEmpty()
