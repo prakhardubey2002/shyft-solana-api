@@ -76,7 +76,6 @@ export class CreateNftService {
     }
     const { network, privateKey } = createNftDto;
     const connection = new Connection(clusterApiUrl(network), 'confirmed');
-    await connection.getClusterNodes();
     const from = this.accountService.getKeypair(privateKey);
     const wallet = new NodeWallet(from);
     const nft = await actions.mintNFT({

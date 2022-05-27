@@ -7,11 +7,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
-import * as bs58 from 'bs58';
-import { AccountService } from 'src/modules/account/account.service';
 import { CreateNftService } from './create-nft.service';
 import { CreateNftDto } from './dto/create-nft.dto';
-import { PublicKey } from '@solana/web3.js';
 
 @Controller('nft')
 export class CreateNftController {
