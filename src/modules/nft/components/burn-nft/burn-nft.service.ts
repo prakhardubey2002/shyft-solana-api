@@ -35,11 +35,7 @@ export class BurnNftService {
         owner: accountInfo.publicKey,
         close: false,
       });
-      return {
-        success: true,
-        message: 'Burneed successfully selected NFT!',
-        result,
-      };
+      return result;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
