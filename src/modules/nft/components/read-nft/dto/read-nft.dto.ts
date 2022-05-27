@@ -5,7 +5,9 @@ export class ReadNftDto {
   @IsNotEmpty()
   readonly network: Network;
   @IsOptional()
+  @IsString()
   readonly privateKey: string;
   @IsOptional()
+  @IsString()
   readonly publicKey: string;
 }
