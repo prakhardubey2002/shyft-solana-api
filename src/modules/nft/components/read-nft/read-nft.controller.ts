@@ -5,13 +5,24 @@ import { ReadNftService } from './read-nft.service';
 @Controller('nft')
 export class ReadNftController {
   constructor(private readNftService: ReadNftService) {}
-  @Post('read-nft')
+  @Post('read_all')
+  @HttpCode(200)
+  async readAllNfts(@Body() readNftDto: ReadNftDto): Promise<any> {
+    const result = await this.readNftService.readAllNfts(readNftDto);
+    return {
+      success: true,
+      message: 'Your all NFTs',
+      result,
+    };
+  }
+
+  @Post('read')
   @HttpCode(200)
   async readNft(@Body() readNftDto: ReadNftDto): Promise<any> {
     const result = await this.readNftService.readNft(readNftDto);
     return {
       success: true,
-      message: 'Your All NFTs',
+      message: 'NFT metadata',
       result,
     };
   }

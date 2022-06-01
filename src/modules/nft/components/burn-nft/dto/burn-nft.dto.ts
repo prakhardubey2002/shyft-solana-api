@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, isString, IsString } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
 export class BurnNftDto {
@@ -10,4 +10,10 @@ export class BurnNftDto {
   @IsNotEmpty()
   @IsString()
   readonly tokenAddress: string;
+  @IsString()
+  @IsOptional()
+  readonly close: boolean;
+  @IsNumber()
+  @IsOptional()
+  readonly amount: number;
 }

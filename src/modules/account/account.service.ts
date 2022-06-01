@@ -22,10 +22,9 @@ export class AccountService {
 
   async checkBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
-      const { privateKey, network } = balanceCheckDto;
+      const { address, network } = balanceCheckDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      const keypair = this.getKeypair(privateKey);
-      const balance = await connection.getBalance(keypair.publicKey);
+      const balance = await connection.getBalance(new PublicKey(address));
       return balance / LAMPORTS_PER_SOL;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
@@ -34,16 +33,15 @@ export class AccountService {
 
   async sendSol(sendSolDto: SendSolDto): Promise<string> {
     try {
-      const { network, privateKey, recipientPublicKey, amount } = sendSolDto;
+      const { network, fromPrivateKey, toAddress, amount } = sendSolDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
-      const from = this.getKeypair(privateKey);
-      const to = bs58.decode(recipientPublicKey);
+      const from = this.getKeypair(fromPrivateKey);
       // Add transfer instruction to transaction
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: from.publicKey,
-          toPubkey: new PublicKey(to),
+          toPubkey: new PublicKey(toAddress),
           lamports: LAMPORTS_PER_SOL * amount,
         }),
       );

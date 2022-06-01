@@ -6,10 +6,10 @@ export class SendSolDto {
   readonly network: Network;
   @IsNotEmpty()
   @IsString()
-  readonly privateKey: string;
+  readonly fromPrivateKey: string;
   @IsNotEmpty()
   @IsString()
-  readonly recipientPublicKey: string;
+  readonly toAddress: string;
   @IsNotEmpty()
   @IsNumber()
   readonly amount: number;
