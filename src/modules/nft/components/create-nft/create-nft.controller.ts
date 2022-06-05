@@ -13,7 +13,7 @@ import { CreateNftDto } from './dto/create-nft.dto';
 @Controller('nft')
 export class CreateNftController {
   constructor(private createNftService: CreateNftService) {}
-  @Post('create-nft')
+  @Post('create')
   @UseInterceptors(FileInterceptor('file'))
   async createNft(
     @UploadedFile() file: Express.Multer.File,

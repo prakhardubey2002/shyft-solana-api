@@ -5,7 +5,7 @@ import { BurnNftService } from './burn-nft.service';
 @Controller('nft')
 export class BurnNftController {
   constructor(private burnNftService: BurnNftService) {}
-  @Delete('burn-nft')
+  @Delete('burn')
   async readNft(@Body() burnNftDto: BurnNftDto): Promise<any> {
     const result = await this.burnNftService.burnNft(burnNftDto);
     return {

@@ -17,7 +17,7 @@ export class AccountController {
     };
   }
 
-  @Post('send-sol')
+  @Post('send_sol')
   @HttpCode(200)
   async sendSol(@Body() sendSolDto: SendSolDto): Promise<any> {
     const { amount } = sendSolDto;
