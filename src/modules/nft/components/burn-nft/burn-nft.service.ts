@@ -15,15 +15,15 @@ export class BurnNftService {
   constructor(private accountService: AccountService) {}
   async burnNft(burnNftDto: BurnNftDto): Promise<any> {
     try {
-      const { network, privateKey, tokenAddress } = burnNftDto;
+      const { network, privateKey, tokenAddress, close, amount } = burnNftDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      const accountInfo = await this.accountService.getKeypair(privateKey);
-      const wallet = new NodeWallet(accountInfo);
+      const keypair = await this.accountService.getKeypair(privateKey);
+      const wallet = new NodeWallet(keypair);
       const associatedAddress = await Token.getAssociatedTokenAddress(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
         new PublicKey(tokenAddress),
-        accountInfo.publicKey,
+        keypair.publicKey,
       );
 
       const result = await actions.burnToken({
@@ -31,9 +31,9 @@ export class BurnNftService {
         wallet,
         token: associatedAddress,
         mint: new PublicKey(tokenAddress),
-        amount: 1,
-        owner: accountInfo.publicKey,
-        close: false,
+        amount: amount || 1,
+        owner: keypair.publicKey,
+        close: close,
       });
       return result;
     } catch (error) {

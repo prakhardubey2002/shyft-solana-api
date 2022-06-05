@@ -7,5 +7,5 @@ export class BalanceCheckDto {
   readonly network: Network;
   @IsNotEmpty()
   @IsString()
-  readonly privateKey: string;
+  readonly address: string;
 }

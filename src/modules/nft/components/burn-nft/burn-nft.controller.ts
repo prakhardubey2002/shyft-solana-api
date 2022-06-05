@@ -10,7 +10,7 @@ export class BurnNftController {
     const result = await this.burnNftService.burnNft(burnNftDto);
     return {
       success: true,
-      message: 'Burned successfully selected NFT',
+      message: 'NFT burned successfully',
       result,
     };
   }
