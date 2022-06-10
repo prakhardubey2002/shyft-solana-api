@@ -27,9 +27,9 @@ export class ReadNftService {
 
   async readNft(readNftDto: ReadNftDto): Promise<any> {
     try {
-      const { network, tokenAddress } = readNftDto;
+      const { network, token_address } = readNftDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      if (!tokenAddress) {
+      if (!token_address) {
         throw new HttpException(
           'Please provide any public or private key',
           HttpStatus.BAD_REQUEST,
@@ -37,7 +37,7 @@ export class ReadNftService {
       }
       const metadata = await Metadata.getEdition(
         connection,
-        new PublicKey(tokenAddress),
+        new PublicKey(token_address),
       );
       if (!metadata) {
         throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);

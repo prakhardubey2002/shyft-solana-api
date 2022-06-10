@@ -24,16 +24,16 @@ export class AppService {
     try {
       let result = await this.userModel.findOne(getApiKeyDto);
       if (!result) {
-        const apiKey = await nanoid();
+        const api_key = await nanoid();
         result = await this.userModel.create({
           ...getApiKeyDto,
-          apiKey,
+          api_key,
         });
       }
       const destinationEmailAddess = result.email;
       const templateName = 'ApiKeyTemplate';
       const templateData = {
-        apiKey: result.apiKey,
+        apiKey: result.api_key,
       };
       await this.emailer.sendEmail(
         destinationEmailAddess,

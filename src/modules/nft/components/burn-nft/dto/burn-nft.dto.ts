@@ -6,10 +6,10 @@ export class BurnNftDto {
   readonly network: Network;
   @IsNotEmpty()
   @IsString()
-  readonly privateKey: string;
+  readonly private_key: string;
   @IsNotEmpty()
   @IsString()
-  readonly tokenAddress: string;
+  readonly token_address: string;
   @IsString()
   @IsOptional()
   readonly close: boolean;

@@ -9,7 +9,7 @@ export class User {
   email: string;
 
   @Prop({ required: true })
-  apiKey: string;
+  api_key: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

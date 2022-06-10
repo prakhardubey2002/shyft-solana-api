@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Blob } from 'nft.storage';
+import { Body, Controller, Post } from '@nestjs/common';
 import { CreateNftService } from './create-nft.service';
 import { CreateNftDto } from './dto/create-nft.dto';
 
@@ -14,20 +6,8 @@ import { CreateNftDto } from './dto/create-nft.dto';
 export class CreateNftController {
   constructor(private createNftService: CreateNftService) {}
   @Post('create')
-  @UseInterceptors(FileInterceptor('file'))
-  async createNft(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() creatNftDto: CreateNftDto,
-  ): Promise<any> {
-    const uploadImage = await this.createNftService.uploadToIPFS(
-      new Blob([file.buffer], { type: file.mimetype }),
-    );
-    const image = uploadImage.uri;
-    const metaDataURI = await this.createNftService.prepareMetaData(
-      creatNftDto,
-      image,
-    );
-    const nft = await this.createNftService.mintNft(creatNftDto, metaDataURI);
+  async createNft(@Body() creatNftDto: CreateNftDto): Promise<any> {
+    const nft = await this.createNftService.mintNft(creatNftDto);
     return {
       success: true,
       message: 'NFT created successfully',

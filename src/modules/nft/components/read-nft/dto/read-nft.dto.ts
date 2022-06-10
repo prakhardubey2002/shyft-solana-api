@@ -6,5 +6,5 @@ export class ReadNftDto {
   readonly network: Network;
   @IsNotEmpty()
   @IsString()
-  readonly tokenAddress: string;
+  readonly token_address: string;
 }
