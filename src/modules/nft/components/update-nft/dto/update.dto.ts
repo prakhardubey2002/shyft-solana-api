@@ -27,7 +27,7 @@ export class UpdateNftDto {
   @IsNotEmpty()
   @Transform(({ value }) => JSON.parse(value), { toClassOnly: true })
   attributes: {
-    traitType: string;
+    trait_type: string;
     value: string;
   }[];
   @IsNotEmpty()

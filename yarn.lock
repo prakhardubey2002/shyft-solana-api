@@ -1420,7 +1420,7 @@
     "webpack" "5.72.1"
     "webpack-node-externals" "3.0.0"
 
-"@nestjs/common@^6.0.0 || ^7.0.0 || ^8.0.0", "@nestjs/common@^8.0.0":
+"@nestjs/common@^6.0.0 || ^7.0.0 || ^8.0.0", "@nestjs/common@^7.0.0 || ^8.0.0", "@nestjs/common@^8.0.0":
   "integrity" "sha512-INp1ERDrLiQ4GwRc3zotTwBLZm2sIwcJwnBE2yXqsth17KijmoVmY8UB5Tares0IlwjsqlRFWkCX8uWE5rzbSA=="
   "resolved" "https://registry.npmjs.org/@nestjs/common/-/common-8.4.6.tgz"
   "version" "8.4.6"
@@ -1428,6 +1428,16 @@
     "axios" "0.27.2"
     "iterare" "1.2.1"
     "tslib" "2.4.0"
+    "uuid" "8.3.2"
+
+"@nestjs/config@^2.1.0":
+  "integrity" "sha512-wUpt1/QJEN7xnJl4pM3c9rHrY1widq2yPOZfjaMD1//XAP9LLHTaW+RxSEG6BSGIm3w4wGtjco+gKNB2WL7yRg=="
+  "resolved" "https://registry.npmjs.org/@nestjs/config/-/config-2.1.0.tgz"
+  "version" "2.1.0"
+  dependencies:
+    "dotenv" "16.0.1"
+    "dotenv-expand" "8.0.3"
+    "lodash" "4.17.21"
     "uuid" "8.3.2"
 
 "@nestjs/core@^6.0.0 || ^7.0.0 || ^8.0.0", "@nestjs/core@^8.0.0":
@@ -3286,10 +3296,20 @@
   dependencies:
     "webidl-conversions" "^5.0.0"
 
+"dotenv-expand@8.0.3":
+  "integrity" "sha512-SErOMvge0ZUyWd5B0NXMQlDkN+8r+HhVUsxgOO7IoPDOdDRD2JjExpN6y3KnFR66jsJMwSn1pqIivhU5rcJiNg=="
+  "resolved" "https://registry.npmjs.org/dotenv-expand/-/dotenv-expand-8.0.3.tgz"
+  "version" "8.0.3"
+
 "dotenv@10.0.0":
   "integrity" "sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q=="
   "resolved" "https://registry.npmjs.org/dotenv/-/dotenv-10.0.0.tgz"
   "version" "10.0.0"
+
+"dotenv@16.0.1":
+  "integrity" "sha512-1K6hR6wtk2FviQ4kEiSjFiH5rpzEVi8WW0x96aztHVMhEspNpc4DVOUTEHtEva5VThQ8IaBX1Pe4gSzpVVUsKQ=="
+  "resolved" "https://registry.npmjs.org/dotenv/-/dotenv-16.0.1.tgz"
+  "version" "16.0.1"
 
 "ee-first@1.1.1":
   "integrity" "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
@@ -5463,7 +5483,7 @@
   "resolved" "https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz"
   "version" "4.6.2"
 
-"lodash@^4.17.19", "lodash@^4.17.20", "lodash@^4.17.21", "lodash@^4.7.0":
+"lodash@^4.17.19", "lodash@^4.17.20", "lodash@^4.17.21", "lodash@^4.7.0", "lodash@4.17.21":
   "integrity" "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
   "resolved" "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
   "version" "4.17.21"
@@ -6511,7 +6531,7 @@
   dependencies:
     "queue-microtask" "^1.2.2"
 
-"rxjs@^6.0.0 || ^7.0.0", "rxjs@^7.1.0", "rxjs@^7.2.0":
+"rxjs@^6.0.0 || ^7.0.0", "rxjs@^6.0.0 || ^7.2.0", "rxjs@^7.1.0", "rxjs@^7.2.0":
   "integrity" "sha512-sy+H0pQofO95VDmFLzyaw9xNJU4KTRSwQIGM6+iG3SypAtCiLDzpeG8sJrNCWn2Up9km+KhkvTdbkrdy+yzZdw=="
   "resolved" "https://registry.npmjs.org/rxjs/-/rxjs-7.5.5.tgz"
   "version" "7.5.5"

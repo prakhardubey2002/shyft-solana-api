@@ -3,21 +3,29 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
 import { Blob } from 'nft.storage';
-import { CreateNftService } from '../create-nft/create-nft.service';
+import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 
 @Controller('nft')
 export class UpdateNftController {
-  constructor(private updateNftService: UpdateNftService, private createNftService: CreateNftService) {}
+  constructor(private updateNftService: UpdateNftService, private storageService: StorageMetadataService) {}
   @Post('update')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(200)
   async update(@UploadedFile() file: Express.Multer.File, @Body() updateNftDto: UpdateNftDto): Promise<any>
   {
-    const uploadImage = await this.createNftService.uploadToIPFS(
+    const uploadImage = await this.storageService.uploadToIPFS(
       new Blob([file.buffer], { type: file.mimetype }),
     );
     const image = uploadImage.uri;
-    const metaDataURI = await this.createNftService.prepareMetaData({...updateNftDto, maxSupply:undefined},image);
+    const metaDataURI = await this.storageService.prepareMetaData({network: updateNftDto.network, private_key: updateNftDto.privateKey,
+      image,
+      name:updateNftDto.name,
+      description: updateNftDto.description,
+      symbol: updateNftDto.symbol,
+      attributes:updateNftDto.attributes,
+      share:updateNftDto.share,
+      seller_fee_basis_points: updateNftDto.sellerFeeBasisPoints,
+      external_url: updateNftDto.externalUrl});
 
     const res = await this.updateNftService.updateNft(updateNftDto, metaDataURI);
     return {

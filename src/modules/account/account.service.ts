@@ -33,15 +33,15 @@ export class AccountService {
 
   async sendSol(sendSolDto: SendSolDto): Promise<string> {
     try {
-      const { network, fromPrivateKey, toAddress, amount } = sendSolDto;
+      const { network, from_private_key, to_address, amount } = sendSolDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
-      const from = this.getKeypair(fromPrivateKey);
+      const from = this.getKeypair(from_private_key);
       // Add transfer instruction to transaction
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: from.publicKey,
-          toPubkey: new PublicKey(toAddress),
+          toPubkey: new PublicKey(to_address),
           lamports: LAMPORTS_PER_SOL * amount,
         }),
       );
