@@ -6,9 +6,11 @@ import { ReadNftController } from './components/read-nft/read-nft.controller';
 import { ReadNftService } from './components/read-nft/read-nft.service';
 import { BurnNftController } from './components/burn-nft/burn-nft.controller';
 import { BurnNftService } from './components/burn-nft/burn-nft.service';
+import { UpdateNftController } from './components/update-nft/update-nft.controller';
+import { UpdateNftService } from './components/update-nft/update-nft.service';
 
 @Module({
-  controllers: [CreateNftController, ReadNftController, BurnNftController],
-  providers: [CreateNftService, AccountService, ReadNftService, BurnNftService],
+  controllers: [CreateNftController, ReadNftController, BurnNftController, UpdateNftController],
+  providers: [CreateNftService, AccountService, ReadNftService, BurnNftService, UpdateNftService],
 })
 export class NftModule {}

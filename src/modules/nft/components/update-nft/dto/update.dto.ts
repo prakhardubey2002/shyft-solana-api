@@ -1,13 +1,20 @@
+import { ParseBoolPipe } from '@nestjs/common';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
-export class CreateNftDto {
+export class UpdateNftDto {
   @IsNotEmpty()
   readonly network: Network;
   @IsNotEmpty()
   @IsString()
   readonly privateKey: string;
+  @IsNotEmpty()
+  @IsString()
+  readonly tokenAddress: string;
+  @IsNotEmpty()
+  @IsString()
+  readonly updateAuthority: string;
   @IsNotEmpty()
   @IsString()
   readonly name: string;
@@ -28,13 +35,16 @@ export class CreateNftDto {
   @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly share: number;
   @IsNotEmpty()
-  @IsNumber()
-  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
-  readonly maxSupply: number;
-  @IsOptional()
   @IsString()
   readonly externalUrl: string;
+  @IsNotEmpty()
+  @IsBoolean()
+  @Transform(({ value }) => {return (value === false ||value === 0) ? false : true }, { toClassOnly: true })
+  readonly isMutable: boolean;
   @IsOptional()
+  @IsBoolean()
+  readonly primarySaleHappened: boolean;
+  @IsNotEmpty()
   @IsNumber()
   @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly sellerFeeBasisPoints: number;
