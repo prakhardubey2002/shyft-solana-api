@@ -68,7 +68,7 @@ export class CreateMetadataDto {
     title: 'attributes',
     type: Array,
     description: 'NFT attributes',
-    example: [{ traitType: 'edification', value: '100' }],
+    example: [{ trait_type: 'edification', value: '100' }],
   })
   @IsNotEmpty()
   attributes: {
