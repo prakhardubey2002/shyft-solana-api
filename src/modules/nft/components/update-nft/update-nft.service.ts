@@ -29,12 +29,13 @@ export class UpdateNftService {
         isMutable,
         primarySaleHappened,
       } = updateNftDto;
-      console.log(updateNftDto)
+
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
       //generate wallet
       const keypair = this.accountService.getKeypair(privateKey);
       const wallet = new NodeWallet(keypair);
+
       //get token's PDA (metadata address)
       const pda = await Metadata.getPDA(tokenAddress);
       const creators = new Array<Creator>(new programs.metadata.Creator({
@@ -42,30 +43,30 @@ export class UpdateNftService {
         verified:true,
         share:share,
       }))
-        const res = new programs.metadata.UpdateMetadataV2({
-          recentBlockhash: (await connection.getLatestBlockhash('finalized')).blockhash,
-          feePayer: wallet.publicKey
-        }, {
-          metadata: pda,
-          updateAuthority: new PublicKey(updateAuthority),
-          metadataData: new programs.metadata.DataV2({
-            name: name,
-            symbol: symbol,
-            uri: metaDataUri,
-            sellerFeeBasisPoints: sellerFeeBasisPoints,
-            creators: creators,
-            uses: null,
-            collection: null
-          }),
-          primarySaleHappened: primarySaleHappened,
-          isMutable: isMutable
-        });
-        console.log(res)
-        const signedTransaction = await wallet.signTransaction(res)
-        const result = await connection.sendRawTransaction(signedTransaction.serialize());
-        console.log(result)
-        return {txId:result};
+      const res = new programs.metadata.UpdateMetadataV2({
+        recentBlockhash: (await connection.getLatestBlockhash('finalized')).blockhash,
+        feePayer: wallet.publicKey
+      }, {
+        metadata: pda,
+        updateAuthority: new PublicKey(updateAuthority),
+        metadataData: new programs.metadata.DataV2({
+          name: name,
+          symbol: symbol,
+          uri: metaDataUri,
+          sellerFeeBasisPoints: sellerFeeBasisPoints,
+          creators: creators,
+          uses: null,
+          collection: null
+        }),
+        primarySaleHappened: primarySaleHappened,
+        isMutable: isMutable
+      });
+
+      const signedTransaction = await wallet.signTransaction(res)
+      const result = await connection.sendRawTransaction(signedTransaction.serialize());
+      return {txId:result};
     } catch (error) {
+
       throw new HttpException(error.message, error.status);
     }
   }
