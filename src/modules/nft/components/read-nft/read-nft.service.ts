@@ -35,15 +35,13 @@ export class ReadNftService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const metadata = await Metadata.getEdition(
-        connection,
-        new PublicKey(token_address),
-      );
+      const pda = await Metadata.getPDA(new PublicKey(token_address));
+      const metadata = await Metadata.load(connection, pda);
       if (!metadata) {
         throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
       }
 
-      return metadata;
+      return metadata.data;
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
