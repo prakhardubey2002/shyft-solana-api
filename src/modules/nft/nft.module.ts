@@ -18,6 +18,7 @@ import { StorageMetadataService } from './components/storage-metadata/storage-me
     CreateNftController,
     ReadNftController,
     BurnNftController,
+    UpdateNftController,
     StorageMetadataController,
   ],
   imports: [
@@ -28,6 +29,7 @@ import { StorageMetadataService } from './components/storage-metadata/storage-me
     AccountService,
     ReadNftService,
     BurnNftService,
+    UpdateNftService,
     StorageMetadataService,
   ],
 })
