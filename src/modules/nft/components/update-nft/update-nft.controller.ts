@@ -17,7 +17,7 @@ export class UpdateNftController {
       new Blob([file.buffer], { type: file.mimetype }),
     );
     const image = uploadImage.uri;
-    const metaDataURI = await this.storageService.prepareMetaData({network: updateNftDto.network, private_key: updateNftDto.privateKey,
+    const { uri } = await this.storageService.prepareMetaData({network: updateNftDto.network, private_key: updateNftDto.privateKey,
       image,
       name:updateNftDto.name,
       description: updateNftDto.description,
@@ -27,7 +27,7 @@ export class UpdateNftController {
       seller_fee_basis_points: updateNftDto.sellerFeeBasisPoints,
       external_url: updateNftDto.externalUrl});
 
-    const res = await this.updateNftService.updateNft(updateNftDto, metaDataURI);
+    const res = await this.updateNftService.updateNft(updateNftDto, uri);
     return {
       success: true,
       message: 'NFT updated',
