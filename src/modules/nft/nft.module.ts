@@ -12,6 +12,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { StorageMetadataController } from './components/storage-metadata/storage-metadata.controller';
 import { StorageMetadataService } from './components/storage-metadata/storage-metadata.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   controllers: [
@@ -23,6 +24,7 @@ import { StorageMetadataService } from './components/storage-metadata/storage-me
   ],
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    HttpModule
   ],
   providers: [
     CreateNftService,

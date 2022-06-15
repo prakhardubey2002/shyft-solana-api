@@ -5,9 +5,13 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
+import { HttpService } from '@nestjs/axios';
+import { nftHelper } from '../../nft.helper';
 
 @Injectable()
 export class ReadNftService {
+  
+  constructor(private httpService: HttpService)  {}
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
       const { network, address } = readAllNftDto;
@@ -37,12 +41,22 @@ export class ReadNftService {
       }
       const pda = await Metadata.getPDA(new PublicKey(token_address));
       const metadata = await Metadata.load(connection, pda);
+      console.log(metadata);
+      const uriRes = await this.httpService.get(metadata.data.data.uri).toPromise();
+      if(uriRes.status != 200)
+      {
+        throw new HttpException("Incorrect URI path", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      
       if (!metadata) {
         throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
       }
+      const body = nftHelper.parseMetadata(uriRes.data);
+      console.log(body)
 
-      return metadata.data;
+      return body;
     } catch (error) {
+      console.log(error);
       throw new HttpException(error.message, error.status);
     }
   }
