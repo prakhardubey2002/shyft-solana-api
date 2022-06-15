@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
         return true;
       }
       const req: IGetUserAuthInfoRequest = context.switchToHttp().getRequest();
-      let apiKey: string | string[] = req.headers['api_key'];
+      let apiKey: string | string[] = req.headers['x-api-key'];
 
       if (!apiKey) {
         throw new UnauthorizedException();

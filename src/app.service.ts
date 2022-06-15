@@ -17,7 +17,7 @@ export class AppService {
     private readonly emailer: Emailer,
   ) {}
   getHello(): string {
-    return 'Hello World!';
+    return 'Welcome to explore Shyft APIs!';
   }
 
   async getApiKey(getApiKeyDto: GetApiKeyDto): Promise<boolean> {

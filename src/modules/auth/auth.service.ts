@@ -7,8 +7,8 @@ import { User, UserDocument } from 'src/schemas/user.schema';
 export class AuthService {
   constructor(@InjectModel(User.name) public userModel: Model<UserDocument>) {}
 
-  public async validateUser(apiKey: string): Promise<any> {
-    const user = await this.userModel.findOne({ apiKey });
+  public async validateUser(api_key: string): Promise<any> {
+    const user = await this.userModel.findOne({ api_key });
     // console.log(user);
     if (user) {
       return user.email;
