@@ -26,8 +26,8 @@ export class CreateNftService {
       maxSupply: maxSupply || 1,
     });
 
-    let nftCreationEvent = new NftCreationEvent(nft.mint.toString())
-    this.eventEmitter.emit('nft.created', nftCreationEvent)
+    // let nftCreationEvent = new NftCreationEvent(nft.mint.toString())
+    // this.eventEmitter.emit('nft.created', nftCreationEvent)
 
     return nft;
   }

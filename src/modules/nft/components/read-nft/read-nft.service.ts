@@ -9,24 +9,21 @@ import { HttpService } from '@nestjs/axios';
 import { nftHelper } from '../../nft.helper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NftReadEvent, NftReadInWalletEvent } from '../db-sync/events';
+import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
+import { FetchAllNftDto, FetchNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
 
 @Injectable()
 export class ReadNftService {
 
-  constructor(private httpService: HttpService, private eventEmitter: EventEmitter2) { }
+  constructor(private httpService: HttpService, private remoteDataFetcher: RemoteDataFetcherService, private eventEmitter: EventEmitter2) { }
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
       const { network, address } = readAllNftDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      if (!address) {
-        throw new HttpException(
-          'Please provide any public or private key',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      const nftsmetadata = await Metadata.findDataByOwner(connection, address);
-      let nftReadInWalletEvent = new NftReadInWalletEvent(address)
-      this.eventEmitter.emit('nfts.in.wallet', nftReadInWalletEvent)
+      let fetchAllNft = new FetchAllNftDto(network, address)
+      let nftsmetadata = this.remoteDataFetcher.fetchAllNfts(fetchAllNft)
+
+      // let nftReadInWalletEvent = new NftReadInWalletEvent(address)
+      // this.eventEmitter.emit('nfts.in.wallet.read', nftReadInWalletEvent)
 
       return nftsmetadata;
     } catch (error) {
@@ -37,29 +34,15 @@ export class ReadNftService {
   async readNft(readNftDto: ReadNftDto): Promise<any> {
     try {
       const { network, token_address } = readNftDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      if (!token_address) {
-        throw new HttpException(
-          'Please provide any public or private key',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      const pda = await Metadata.getPDA(new PublicKey(token_address));
-      const metadata = await Metadata.load(connection, pda);
-      console.log(metadata);
-      const uriRes = await this.httpService.get(metadata.data.data.uri).toPromise();
-      if (uriRes.status != 200) {
-        throw new HttpException("Incorrect URI path", HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+      let fetchNft = new FetchNftDto(network, token_address)
+      let onChainMetadata, offChainMetadata
+      let metadata = await this.remoteDataFetcher.fetchNft(fetchNft)
 
-      if (!metadata) {
-        throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
-      }
-      const body = nftHelper.parseMetadata(uriRes.data);
+      const body = nftHelper.parseMetadata(metadata.offChainMetadata);
       console.log(body)
 
-      let nftReadEvent = new NftReadEvent(token_address)
-      this.eventEmitter.emit('nfts.read', nftReadEvent)
+      // let nftReadEvent = new NftReadEvent(token_address)
+      // this.eventEmitter.emit('nfts.read', nftReadEvent)
 
       return body;
     } catch (error) {

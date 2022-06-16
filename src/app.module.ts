@@ -8,7 +8,7 @@ import { AccountModule } from './modules/account/account.module';
 import { NftModule } from './modules/nft/nft.module';
 import { configuration } from './common/configs/config';
 import { AuthModule } from './modules/auth/auth.module';
-import { User, UserSchema } from './schemas/user.schema';
+import { User, UserSchema } from './dal/user.schema';
 import { Emailer } from './common/utils/emailer';
 
 @Module({
@@ -28,4 +28,4 @@ import { Emailer } from './common/utils/emailer';
   controllers: [AppController],
   providers: [AppService, Emailer],
 })
-export class AppModule {}
+export class AppModule { }

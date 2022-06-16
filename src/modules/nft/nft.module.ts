@@ -9,10 +9,12 @@ import { BurnNftService } from './components/burn-nft/burn-nft.service';
 import { UpdateNftController } from './components/update-nft/update-nft.controller';
 import { UpdateNftService } from './components/update-nft/update-nft.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from 'src/schemas/user.schema';
+import { User, UserSchema } from 'src/dal/user.schema';
 import { StorageMetadataController } from './components/storage-metadata/storage-metadata.controller';
 import { StorageMetadataService } from './components/storage-metadata/storage-metadata.service';
 import { HttpModule } from '@nestjs/axios';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RemoteDataFetcherService } from './components/remote-data-fetcher/data-fetcher.service';
 
 @Module({
   controllers: [
@@ -24,7 +26,8 @@ import { HttpModule } from '@nestjs/axios';
   ],
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    HttpModule
+    HttpModule,
+    EventEmitterModule.forRoot()
   ],
   providers: [
     CreateNftService,
@@ -33,6 +36,7 @@ import { HttpModule } from '@nestjs/axios';
     BurnNftService,
     UpdateNftService,
     StorageMetadataService,
+    RemoteDataFetcherService,
   ],
 })
-export class NftModule {}
+export class NftModule { }
