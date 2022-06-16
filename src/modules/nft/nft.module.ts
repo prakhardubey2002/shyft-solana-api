@@ -16,6 +16,8 @@ import { HttpModule } from '@nestjs/axios';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RemoteDataFetcherService } from './components/remote-data-fetcher/data-fetcher.service';
 import { NftOperationsEventListener } from './components/db-sync/service';
+import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
+import { NftInfo, NftInfoSchema } from 'src/dal/nft-repo/nft-info.schema';
 
 @Module({
   controllers: [
@@ -26,7 +28,10 @@ import { NftOperationsEventListener } from './components/db-sync/service';
     StorageMetadataController,
   ],
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: NftInfo.name, schema: NftInfoSchema }
+    ]),
     HttpModule,
     EventEmitterModule.forRoot()
   ],
@@ -38,7 +43,8 @@ import { NftOperationsEventListener } from './components/db-sync/service';
     UpdateNftService,
     StorageMetadataService,
     RemoteDataFetcherService,
-    NftOperationsEventListener
+    NftOperationsEventListener,
+    NftInfoAccessor
   ],
 })
 export class NftModule { }
