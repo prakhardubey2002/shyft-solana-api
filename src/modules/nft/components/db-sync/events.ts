@@ -1,9 +1,13 @@
+import { Network } from "src/dto/netwotk.dto";
+
 export class NftCreationEvent {
-    constructor(tokenAddress: string) {
+    constructor(tokenAddress: string, network: Network) {
         this.tokenAddress = tokenAddress
+        this.network = network
     }
 
     tokenAddress: string
+    network: Network;
 }
 
 export class NftReadInWalletEvent {

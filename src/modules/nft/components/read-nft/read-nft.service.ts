@@ -20,7 +20,7 @@ export class ReadNftService {
     try {
       const { network, address } = readAllNftDto;
       let fetchAllNft = new FetchAllNftDto(network, address)
-      let nftsmetadata = this.remoteDataFetcher.fetchAllNfts(fetchAllNft)
+      let nftsmetadata = await this.remoteDataFetcher.fetchAllNfts(fetchAllNft)
 
       // let nftReadInWalletEvent = new NftReadInWalletEvent(address)
       // this.eventEmitter.emit('nfts.in.wallet.read', nftReadInWalletEvent)
@@ -35,7 +35,6 @@ export class ReadNftService {
     try {
       const { network, token_address } = readNftDto;
       let fetchNft = new FetchNftDto(network, token_address)
-      let onChainMetadata, offChainMetadata
       let metadata = await this.remoteDataFetcher.fetchNft(fetchNft)
 
       const body = nftHelper.parseMetadata(metadata.offChainMetadata);

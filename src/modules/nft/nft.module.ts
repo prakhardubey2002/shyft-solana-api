@@ -15,6 +15,7 @@ import { StorageMetadataService } from './components/storage-metadata/storage-me
 import { HttpModule } from '@nestjs/axios';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RemoteDataFetcherService } from './components/remote-data-fetcher/data-fetcher.service';
+import { NftOperationsEventListener } from './components/db-sync/service';
 
 @Module({
   controllers: [
@@ -37,6 +38,7 @@ import { RemoteDataFetcherService } from './components/remote-data-fetcher/data-
     UpdateNftService,
     StorageMetadataService,
     RemoteDataFetcherService,
+    NftOperationsEventListener
   ],
 })
 export class NftModule { }

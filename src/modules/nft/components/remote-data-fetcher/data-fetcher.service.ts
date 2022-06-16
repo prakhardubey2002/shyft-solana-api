@@ -3,8 +3,6 @@ import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection } from '@metaplex/js';
 import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata';
 import { HttpService } from '@nestjs/axios';
-import { nftHelper } from '../../nft.helper';
-import { NftReadEvent, NftReadInWalletEvent } from '../db-sync/events';
 import { FetchNftDto, FetchAllNftDto } from './dto/data-fetcher.dto';
 
 @Injectable()
@@ -40,7 +38,7 @@ export class RemoteDataFetcherService {
             }
             const pda = await Metadata.getPDA(new PublicKey(tokenAddress));
             const metadata = await Metadata.load(connection, pda);
-            //console.log(metadata);
+
             const uriRes = await this.httpService.get(metadata.data.data.uri).toPromise();
             if (uriRes.status != 200) {
                 throw new HttpException("Incorrect URI path", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -50,8 +48,6 @@ export class RemoteDataFetcherService {
                 throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
             }
 
-            //const body = nftHelper.parseMetadata(uriRes.data);
-            //console.log(body)
             let retObj = {
                 onChainMetadata: metadata,
                 offChainMetadata: uriRes.data

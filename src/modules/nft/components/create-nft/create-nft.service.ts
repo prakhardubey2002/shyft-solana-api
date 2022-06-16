@@ -17,6 +17,7 @@ export class CreateNftService {
     }
     const { network, private_key } = createNftDto;
     const connection = new Connection(clusterApiUrl(network), 'confirmed');
+    console.log('connection done')
     const from = this.accountService.getKeypair(private_key);
     const wallet = new NodeWallet(from);
     const nft = await actions.mintNFT({
@@ -26,8 +27,9 @@ export class CreateNftService {
       maxSupply: maxSupply || 1,
     });
 
-    // let nftCreationEvent = new NftCreationEvent(nft.mint.toString())
-    // this.eventEmitter.emit('nft.created', nftCreationEvent)
+    console.log('minted')
+    let nftCreationEvent = new NftCreationEvent(nft.mint.toString(), createNftDto.network)
+    this.eventEmitter.emit('nft.created', nftCreationEvent)
 
     return nft;
   }
