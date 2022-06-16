@@ -4,10 +4,12 @@ import { clusterApiUrl } from '@solana/web3.js';
 import { actions, Connection, NodeWallet } from '@metaplex/js';
 import { CreateNftDto } from './dto/create-nft.dto';
 import { AccountService } from 'src/modules/account/account.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NftCreationEvent } from '../db-sync/events';
 
 @Injectable()
 export class CreateNftService {
-  constructor(private accountService: AccountService) {}
+  constructor(private accountService: AccountService, private eventEmitter: EventEmitter2) { }
   async mintNft(createNftDto: CreateNftDto): Promise<any> {
     const { metadata_uri, maxSupply } = createNftDto;
     if (!metadata_uri) {
@@ -23,6 +25,10 @@ export class CreateNftService {
       uri: metadata_uri,
       maxSupply: maxSupply || 1,
     });
+
+    let nftCreationEvent = new NftCreationEvent(nft.mint.toString())
+    this.eventEmitter.emit('nft.created', nftCreationEvent)
+
     return nft;
   }
 }

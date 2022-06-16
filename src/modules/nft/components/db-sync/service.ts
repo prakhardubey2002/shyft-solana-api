@@ -1,0 +1,4 @@
+/*
+event listerner to trigger the blockchain and ipfs read operations
+update the stored db schema
+*/

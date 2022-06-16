@@ -4,15 +4,16 @@ import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection, NodeWallet, programs } from '@metaplex/js';
 import { UpdateNftDto } from './dto/update.dto';
 import { AccountService } from 'src/modules/account/account.service';
-import { Creator, Metadata,  } from '@metaplex-foundation/mpl-token-metadata';
+import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata';
+import { NftUpdateEvent } from '../db-sync/events';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class UpdateNftService {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor(private accountService: AccountService) {}
+  constructor(private accountService: AccountService, private eventEmitter: EventEmitter2) { }
 
-  async updateNft(updateNftDto: UpdateNftDto, metaDataUri: string): Promise<any>
-  {
+  async updateNft(updateNftDto: UpdateNftDto, metaDataUri: string): Promise<any> {
     if (!metaDataUri) {
       throw new Error('metadata URI missing');
     }
@@ -40,8 +41,8 @@ export class UpdateNftService {
       const pda = await Metadata.getPDA(tokenAddress);
       const creators = new Array<Creator>(new programs.metadata.Creator({
         address: wallet.publicKey.toString(),
-        verified:true,
-        share:share,
+        verified: true,
+        share: share,
       }))
       const res = new programs.metadata.UpdateMetadataV2({
         recentBlockhash: (await connection.getLatestBlockhash('finalized')).blockhash,
@@ -64,10 +65,14 @@ export class UpdateNftService {
 
       const signedTransaction = await wallet.signTransaction(res)
       const result = await connection.sendRawTransaction(signedTransaction.serialize());
-      return {txId:result};
+
+      let nftUpdatedEvent = new NftUpdateEvent(tokenAddress)
+      this.eventEmitter.emit('nft.updated', nftUpdatedEvent)
+
+      return { txId: result };
     } catch (error) {
 
       throw new HttpException(error.message, error.status);
     }
   }
-} 
+}
