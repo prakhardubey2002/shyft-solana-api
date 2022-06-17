@@ -1,4 +1,4 @@
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { Network } from 'src/dto/netwotk.dto';
@@ -31,25 +31,25 @@ export class FetchNftDto {
 }
 
 export class NftData {
-    onChainMetadata: Metadata
+    onChainMetadata: MetadataData
     offChainMetadata: any
 
-    constructor(onChainData: Metadata, offChainData: any) {
+    constructor(onChainData: MetadataData, offChainData: any) {
         this.onChainMetadata = onChainData
         this.offChainMetadata = offChainData
     }
 
     public getNftInfoDto(): NftInfo {
         let nftDbDto = new NftInfo()
-        nftDbDto.updateAuthority = this.onChainMetadata.data.updateAuthority
-        nftDbDto.mint = this.onChainMetadata.data.mint
-        nftDbDto.primarySaleHappened = this.onChainMetadata.data.primarySaleHappened
-        nftDbDto.isMutable = this.onChainMetadata.data.isMutable
-        nftDbDto.name = this.onChainMetadata.data.data.name
-        nftDbDto.symbol = this.onChainMetadata.data.data.symbol
-        nftDbDto.sellerFeeBasisPoints = this.onChainMetadata.data.data.sellerFeeBasisPoints
-        nftDbDto.metadataUri = this.onChainMetadata.data.data.uri
-        nftDbDto.creators = this.onChainMetadata.data.data?.creators.map(cr => {
+        nftDbDto.updateAuthority = this.onChainMetadata.updateAuthority
+        nftDbDto.mint = this.onChainMetadata.mint
+        nftDbDto.primarySaleHappened = this.onChainMetadata.primarySaleHappened
+        nftDbDto.isMutable = this.onChainMetadata.isMutable
+        nftDbDto.name = this.onChainMetadata.data.name
+        nftDbDto.symbol = this.onChainMetadata.data.symbol
+        nftDbDto.sellerFeeBasisPoints = this.onChainMetadata.data.sellerFeeBasisPoints
+        nftDbDto.metadataUri = this.onChainMetadata.data.uri
+        nftDbDto.creators = this.onChainMetadata.data?.creators.map(cr => {
             return {
                 address: cr.address,
                 share: cr.share,

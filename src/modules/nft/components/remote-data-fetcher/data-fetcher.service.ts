@@ -26,6 +26,18 @@ export class RemoteDataFetcherService {
         }
     }
 
+    async fetchAllNftsMetadata(fetchAllNftDto: FetchAllNftDto): Promise<NftData[]> {
+        let onChainData = await this.fetchAllNfts(fetchAllNftDto)
+        let result: NftData[] = []
+
+        for (let oncd of onChainData) {
+            let ofcd = await this.getOffChainMetadata(oncd.data.uri)
+            result.push(new NftData(oncd, ofcd.data))
+        }
+
+        return result
+    }
+
     async fetchNft(fetchNftDto: FetchNftDto): Promise<NftData> {
         try {
             const { network, tokenAddress } = fetchNftDto;
@@ -39,20 +51,25 @@ export class RemoteDataFetcherService {
             const pda = await Metadata.getPDA(new PublicKey(tokenAddress));
             const metadata = await Metadata.load(connection, pda);
 
-            const uriRes = await this.httpService.get(metadata.data.data.uri).toPromise();
-            if (uriRes.status != 200) {
-                throw new HttpException("Incorrect URI path", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            const uriRes = await this.getOffChainMetadata(metadata.data.data.uri);
 
             if (!metadata) {
                 throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
             }
 
-            let retObj = new NftData(metadata, uriRes.data)
+            let retObj = new NftData(metadata.data, uriRes.data)
             return retObj;
         } catch (error) {
             console.log(error);
             throw new HttpException(error.message, error.status);
         }
+    }
+
+    private async getOffChainMetadata(uri: string): Promise<any> {
+        const uriRes = await this.httpService.get(uri).toPromise();
+        if (uriRes.status != 200) {
+            throw new HttpException("Incorrect URI path", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return uriRes;
     }
 }

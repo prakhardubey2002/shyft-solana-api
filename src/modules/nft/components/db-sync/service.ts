@@ -4,9 +4,8 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
-import { nftHelper } from '../../nft.helper';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
-import { FetchNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
+import { FetchNftDto, FetchAllNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
 import { NftCreationEvent, NftReadEvent, NftReadInWalletEvent } from './events';
 
 const afterNftCreationWaitTime_ms = 5000
@@ -17,6 +16,7 @@ export class NftOperationsEventListener {
 
     @OnEvent('nft.created')
     handleNftCreatedEvent(event: NftCreationEvent) {
+        // it takes some time to newly created data on blockchain to be available for read
         this.delay(afterNftCreationWaitTime_ms)
             .then(() => {
                 this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
@@ -60,23 +60,25 @@ export class NftOperationsEventListener {
             })
     }
 
-    // @OnEvent('all.nfts.read')
-    // handleAllNftReadEvent(event: NftReadInWalletEvent) {
-    //     this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
-    //         .then(metadata => {
-    //             let nftDbDto = metadata.getNftInfoDto()
-    //             nftDbDto.chain = event.network
-    //             return nftDbDto
-    //         })
-    //         .then(nftDbDto => {
-    //             return this.nftInfoAccessor.updateNft(nftDbDto)
-    //         })
-    //         .then(result => {
-    //             console.log(result)
-    //         })
-    //         .catch(err => {
-    //             console.log(err)
-    //         })
-    // }
+    @OnEvent('all.nfts.read')
+    handleAllNftReadEvent(event: NftReadInWalletEvent) {
+        this.remoteDataFetcher.fetchAllNftsMetadata(new FetchAllNftDto(event.network, event.walletAddress))
+            .then(nfts => {
+                let nftInfos: NftInfo[] = []
+                nftInfos = nfts.map(nft => {
+                    return nft.getNftInfoDto()
+                })
 
+                return nftInfos
+            })
+            .then(nftInfos => {
+                return this.nftInfoAccessor.updateManyNft(nftInfos)
+            })
+            .then(result => {
+                console.log(result)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+    }
 }

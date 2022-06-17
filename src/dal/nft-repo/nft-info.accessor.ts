@@ -14,7 +14,20 @@ export class NftInfoAccessor {
 
     public async updateNft(data: NftInfo): Promise<any> {
         let filter = { mint: data.mint }
-        let result = await this.NftInfoDataModel.updateOne(filter, data, { upsert: false })
+        let result = await this.NftInfoDataModel.updateOne(filter, data, { upsert: true })
         return result
+    }
+
+    public async updateManyNft(nfts: NftInfo[]): Promise<any> {
+        try {
+            nfts.map(async nft => {
+                let filter = { mint: nft.mint }
+                await this.NftInfoDataModel.updateOne(filter, nft, { upsert: true })
+            })
+        }
+        catch (err) {
+            console.log(err)
+        }
+        return null
     }
 }
