@@ -11,11 +11,13 @@ export class NftCreationEvent {
 }
 
 export class NftReadInWalletEvent {
-    constructor(walletAddress: string) {
+    constructor(walletAddress: string, network: Network) {
         this.walletAddress = walletAddress
+        this.network = network
     }
 
     walletAddress: string
+    network: Network;
 }
 
 export class NftUpdateEvent {
@@ -31,10 +33,12 @@ export class NftDeleteEvent {
 }
 
 export class NftReadEvent {
-    constructor(tokenAddress: string) {
+    constructor(tokenAddress: string, network: Network) {
         this.tokenAddress = tokenAddress
+        this.network = network
     }
 
     tokenAddress: string
+    network: Network;
 }
 

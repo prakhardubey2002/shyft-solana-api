@@ -11,4 +11,10 @@ export class NftInfoAccessor {
         let result = await this.NftInfoDataModel.create(data)
         return result
     }
+
+    public async updateNft(data: NftInfo): Promise<any> {
+        let filter = { mint: data.mint }
+        let result = await this.NftInfoDataModel.updateOne(filter, data, { upsert: false })
+        return result
+    }
 }

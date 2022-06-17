@@ -7,6 +7,12 @@ import { Document } from 'mongoose';
 
 export type NftInfoDocument = NftInfo & Document
 
+interface creator {
+    address: string
+    verified: boolean
+    share: number
+}
+
 @Schema()
 export class NftInfo {
     @Prop({ required: true })
@@ -40,9 +46,6 @@ export class NftInfo {
     sellerFeeBasisPoints: number
 
     @Prop({ required: true })
-    share: number
-
-    @Prop({ required: true })
     assetUri: string
 
     @Prop({ required: true })
@@ -52,10 +55,7 @@ export class NftInfo {
     attributes: Object
 
     @Prop({ required: true })
-    creatorAddress: string
-
-    @Prop({ required: true })
-    verified: boolean
+    creators: creator[]
 }
 
 export const NftInfoSchema = SchemaFactory.createForClass(NftInfo);

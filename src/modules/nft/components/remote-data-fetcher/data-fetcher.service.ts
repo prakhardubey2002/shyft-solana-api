@@ -3,7 +3,7 @@ import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection } from '@metaplex/js';
 import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata';
 import { HttpService } from '@nestjs/axios';
-import { FetchNftDto, FetchAllNftDto } from './dto/data-fetcher.dto';
+import { FetchNftDto, FetchAllNftDto, NftData } from './dto/data-fetcher.dto';
 
 @Injectable()
 export class RemoteDataFetcherService {
@@ -26,7 +26,7 @@ export class RemoteDataFetcherService {
         }
     }
 
-    async fetchNft(fetchNftDto: FetchNftDto): Promise<any> {
+    async fetchNft(fetchNftDto: FetchNftDto): Promise<NftData> {
         try {
             const { network, tokenAddress } = fetchNftDto;
             const connection = new Connection(clusterApiUrl(network), 'confirmed');
@@ -48,11 +48,7 @@ export class RemoteDataFetcherService {
                 throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
             }
 
-            let retObj = {
-                onChainMetadata: metadata,
-                offChainMetadata: uriRes.data
-            }
-
+            let retObj = new NftData(metadata, uriRes.data)
             return retObj;
         } catch (error) {
             console.log(error);

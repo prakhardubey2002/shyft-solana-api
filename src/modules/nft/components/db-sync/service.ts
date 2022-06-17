@@ -1,11 +1,13 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { metadata } from '@metaplex/js/lib/utils';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
+import { nftHelper } from '../../nft.helper';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
-import { NftCreationEvent } from './events';
+import { NftCreationEvent, NftReadEvent, NftReadInWalletEvent } from './events';
 
 const afterNftCreationWaitTime_ms = 5000
 
@@ -19,27 +21,11 @@ export class NftOperationsEventListener {
             .then(() => {
                 this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
                     .then(metadata => {
-                        let data = <Metadata>metadata.onChainMetadata
-                        let nftDbDto = new NftInfo()
-                        nftDbDto.chain = "sol"
-                        nftDbDto.updateAuthority = data.data.updateAuthority
-                        nftDbDto.mint = data.data.mint
-                        nftDbDto.primarySaleHappened = data.data.primarySaleHappened
-                        nftDbDto.isMutable = data.data.isMutable
-                        nftDbDto.name = data.data.data.name
-                        nftDbDto.symbol = data.data.data.symbol
-                        nftDbDto.description = metadata.offChainMetadata?.description
-                        nftDbDto.externalUrl = metadata.offChainMetadata?.external_url
-                        nftDbDto.sellerFeeBasisPoints = data.data.data.sellerFeeBasisPoints
-                        nftDbDto.share = data.data.data.creators[0].share
-                        nftDbDto.assetUri = metadata.offChainMetadata?.image
-                        nftDbDto.metadataUri = data.data.data.uri
-                        nftDbDto.creatorAddress = data.data.data.creators[0].address
-                        nftDbDto.verified = data.data.data.creators[0].verified
-                        nftDbDto.attributes = {}
-                        metadata.offChainMetadata?.attributes.map((trait) => {
-                            nftDbDto.attributes[trait?.trait_type] = trait?.value
-                        })
+                        let nftDbDto = metadata.getNftInfoDto()
+                        nftDbDto.chain = event.network
+                        return nftDbDto
+                    })
+                    .then(nftDbDto => {
                         return this.nftInfoAccessor.insert(nftDbDto)
                     })
                     .then(result => {
@@ -54,4 +40,43 @@ export class NftOperationsEventListener {
     delay(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
+
+    @OnEvent('nft.read')
+    handleNftReadEvent(event: NftReadEvent) {
+        this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
+            .then(metadata => {
+                let nftDbDto = metadata.getNftInfoDto()
+                nftDbDto.chain = event.network
+                return nftDbDto
+            })
+            .then(nftDbDto => {
+                return this.nftInfoAccessor.updateNft(nftDbDto)
+            })
+            .then(result => {
+                console.log(result)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+    }
+
+    // @OnEvent('all.nfts.read')
+    // handleAllNftReadEvent(event: NftReadInWalletEvent) {
+    //     this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
+    //         .then(metadata => {
+    //             let nftDbDto = metadata.getNftInfoDto()
+    //             nftDbDto.chain = event.network
+    //             return nftDbDto
+    //         })
+    //         .then(nftDbDto => {
+    //             return this.nftInfoAccessor.updateNft(nftDbDto)
+    //         })
+    //         .then(result => {
+    //             console.log(result)
+    //         })
+    //         .catch(err => {
+    //             console.log(err)
+    //         })
+    // }
+
 }

@@ -1,8 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey } from '@solana/web3.js';
-import { Connection } from '@metaplex/js';
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
 import { HttpService } from '@nestjs/axios';
@@ -22,8 +18,8 @@ export class ReadNftService {
       let fetchAllNft = new FetchAllNftDto(network, address)
       let nftsmetadata = await this.remoteDataFetcher.fetchAllNfts(fetchAllNft)
 
-      // let nftReadInWalletEvent = new NftReadInWalletEvent(address)
-      // this.eventEmitter.emit('nfts.in.wallet.read', nftReadInWalletEvent)
+      let nftReadInWalletEvent = new NftReadInWalletEvent(address, network)
+      this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent)
 
       return nftsmetadata;
     } catch (error) {
@@ -40,8 +36,8 @@ export class ReadNftService {
       const body = nftHelper.parseMetadata(metadata.offChainMetadata);
       console.log(body)
 
-      // let nftReadEvent = new NftReadEvent(token_address)
-      // this.eventEmitter.emit('nfts.read', nftReadEvent)
+      let nftReadEvent = new NftReadEvent(token_address, network)
+      this.eventEmitter.emit('nft.read', nftReadEvent)
 
       return body;
     } catch (error) {
