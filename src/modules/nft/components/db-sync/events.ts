@@ -31,7 +31,10 @@ export class NftUpdateEvent {
 }
 
 export class NftDeleteEvent {
-
+    constructor(tokenAddress: string) {
+        this.tokenAddress = tokenAddress
+    }
+    tokenAddress: string
 }
 
 export class NftReadEvent {

@@ -5,7 +5,7 @@ import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto, FetchAllNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
-import { NftCreationEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './events';
+import { NftCreationEvent, NftDeleteEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './events';
 
 const afterNftCreationWaitTime_ms = 5000
 
@@ -74,6 +74,17 @@ export class NftOperationsEventListener {
         this.delay(afterNftCreationWaitTime_ms)
             .then(() => {
                 this.syncNftData(event);
+            })
+    }
+
+    @OnEvent('nft.deleted')
+    handleDeleteNftEvent(event: NftDeleteEvent) {
+        this.nftInfoAccessor.deleteNft(event.tokenAddress)
+            .then(result => {
+                console.log(result)
+            })
+            .catch(err => {
+                console.log(err)
             })
     }
 

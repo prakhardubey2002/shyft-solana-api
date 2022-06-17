@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { filter } from "rxjs";
 import { NftInfo, NftInfoDocument } from "./nft-info.schema";
 
 @Injectable()
@@ -29,5 +30,11 @@ export class NftInfoAccessor {
             console.log(err)
         }
         return null
+    }
+
+    public async deleteNft(tokenAddress: string): Promise<any> {
+        let filter = { mint: tokenAddress }
+        let result = await this.NftInfoDataModel.deleteOne(filter)
+        return result
     }
 }
