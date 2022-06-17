@@ -1,12 +1,11 @@
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import { metadata } from '@metaplex/js/lib/utils';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { info } from 'console';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto, FetchAllNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
-import { NftCreationEvent, NftReadEvent, NftReadInWalletEvent } from './events';
+import { NftCreationEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './events';
 
 const afterNftCreationWaitTime_ms = 5000
 
@@ -43,21 +42,7 @@ export class NftOperationsEventListener {
 
     @OnEvent('nft.read')
     handleNftReadEvent(event: NftReadEvent) {
-        this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
-            .then(metadata => {
-                let nftDbDto = metadata.getNftInfoDto()
-                nftDbDto.chain = event.network
-                return nftDbDto
-            })
-            .then(nftDbDto => {
-                return this.nftInfoAccessor.updateNft(nftDbDto)
-            })
-            .then(result => {
-                console.log(result)
-            })
-            .catch(err => {
-                console.log(err)
-            })
+        this.syncNftData(event);
     }
 
     @OnEvent('all.nfts.read')
@@ -66,7 +51,9 @@ export class NftOperationsEventListener {
             .then(nfts => {
                 let nftInfos: NftInfo[] = []
                 nftInfos = nfts.map(nft => {
-                    return nft.getNftInfoDto()
+                    let info = nft.getNftInfoDto()
+                    info.chain = event.network
+                    return info
                 })
 
                 return nftInfos
@@ -80,5 +67,32 @@ export class NftOperationsEventListener {
             .catch(err => {
                 console.log(err)
             })
+    }
+
+    @OnEvent('nft.updated')
+    handleUpdateNftEvent(event: NftUpdateEvent) {
+        this.delay(afterNftCreationWaitTime_ms)
+            .then(() => {
+                this.syncNftData(event);
+            })
+    }
+
+    private syncNftData(event: NftReadEvent) {
+        this.remoteDataFetcher.fetchNft(new FetchNftDto(event.network, event.tokenAddress))
+            .then(metadata => {
+
+                let nftDbDto = metadata.getNftInfoDto();
+                nftDbDto.chain = event.network;
+                return nftDbDto;
+            })
+            .then(nftDbDto => {
+                return this.nftInfoAccessor.updateNft(nftDbDto);
+            })
+            .then(result => {
+                console.log(result);
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }
 }

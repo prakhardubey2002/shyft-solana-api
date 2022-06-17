@@ -21,11 +21,13 @@ export class NftReadInWalletEvent {
 }
 
 export class NftUpdateEvent {
-    constructor(tokenAddress: string) {
+    constructor(tokenAddress: string, network: Network) {
         this.tokenAddress = tokenAddress
+        this.network = network
     }
 
     tokenAddress: string
+    network: Network;
 }
 
 export class NftDeleteEvent {
