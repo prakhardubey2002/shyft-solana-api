@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
 export class CreateNftDto {
@@ -10,4 +11,8 @@ export class CreateNftDto {
   @IsNotEmpty()
   @IsString()
   readonly metadata_uri: string;
+  @IsNotEmpty()
+  @IsNumber()
+  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
+  readonly maxSupply: number;
 }

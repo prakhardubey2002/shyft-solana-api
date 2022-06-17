@@ -22,7 +22,7 @@ export class CreateMetadataDto {
   @IsNotEmpty()
   attributes: {
     trait_type: string;
-    value: string;
+    value: string | number;
   }[];
   @IsNotEmpty()
   @IsNumber()
