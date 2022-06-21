@@ -1,11 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
 export class BurnNftDto {
@@ -39,23 +33,21 @@ export class BurnNftDto {
   @IsString()
   readonly token_address: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     title: 'close',
     type: Boolean,
-    description: 'Close account',
+    description: '',
     example: false,
   })
   @IsBoolean()
-  @IsOptional()
   readonly close: boolean;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     title: 'amount',
     type: Number,
     description: 'Amount to mint',
     example: 0.001,
   })
   @IsNumber()
-  @IsOptional()
   readonly amount: number;
 }

@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
-export class CreateMetadataDto {
+export class UpdateNftDto {
   @ApiProperty({
     title: 'network',
     type: String,
@@ -24,28 +25,37 @@ export class CreateMetadataDto {
   readonly private_key: string;
 
   @ApiProperty({
-    title: 'image',
+    title: 'tokenAddress',
     type: String,
-    description: 'NFT image URL',
-    example:
-      'https://ipfs.io/ipfs/bafkreigx7c3s267vty55xutwjkdmllugvwu2mhoowlcvx2nnhjl6k5kjaq',
+    description: 'YOUR_NFT_TOKEN_ADDRESS',
+    example: 'HJ32KZye152eCFQYrKDcoyyq77dVDpa8SXE6v8T1HkBP',
   })
   @IsNotEmpty()
   @IsString()
-  readonly image: string;
+  readonly tokenAddress: string;
+
+  @ApiProperty({
+    title: 'updateAuthority',
+    type: String,
+    description: 'WALLET_ADDRESS',
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly updateAuthority: string;
 
   @ApiProperty({
     title: 'name',
     type: String,
     description: 'NFT name',
-    example: 'Fish Eye',
+    example: 'fish eyes',
   })
   @IsNotEmpty()
   @IsString()
   readonly name: string;
 
   @ApiProperty({
-    title: 'description',
+    title: 'symbol',
     type: String,
     description: 'NFT symbol',
     example: 'FYE',
@@ -66,11 +76,12 @@ export class CreateMetadataDto {
 
   @ApiProperty({
     title: 'attributes',
-    type: Array,
+    type: String,
     description: 'NFT attributes',
     example: [{ trait_type: 'edification', value: '100' }],
   })
   @IsNotEmpty()
+  @Transform(({ value }) => JSON.parse(value), { toClassOnly: true })
   attributes: {
     trait_type: string;
     value: string | number;
@@ -78,12 +89,13 @@ export class CreateMetadataDto {
 
   @ApiProperty({
     title: 'share',
-    type: Number,
+    type: String,
     description: 'NFT share',
-    example: 100,
+    example: '100',
   })
   @IsNotEmpty()
   @IsNumber()
+  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly share: number;
 
   @ApiPropertyOptional({
@@ -94,15 +106,54 @@ export class CreateMetadataDto {
   })
   @IsOptional()
   @IsString()
-  readonly external_url: string;
+  readonly externalUrl: string;
+
+  @ApiProperty({
+    title: 'is_mutable',
+    type: String,
+    description: 'mutable or not',
+    example: 'true',
+  })
+  @IsNotEmpty()
+  @Transform(
+    ({ value }) => {
+      return value === false || value === 0 ? false : true;
+    },
+    { toClassOnly: true },
+  )
+  readonly is_mutable: boolean;
 
   @ApiPropertyOptional({
-    title: 'seller_fee_basis_points',
-    type: Number,
-    description: 'NFT seller_fee_basis_points',
-    example: 0,
+    title: 'primary_sale_happened',
+    type: String,
+    description: 'primary sale happened or not',
+    example: 'false',
   })
   @IsOptional()
+  @Transform(
+    ({ value }) => {
+      return value === false || value === 0 ? false : true;
+    },
+    { toClassOnly: true },
+  )
+  readonly primary_sale_happened: boolean;
+
+  @ApiProperty({
+    title: 'seller_fee_basis_points',
+    type: String,
+    description: 'NFT seller fee basis points',
+    example: '100',
+  })
+  @IsNotEmpty()
   @IsNumber()
+  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly seller_fee_basis_points: number;
+
+  @ApiProperty({
+    name: 'file',
+    description: 'File to be uploaded',
+    type: 'string',
+    format: 'binary',
+  })
+  file: string;
 }

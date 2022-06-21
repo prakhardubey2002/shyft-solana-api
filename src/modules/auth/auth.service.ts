@@ -1,11 +1,11 @@
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from 'src/schemas/user.schema';
+import { User, UserDocument } from 'src/dal/user.schema';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) public userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(User.name) public userModel: Model<UserDocument>) { }
 
   public async validateUser(api_key: string): Promise<any> {
     const user = await this.userModel.findOne({ api_key });

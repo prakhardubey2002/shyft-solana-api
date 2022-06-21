@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Version } from '@nestjs/common';
 import {
   ApiTags,
   ApiSecurity,
@@ -26,6 +26,7 @@ export class AccountController {
     },
   })
   @Post('balance')
+  @Version('1')
   @HttpCode(200)
   async balance(@Body() balanceCheckDto: BalanceCheckDto): Promise<any> {
     const balance = await this.accountService.checkBalance(balanceCheckDto);
@@ -52,6 +53,7 @@ export class AccountController {
     },
   })
   @Post('send_sol')
+  @Version('1')
   @HttpCode(200)
   async sendSol(@Body() sendSolDto: SendSolDto): Promise<any> {
     const { amount } = sendSolDto;

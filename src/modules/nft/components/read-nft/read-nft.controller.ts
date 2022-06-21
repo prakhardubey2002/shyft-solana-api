@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Version } from '@nestjs/common';
 import {
   ApiTags,
   ApiSecurity,
@@ -148,6 +148,7 @@ export class ReadNftController {
     },
   })
   @Post('read_all')
+  @Version('1')
   @HttpCode(200)
   async readAllNfts(@Body() readAllNftDto: ReadAllNftDto): Promise<any> {
     const result = await this.readNftService.readAllNfts(readAllNftDto);
@@ -166,41 +167,18 @@ export class ReadNftController {
         success: true,
         message: 'NFT metadata',
         result: {
-          pubkey: '7b7BNd9Nh1TZKSQzpgRWKXQZeKLkutC7Sv8WPqRwjGKu',
-          info: {
-            executable: false,
-            owner: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
-            lamports: 2853600,
-            data: {
-              type: 'Buffer',
-              data: [
-                6, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0,
-              ],
-            },
-          },
-          data: {
-            key: 6,
-            supply: '00',
-            maxSupply: '01',
-          },
+          name: 'sample.jpg',
+          description: 'Kuch bhi',
+          symbol: 'NAT',
+          image:
+            'https://ipfs.io/ipfs/bafkreig63wh7rweyww7zidq6trgp6epljkdbcqmazmdoengosdj5pypv7y',
+          attributes: {},
         },
       },
     },
   })
   @Post('read')
+  @Version('1')
   @HttpCode(200)
   async readNft(@Body() readNftDto: ReadNftDto): Promise<any> {
     const result = await this.readNftService.readNft(readNftDto);

@@ -1,9 +1,9 @@
-import { Body, Controller, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Version } from '@nestjs/common';
 import {
   ApiTags,
   ApiSecurity,
   ApiOperation,
-  ApiCreatedResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { BurnNftDto } from './dto/burn-nft.dto';
 import { BurnNftService } from './burn-nft.service';
@@ -14,7 +14,7 @@ import { BurnNftService } from './burn-nft.service';
 export class BurnNftController {
   constructor(private burnNftService: BurnNftService) {}
   @ApiOperation({ summary: 'Burn NFT' })
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'NFT burned successfully',
     schema: {
       example: {
@@ -27,6 +27,7 @@ export class BurnNftController {
     },
   })
   @Delete('burn')
+  @Version('1')
   async readNft(@Body() burnNftDto: BurnNftDto): Promise<any> {
     const result = await this.burnNftService.burnNft(burnNftDto);
     return {

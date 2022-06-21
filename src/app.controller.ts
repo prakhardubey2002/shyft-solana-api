@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Version } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './decorators/public.decorators';
@@ -15,6 +15,7 @@ export class AppController {
     schema: { example: 'Welcome to Shyft APIs' },
   })
   @Get()
+  @Version('1')
   @Public()
   getHello(): string {
     return this.appService.getHello();
@@ -32,6 +33,7 @@ export class AppController {
     },
   })
   @Post('get_api_key')
+  @Version('1')
   @HttpCode(200)
   @Public()
   async getApiKey(@Body() getApiKeyDto: GetApiKeyDto): Promise<any> {

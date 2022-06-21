@@ -4,6 +4,7 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  Version,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -55,6 +56,7 @@ export class StorageMetadataController {
     },
   })
   @Post('storage/upload')
+  @Version('1')
   @UseInterceptors(FileInterceptor('file'))
   async upload(@UploadedFile() file: Express.Multer.File): Promise<any> {
     const uploadResponse = await this.storageMetadataService.uploadToIPFS(
@@ -68,6 +70,7 @@ export class StorageMetadataController {
   }
 
   @ApiTags('Metadata')
+  @Version('1')
   @ApiOperation({ summary: 'Create NFT metadata' })
   @ApiCreatedResponse({
     description: 'Metadata created successfully',

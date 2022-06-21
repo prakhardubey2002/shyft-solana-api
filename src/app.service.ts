@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { customAlphabet } from 'nanoid/async';
-import { User, UserDocument } from 'src/schemas/user.schema';
+import { User, UserDocument } from 'src/dal/user.schema';
 import { GetApiKeyDto } from './dto/get-api-key.dto';
 import { Emailer } from './common/utils/emailer';
 
