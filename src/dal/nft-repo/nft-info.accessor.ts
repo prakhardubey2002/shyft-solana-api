@@ -14,6 +14,11 @@ export class NftInfoAccessor {
     return result;
   }
 
+  public async readNft(data: string): Promise<NftInfoDocument> {
+    const result = await this.NftInfoDataModel.findOne({ mint: data });
+    return result;
+  }
+
   public async updateNft(data: NftInfo): Promise<any> {
     const filter = { mint: data.mint };
     const result = await this.NftInfoDataModel.updateOne(filter, data, {

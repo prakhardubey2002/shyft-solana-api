@@ -50,6 +50,7 @@ export class NftOperationsEventListener {
       const nftInfos: NftInfo[] = nfts.map((nft) => {
         const info = nft.getNftInfoDto();
         info.chain = event.network;
+        info.owner = event.walletAddress;
         return info;
       });
       await this.nftInfoAccessor.updateManyNft(nftInfos);
@@ -84,6 +85,7 @@ export class NftOperationsEventListener {
       );
       const nftDbDto = metadata.getNftInfoDto();
       nftDbDto.chain = event.network;
+      nftDbDto.owner = await this.remoteDataFetcher.fetchOwner(new FetchNftDto(event.network, event.tokenAddress)) ?? '';
       const result = await this.nftInfoAccessor.updateNft(nftDbDto);
       return result;
     } catch (err) {

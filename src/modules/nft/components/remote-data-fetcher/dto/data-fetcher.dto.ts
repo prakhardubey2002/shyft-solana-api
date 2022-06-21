@@ -56,7 +56,7 @@ export class NftData {
         verified: cr.verified,
       };
     });
-    nftDbDto.asset_uri = this.offChainMetadata?.image;
+    nftDbDto.image_uri = this.offChainMetadata?.image;
     nftDbDto.description = this.offChainMetadata?.description;
     nftDbDto.external_url = this.offChainMetadata?.external_url;
     nftDbDto.attributes = {};

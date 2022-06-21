@@ -18,6 +18,7 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
+import { UpdateOpenApi } from './open-api';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -28,20 +29,7 @@ export class UpdateNftController {
     private storageService: StorageMetadataService,
   ) {}
 
-  @ApiOperation({ summary: 'Update NFT' })
-  @ApiConsumes('multipart/form-data')
-  @ApiCreatedResponse({
-    description: 'NFT updated',
-    schema: {
-      example: {
-        success: true,
-        message: 'NFT updated',
-        result: {
-          txId: '5NjF2pzAjE9cJq3xfBsVLf9GYWJRdQqgQ3u6k27CtHKwKr6Mh5zqhVgujqfxYEy6LwWNNahyzsk1zYDhEE8a1jqN',
-        },
-      },
-    },
-  })
+  @UpdateOpenApi()
   @Post('update')
   @Version('1')
   @UseInterceptors(FileInterceptor('file'))

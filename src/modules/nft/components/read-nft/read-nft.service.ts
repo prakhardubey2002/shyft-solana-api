@@ -1,11 +1,11 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
-import { HttpService } from '@nestjs/axios';
 import { nftHelper } from '../../nft.helper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NftReadEvent, NftReadInWalletEvent } from '../db-sync/events';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
+import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
 import {
   FetchAllNftDto,
   FetchNftDto,
@@ -14,8 +14,8 @@ import {
 @Injectable()
 export class ReadNftService {
   constructor(
-    private httpService: HttpService,
     private remoteDataFetcher: RemoteDataFetcherService,
+    private nftInfoAccessor: NftInfoAccessor,
     private eventEmitter: EventEmitter2,
   ) {}
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
@@ -39,14 +39,23 @@ export class ReadNftService {
     try {
       const { network, token_address } = readNftDto;
       const fetchNft = new FetchNftDto(network, token_address);
-      const metadata = await this.remoteDataFetcher.fetchNft(fetchNft);
+      const  dbNftInfo = await this.nftInfoAccessor.readNft(readNftDto.token_address);
+      let nftMeta = {};
+      if(dbNftInfo)
+      {
+        nftMeta = {name: dbNftInfo.name, description: dbNftInfo.description, symbol: dbNftInfo.symbol, image: dbNftInfo.image_uri, attributes: dbNftInfo.attributes};
+      }
+      else
+      {
+        const metadata = await this.remoteDataFetcher.fetchNft(fetchNft);
+        nftMeta = nftHelper.parseMetadata(metadata.offChainMetadata);
+      }
 
-      const result = nftHelper.parseMetadata(metadata.offChainMetadata);
-
+      //Trigger read event, to update DB
       const nftReadEvent = new NftReadEvent(token_address, network);
       await this.eventEmitter.emitAsync('nft.read', nftReadEvent);
-
-      return result;
+      
+      return nftMeta;
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, error.status);

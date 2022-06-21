@@ -1,4 +1,4 @@
-interface NftMetadata {
+export interface NftMetadata {
   name: string;
   description: string;
   symbol: string;
@@ -6,7 +6,7 @@ interface NftMetadata {
   attributes: { trait_type: string; value: string }[];
 }
 export const nftHelper = {
-  parseMetadata: async function name(params: NftMetadata) {
+  parseMetadata: async function name(params: NftMetadata): Promise<unknown> {
     //parse and return only valuable fields
     const meta = {};
     meta['name'] = params?.name;

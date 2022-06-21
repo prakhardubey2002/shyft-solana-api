@@ -21,11 +21,8 @@ export class RemoteDataFetcherService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const nftsmetadata = await Metadata.findDataByOwner(
-        connection,
-        walletAddress,
-      );
-      return nftsmetadata;
+      const nfts = await Metadata.findDataByOwner(connection, walletAddress);
+      return nfts;
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
@@ -43,6 +40,25 @@ export class RemoteDataFetcherService {
     }
 
     return result;
+  }
+
+  async fetchOwner(fetchNftDto: FetchNftDto): Promise<string> {
+    try {
+      const { network, tokenAddress } = fetchNftDto;
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      if (!tokenAddress) {
+        throw new HttpException(
+          'Please provide any public or private key',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
+      const ownerInfo = <any>await connection.getParsedAccountInfo(largestAcc?.value[0]?.address);
+      return ownerInfo.value?.data?.parsed?.info?.owner;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message, error.status);
+    }
   }
 
   async fetchNft(fetchNftDto: FetchNftDto): Promise<NftData> {

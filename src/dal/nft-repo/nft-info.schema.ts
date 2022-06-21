@@ -25,6 +25,9 @@ export class NftInfo {
   mint: string;
 
   @Prop({ required: true })
+  owner: string;
+
+  @Prop({ required: true })
   primary_sale_happened: boolean;
 
   @Prop({ required: true })
@@ -46,7 +49,7 @@ export class NftInfo {
   seller_fee_basis_points: number;
 
   @Prop({ required: true })
-  asset_uri: string;
+  image_uri: string;
 
   @Prop({ required: true })
   metadata_uri: string;
