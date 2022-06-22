@@ -28,4 +28,4 @@ import { Emailer } from './common/utils/emailer';
   controllers: [AppController],
   providers: [AppService, Emailer],
 })
-export class AppModule { }
+export class AppModule {}

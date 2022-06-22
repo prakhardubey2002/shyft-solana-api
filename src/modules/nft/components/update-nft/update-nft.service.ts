@@ -24,17 +24,17 @@ export class UpdateNftService {
         name,
         symbol,
         updateAuthority,
-        sellerFeeBasisPoints,
-        privateKey,
+        seller_fee_basis_points,
+        private_key,
         share,
-        isMutable,
-        primarySaleHappened,
+        is_mutable,
+        primary_sale_happened,
       } = updateNftDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
       //generate wallet
-      const keypair = this.accountService.getKeypair(privateKey);
+      const keypair = this.accountService.getKeypair(private_key);
       const wallet = new NodeWallet(keypair);
 
       //get token's PDA (metadata address)
@@ -54,19 +54,19 @@ export class UpdateNftService {
           name: name,
           symbol: symbol,
           uri: metaDataUri,
-          sellerFeeBasisPoints: sellerFeeBasisPoints,
+          sellerFeeBasisPoints: seller_fee_basis_points,
           creators: creators,
           uses: null,
           collection: null
         }),
-        primarySaleHappened: primarySaleHappened,
-        isMutable: isMutable
+        primarySaleHappened: primary_sale_happened,
+        isMutable: is_mutable
       });
 
       const signedTransaction = await wallet.signTransaction(res)
       const result = await connection.sendRawTransaction(signedTransaction.serialize());
 
-      let nftUpdatedEvent = new NftUpdateEvent(tokenAddress, network)
+      const nftUpdatedEvent = new NftUpdateEvent(tokenAddress, network)
       this.eventEmitter.emit('nft.updated', nftUpdatedEvent)
 
       return { txId: result };

@@ -1,25 +1,33 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
-import { HttpService } from '@nestjs/axios';
 import { nftHelper } from '../../nft.helper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NftReadEvent, NftReadInWalletEvent } from '../db-sync/events';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
-import { FetchAllNftDto, FetchNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
+import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
+import {
+  FetchAllNftDto,
+  FetchNftDto,
+} from '../remote-data-fetcher/dto/data-fetcher.dto';
 
 @Injectable()
 export class ReadNftService {
-
-  constructor(private httpService: HttpService, private remoteDataFetcher: RemoteDataFetcherService, private eventEmitter: EventEmitter2) { }
+  constructor(
+    private remoteDataFetcher: RemoteDataFetcherService,
+    private nftInfoAccessor: NftInfoAccessor,
+    private eventEmitter: EventEmitter2,
+  ) {}
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
       const { network, address } = readAllNftDto;
-      let fetchAllNft = new FetchAllNftDto(network, address)
-      let nftsmetadata = await this.remoteDataFetcher.fetchAllNfts(fetchAllNft)
+      const fetchAllNft = new FetchAllNftDto(network, address);
+      const nftsmetadata = await this.remoteDataFetcher.fetchAllNfts(
+        fetchAllNft,
+      );
 
-      let nftReadInWalletEvent = new NftReadInWalletEvent(address, network)
-      this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent)
+      const nftReadInWalletEvent = new NftReadInWalletEvent(address, network);
+      this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
 
       return nftsmetadata;
     } catch (error) {
@@ -30,16 +38,29 @@ export class ReadNftService {
   async readNft(readNftDto: ReadNftDto): Promise<any> {
     try {
       const { network, token_address } = readNftDto;
-      let fetchNft = new FetchNftDto(network, token_address)
-      let metadata = await this.remoteDataFetcher.fetchNft(fetchNft)
+      const fetchNft = new FetchNftDto(network, token_address);
+      const dbNftInfo = await this.nftInfoAccessor.readNft(
+        readNftDto.token_address,
+      );
+      let nftMeta = {};
+      if (dbNftInfo) {
+        nftMeta = {
+          name: dbNftInfo.name,
+          description: dbNftInfo.description,
+          symbol: dbNftInfo.symbol,
+          image: dbNftInfo.image_uri,
+          attributes: dbNftInfo.attributes,
+        };
+      } else {
+        const metadata = await this.remoteDataFetcher.fetchNft(fetchNft);
+        nftMeta = nftHelper.parseMetadata(metadata.offChainMetadata);
+      }
 
-      const body = nftHelper.parseMetadata(metadata.offChainMetadata);
-      console.log(body)
+      //Trigger read event, to update DB
+      const nftReadEvent = new NftReadEvent(token_address, network);
+      this.eventEmitter.emit('nft.read', nftReadEvent);
 
-      let nftReadEvent = new NftReadEvent(token_address, network)
-      this.eventEmitter.emit('nft.read', nftReadEvent)
-
-      return body;
+      return nftMeta;
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, error.status);

@@ -30,10 +30,10 @@ import { NftInfo, NftInfoSchema } from 'src/dal/nft-repo/nft-info.schema';
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
-      { name: NftInfo.name, schema: NftInfoSchema }
+      { name: NftInfo.name, schema: NftInfoSchema },
     ]),
     HttpModule,
-    EventEmitterModule.forRoot()
+    EventEmitterModule.forRoot(),
   ],
   providers: [
     CreateNftService,
@@ -44,7 +44,7 @@ import { NftInfo, NftInfoSchema } from 'src/dal/nft-repo/nft-info.schema';
     StorageMetadataService,
     RemoteDataFetcherService,
     NftOperationsEventListener,
-    NftInfoAccessor
+    NftInfoAccessor,
   ],
 })
-export class NftModule { }
+export class NftModule {}

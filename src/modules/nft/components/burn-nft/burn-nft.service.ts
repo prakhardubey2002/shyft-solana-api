@@ -14,7 +14,10 @@ import { NftDeleteEvent } from '../db-sync/events';
 
 @Injectable()
 export class BurnNftService {
-  constructor(private accountService: AccountService, private eventEmitter: EventEmitter2) { }
+  constructor(
+    private accountService: AccountService,
+    private eventEmitter: EventEmitter2,
+  ) {}
   async burnNft(burnNftDto: BurnNftDto): Promise<any> {
     try {
       const { network, private_key, token_address, close, amount } = burnNftDto;
@@ -38,11 +41,12 @@ export class BurnNftService {
         close: close,
       });
 
-      let nftCreationEvent = new NftDeleteEvent(token_address)
-      this.eventEmitter.emit('nft.deleted', nftCreationEvent)
+      const nftCreationEvent = new NftDeleteEvent(token_address);
+      this.eventEmitter.emit('nft.deleted', nftCreationEvent);
 
       return result;
     } catch (error) {
+      console.log(error);
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
