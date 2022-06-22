@@ -42,7 +42,7 @@ export class BurnNftService {
       });
 
       const nftCreationEvent = new NftDeleteEvent(token_address);
-      await this.eventEmitter.emitAsync('nft.deleted', nftCreationEvent);
+      this.eventEmitter.emit('nft.deleted', nftCreationEvent);
 
       return result;
     } catch (error) {

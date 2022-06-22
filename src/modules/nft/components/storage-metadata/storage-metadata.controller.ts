@@ -6,16 +6,10 @@ import {
   UseInterceptors,
   Version,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiSecurity,
-  ApiOperation,
-  ApiConsumes,
-  ApiBody,
-  ApiCreatedResponse,
-} from '@nestjs/swagger';
+import { ApiSecurity } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
+import { StorageUploadOpenApi, MetadataCreateOpenApi } from './open-api';
 import { CreateMetadataDto } from './dto/create-metadata.dto';
 import { StorageMetadataService } from './storage-metadata.service';
 
@@ -26,35 +20,7 @@ export class StorageMetadataController {
     private readonly storageMetadataService: StorageMetadataService,
   ) {}
 
-  @ApiTags('Storage')
-  @ApiOperation({ summary: 'Upload NFT asset' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      title: 'File',
-      description: 'File to be uploaded',
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @ApiCreatedResponse({
-    description: 'File uploaded successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'File uploaded successfully',
-        result: {
-          cid: 'bafkreidw7b75gco2kfvreciexo5b4lakei7xpx6zcktbeyc2xey6hpowa4',
-          uri: 'https://ipfs.io/ipfs/bafkreidw7b75gco2kfvreciexo5b4lakei7xpx6zcktbeyc2xey6hpowa4',
-        },
-      },
-    },
-  })
+  @StorageUploadOpenApi()
   @Post('storage/upload')
   @Version('1')
   @UseInterceptors(FileInterceptor('file'))
@@ -69,23 +35,9 @@ export class StorageMetadataController {
     };
   }
 
-  @ApiTags('Metadata')
-  @Version('1')
-  @ApiOperation({ summary: 'Create NFT metadata' })
-  @ApiCreatedResponse({
-    description: 'Metadata created successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'Metadata created successfully',
-        result: {
-          cid: 'bafkreifwzh2o2fsyxmcblu7p7rmx4rdlksoepsli3djtlz7jmeknkz446y',
-          uri: 'https://ipfs.io/ipfs/bafkreifwzh2o2fsyxmcblu7p7rmx4rdlksoepsli3djtlz7jmeknkz446y',
-        },
-      },
-    },
-  })
+  @MetadataCreateOpenApi()
   @Post('metadata/create')
+  @Version('1')
   async createMetadata(
     @Body() createMetadataDto: CreateMetadataDto,
   ): Promise<any> {

@@ -27,7 +27,7 @@ export class ReadNftService {
       );
 
       const nftReadInWalletEvent = new NftReadInWalletEvent(address, network);
-      await this.eventEmitter.emitAsync('all.nfts.read', nftReadInWalletEvent);
+      this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
 
       return nftsmetadata;
     } catch (error) {
@@ -39,22 +39,27 @@ export class ReadNftService {
     try {
       const { network, token_address } = readNftDto;
       const fetchNft = new FetchNftDto(network, token_address);
-      const  dbNftInfo = await this.nftInfoAccessor.readNft(readNftDto.token_address);
+      const dbNftInfo = await this.nftInfoAccessor.readNft(
+        readNftDto.token_address,
+      );
       let nftMeta = {};
-      if(dbNftInfo)
-      {
-        nftMeta = {name: dbNftInfo.name, description: dbNftInfo.description, symbol: dbNftInfo.symbol, image: dbNftInfo.image_uri, attributes: dbNftInfo.attributes};
-      }
-      else
-      {
+      if (dbNftInfo) {
+        nftMeta = {
+          name: dbNftInfo.name,
+          description: dbNftInfo.description,
+          symbol: dbNftInfo.symbol,
+          image: dbNftInfo.image_uri,
+          attributes: dbNftInfo.attributes,
+        };
+      } else {
         const metadata = await this.remoteDataFetcher.fetchNft(fetchNft);
         nftMeta = nftHelper.parseMetadata(metadata.offChainMetadata);
       }
 
       //Trigger read event, to update DB
       const nftReadEvent = new NftReadEvent(token_address, network);
-      await this.eventEmitter.emitAsync('nft.read', nftReadEvent);
-      
+      this.eventEmitter.emit('nft.read', nftReadEvent);
+
       return nftMeta;
     } catch (error) {
       console.log(error);

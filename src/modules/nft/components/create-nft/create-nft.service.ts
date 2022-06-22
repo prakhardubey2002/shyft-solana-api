@@ -31,7 +31,7 @@ export class CreateNftService {
       nft.mint.toString(),
       mintNftDto.network,
     );
-    await this.eventEmitter.emitAsync('nft.created', nftCreationEvent);
+    this.eventEmitter.emit('nft.created', nftCreationEvent);
 
     return nft;
   }

@@ -1,8 +1,5 @@
 import { Body, Controller, Delete, Version } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiSecurity,
-} from '@nestjs/swagger';
+import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { BurnNftDto } from './dto/burn-nft.dto';
 import { BurnNftService } from './burn-nft.service';
 import { BurnOpenApi } from './open-api';

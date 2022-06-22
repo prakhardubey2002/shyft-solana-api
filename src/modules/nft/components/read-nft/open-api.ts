@@ -1,7 +1,4 @@
-import {
-  ApiOperation,
-  ApiOkResponse,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 
 import { applyDecorators } from '@nestjs/common';
 
@@ -135,12 +132,12 @@ const ReadAllResponse = {
       ],
     },
   },
-}
+};
 
 export function ReadAllOpenApi() {
   return applyDecorators(
     ApiOperation({ summary: 'Read all NFT' }),
-    ApiOkResponse(ReadAllResponse)
+    ApiOkResponse(ReadAllResponse),
   );
 }
 
@@ -163,6 +160,6 @@ export function ReadOpenApi() {
           },
         },
       },
-    })
+    }),
   );
 }

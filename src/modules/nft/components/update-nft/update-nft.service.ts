@@ -67,7 +67,7 @@ export class UpdateNftService {
       const result = await connection.sendRawTransaction(signedTransaction.serialize());
 
       const nftUpdatedEvent = new NftUpdateEvent(tokenAddress, network)
-      await this.eventEmitter.emitAsync('nft.updated', nftUpdatedEvent)
+      this.eventEmitter.emit('nft.updated', nftUpdatedEvent)
 
       return { txId: result };
     } catch (error) {

@@ -8,13 +8,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
-import {
-  ApiTags,
-  ApiSecurity,
-  ApiOperation,
-  ApiCreatedResponse,
-  ApiConsumes,
-} from '@nestjs/swagger';
+import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { CreateNftService } from './create-nft.service';
 import { CreateNftDto } from './dto/create-nft.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';

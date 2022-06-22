@@ -24,72 +24,100 @@ export class NftOperationsEventListener {
     private nftInfoAccessor: NftInfoAccessor,
   ) {}
 
-  @OnEvent('nft.created', { async: true })
-  async handleNftCreatedEvent(event: NftCreationEvent): Promise<any> {
-    try {
-      // it takes some time to newly created data on blockchain to be available for read
-      setTimeout(async () => {
-        await this.syncNftData(event);
-      }, afterNftCreationWaitTime_ms);
-    } catch (err) {
-      throw new Error(err);
-    }
+  @OnEvent('nft.created')
+  handleNftCreatedEvent(event: NftCreationEvent) {
+    // it takes some time to newly created data on blockchain to be available for read
+    this.delay(afterNftCreationWaitTime_ms).then(() => {
+      this.remoteDataFetcher
+        .fetchNft(new FetchNftDto(event.network, event.tokenAddress))
+        .then((metadata) => {
+          const nftDbDto = metadata.getNftInfoDto();
+          nftDbDto.chain = event.network;
+          return nftDbDto;
+        })
+        .then((nftDbDto) => {
+          return this.nftInfoAccessor.insert(nftDbDto);
+        })
+        .then((result) => {
+          console.log(result);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
   }
 
-  @OnEvent('nft.read', { async: true })
-  async handleNftReadEvent(event: NftReadEvent): Promise<any> {
-    await this.syncNftData(event);
+  delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  @OnEvent('all.nfts.read', { async: true })
-  async handleAllNftReadEvent(event: NftReadInWalletEvent): Promise<any> {
-    try {
-      const nfts = await this.remoteDataFetcher.fetchAllNftsMetadata(
+  @OnEvent('nft.read')
+  handleNftReadEvent(event: NftReadEvent) {
+    this.syncNftData(event);
+  }
+
+  @OnEvent('all.nfts.read')
+  handleAllNftReadEvent(event: NftReadInWalletEvent) {
+    this.remoteDataFetcher
+      .fetchAllNftsMetadata(
         new FetchAllNftDto(event.network, event.walletAddress),
-      );
-      const nftInfos: NftInfo[] = nfts.map((nft) => {
-        const info = nft.getNftInfoDto();
-        info.chain = event.network;
-        info.owner = event.walletAddress;
-        return info;
+      )
+      .then((nfts) => {
+        let nftInfos: NftInfo[] = [];
+        nftInfos = nfts.map((nft) => {
+          const info = nft.getNftInfoDto();
+          info.chain = event.network;
+          return info;
+        });
+
+        return nftInfos;
+      })
+      .then((nftInfos) => {
+        return this.nftInfoAccessor.updateManyNft(nftInfos);
+      })
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log(err);
       });
-      await this.nftInfoAccessor.updateManyNft(nftInfos);
-    } catch (err) {
-      throw new Error(err);
-    }
   }
 
-  @OnEvent('nft.updated', { async: true })
-  async handleUpdateNftEvent(event: NftUpdateEvent): Promise<any> {
-    try {
-      await this.syncNftData(event);
-    } catch (err) {
-      throw new Error(err);
-    }
+  @OnEvent('nft.updated')
+  handleUpdateNftEvent(event: NftUpdateEvent) {
+    this.delay(afterNftCreationWaitTime_ms).then(() => {
+      this.syncNftData(event);
+    });
   }
 
-  @OnEvent('nft.deleted', { async: true })
-  async handleDeleteNftEvent(event: NftDeleteEvent) {
-    try {
-      const result = await this.nftInfoAccessor.deleteNft(event.tokenAddress);
-      return result;
-    } catch (err) {
-      throw new Error(err);
-    }
+  @OnEvent('nft.deleted')
+  handleDeleteNftEvent(event: NftDeleteEvent) {
+    this.nftInfoAccessor
+      .deleteNft(event.tokenAddress)
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
-  private async syncNftData(event: NftReadEvent): Promise<any> {
-    try {
-      const metadata = await this.remoteDataFetcher.fetchNft(
-        new FetchNftDto(event.network, event.tokenAddress),
-      );
-      const nftDbDto = metadata.getNftInfoDto();
-      nftDbDto.chain = event.network;
-      nftDbDto.owner = await this.remoteDataFetcher.fetchOwner(new FetchNftDto(event.network, event.tokenAddress)) ?? '';
-      const result = await this.nftInfoAccessor.updateNft(nftDbDto);
-      return result;
-    } catch (err) {
-      throw new Error(err);
-    }
+  private syncNftData(event: NftReadEvent) {
+    this.remoteDataFetcher
+      .fetchNft(new FetchNftDto(event.network, event.tokenAddress))
+      .then((metadata) => {
+        const nftDbDto = metadata.getNftInfoDto();
+        nftDbDto.chain = event.network;
+        return nftDbDto;
+      })
+      .then((nftDbDto) => {
+        return this.nftInfoAccessor.updateNft(nftDbDto);
+      })
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 }

@@ -11,13 +11,7 @@ import { UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
 import { Blob } from 'nft.storage';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
-import {
-  ApiTags,
-  ApiSecurity,
-  ApiOperation,
-  ApiConsumes,
-  ApiCreatedResponse,
-} from '@nestjs/swagger';
+import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { UpdateOpenApi } from './open-api';
 
 @ApiTags('NFT')

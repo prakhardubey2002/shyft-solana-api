@@ -42,6 +42,7 @@ export class NftData {
     const nftDbDto = new NftInfo();
     nftDbDto.update_authority = this.onChainMetadata.updateAuthority;
     nftDbDto.mint = this.onChainMetadata.mint;
+    nftDbDto.owner = this.onChainMetadata.updateAuthority;
     nftDbDto.primary_sale_happened = this.onChainMetadata.primarySaleHappened;
     nftDbDto.is_mutable = this.onChainMetadata.isMutable;
     nftDbDto.name = this.onChainMetadata.data.name;
