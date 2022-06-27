@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Version } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
 import { ReadNftDto } from './dto/read-nft.dto';
@@ -12,9 +12,8 @@ export class ReadNftController {
   constructor(private readNftService: ReadNftService) {}
 
   @ReadAllOpenApi()
-  @Post('read_all')
+  @Get('read_all')
   @Version('1')
-  @HttpCode(200)
   async readAllNfts(@Body() readAllNftDto: ReadAllNftDto): Promise<any> {
     const result = await this.readNftService.readAllNfts(readAllNftDto);
     return {
@@ -25,9 +24,8 @@ export class ReadNftController {
   }
 
   @ReadOpenApi()
-  @Post('read')
+  @Get('read')
   @Version('1')
-  @HttpCode(200)
   async readNft(@Body() readNftDto: ReadNftDto): Promise<any> {
     const result = await this.readNftService.readNft(readNftDto);
     return {
