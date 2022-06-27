@@ -1,13 +1,16 @@
 import { Network } from 'src/dto/netwotk.dto';
+import { ObjectId } from 'mongoose';
 
 export class NftCreationEvent {
-  constructor(tokenAddress: string, network: Network) {
+  constructor(tokenAddress: string, network: Network, apiKeyId: ObjectId) {
     this.tokenAddress = tokenAddress;
     this.network = network;
+    this.apiKeyId = apiKeyId;
   }
 
   tokenAddress: string;
   network: Network;
+  apiKeyId: ObjectId;
 }
 
 export class NftReadInWalletEvent {

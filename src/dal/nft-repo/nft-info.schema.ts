@@ -3,7 +3,7 @@
 2. functions to read, write and update these documents. These functions will be called from the service layers
 */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document, ObjectId } from 'mongoose';
 
 export type NftInfoDocument = NftInfo & Document;
 
@@ -15,8 +15,14 @@ interface creator {
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class NftInfo {
-  @Prop({ required: true })
+  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, default: null })
+  api_key_id: ObjectId;
+
+  @Prop({ required: true, default: 'solana' })
   chain: string;
+
+  @Prop({ required: true, default: 'devnet' })
+  network: string;
 
   @Prop({ required: true })
   update_authority: string;
@@ -24,7 +30,7 @@ export class NftInfo {
   @Prop({ required: true })
   mint: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, default: '' })
   owner: string;
 
   @Prop({ required: true })
@@ -45,8 +51,14 @@ export class NftInfo {
   @Prop({ required: false })
   external_url: string;
 
+  @Prop({ required: false, min: 0, max: 100, default: 0 })
+  royalty: number;
+
   @Prop({ required: false })
-  seller_fee_basis_points: number;
+  max_supply: number;
+
+  @Prop({ required: false })
+  supply: number;
 
   @Prop({ required: true })
   image_uri: string;
@@ -54,10 +66,10 @@ export class NftInfo {
   @Prop({ required: true })
   metadata_uri: string;
 
-  @Prop({ required: false, type: Object })
-  attributes: object;
+  @Prop({ required: false, type: Object, default: {} })
+  attributes: { [k: string]: string | number };
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   creators: creator[];
 }
 
