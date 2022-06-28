@@ -1,4 +1,11 @@
-import { Body, Controller, Post, UploadedFile, UseInterceptors, Version } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Put,
+  UploadedFile,
+  UseInterceptors,
+  Version,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
@@ -11,14 +18,22 @@ import { UpdateOpenApi } from './open-api';
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class UpdateNftController {
-  constructor(private updateNftService: UpdateNftService, private storageService: StorageMetadataService) {}
+  constructor(
+    private updateNftService: UpdateNftService,
+    private storageService: StorageMetadataService,
+  ) {}
 
   @UpdateOpenApi()
-  @Post('update')
+  @Put('update')
   @Version('1')
   @UseInterceptors(FileInterceptor('file'))
-  async update(@UploadedFile() file: Express.Multer.File, @Body() updateNftDto: UpdateNftDto): Promise<any> {
-    const uploadImage = await this.storageService.uploadToIPFS(new Blob([file.buffer], { type: file.mimetype }));
+  async update(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updateNftDto: UpdateNftDto,
+  ): Promise<any> {
+    const uploadImage = await this.storageService.uploadToIPFS(
+      new Blob([file.buffer], { type: file.mimetype }),
+    );
     const image = uploadImage.uri;
     const { uri } = await this.storageService.prepareMetaData({
       network: updateNftDto.network,
