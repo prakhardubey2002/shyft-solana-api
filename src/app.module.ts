@@ -17,7 +17,7 @@ import { Emailer } from './common/utils/emailer';
       isGlobal: true,
       load: [configuration],
     }),
-    MongooseModule.forRoot(process.env.MONGO_URI, {
+    MongooseModule.forRoot(configuration().mongoURI, {
       useNewUrlParser: true,
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
