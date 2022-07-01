@@ -23,7 +23,7 @@ export class CreateNftController {
   constructor(
     private createNftService: CreateNftService,
     private storageService: StorageMetadataService,
-  ) {}
+  ) { }
 
   @CreateOpenApi()
   @Post('create')
@@ -49,7 +49,7 @@ export class CreateNftController {
       attributes: createNftDto.attributes,
       share: createNftDto.share,
       seller_fee_basis_points: createNftDto.royalty * 100, //500 = 5%
-      external_url: createNftDto.externalUrl,
+      external_url: createNftDto.external_url,
     });
 
     const mintNftRequest = {

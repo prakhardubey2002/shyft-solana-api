@@ -13,7 +13,7 @@ interface IGetUserAuthInfoRequest extends Request {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  public constructor(public readonly reflector: Reflector, public readonly authService: AuthService) {}
+  public constructor(public readonly reflector: Reflector, public readonly authService: AuthService) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> | never {
     try {

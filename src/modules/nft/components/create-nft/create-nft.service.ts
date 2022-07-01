@@ -17,7 +17,7 @@ export interface CreateParams {
 
 @Injectable()
 export class CreateNftService {
-  constructor(private accountService: AccountService, private eventEmitter: EventEmitter2) {}
+  constructor(private accountService: AccountService, private eventEmitter: EventEmitter2) { }
 
   async mintNft(createParams: CreateParams): Promise<unknown> {
     const { metadataUri: metadataUri, maxSupply: maxSupply, network, privateKey: privateKey } = createParams;

@@ -5,7 +5,7 @@ import { NftInfo, NftInfoDocument } from './nft-info.schema';
 
 @Injectable()
 export class NftInfoAccessor {
-  constructor(@InjectModel(NftInfo.name) public NftInfoDataModel: Model<NftInfoDocument>) {}
+  constructor(@InjectModel(NftInfo.name) public NftInfoDataModel: Model<NftInfoDocument>) { }
 
   public async insert(data: NftInfo): Promise<any> {
     const result = await this.NftInfoDataModel.create(data);
@@ -23,6 +23,16 @@ export class NftInfoAccessor {
       upsert: true,
     });
     return result;
+  }
+
+  public async find(filter: Object): Promise<NftInfoDocument[]> {
+    try {
+      const result = await this.NftInfoDataModel.find(filter)
+      return result
+    } catch (err) {
+      console.log(err)
+    }
+    return []
   }
 
   public async updateManyNft(nfts: NftInfo[]): Promise<any> {
