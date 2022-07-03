@@ -1,4 +1,4 @@
-import { MetadataData } from '@metaplex-foundation/mpl-token-metadata';
+import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { Network } from 'src/dto/netwotk.dto';

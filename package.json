@@ -22,10 +22,12 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.107.0",
+    "@metaplex-foundation/js": "^0.11.7",
     "@metaplex-foundation/mpl-auction": "^0.0.2",
-    "@metaplex-foundation/mpl-core": "^0.0.2",
+    "@metaplex-foundation/mpl-core": "^0.0.5",
     "@metaplex-foundation/mpl-metaplex": "^0.0.5",
-    "@metaplex-foundation/mpl-token-metadata": "^0.0.2",
+    "@metaplex-foundation/mpl-token-metadata": "^2.2.1",
+    "@metaplex-foundation/mpl-token-metadata-depricated": "npm:@metaplex-foundation/mpl-token-metadata@^0.0.2",
     "@metaplex-foundation/mpl-token-vault": "^0.0.2",
     "@metaplex/js": "^4.12.0",
     "@nestjs/axios": "^0.0.8",
@@ -36,6 +38,7 @@
     "@nestjs/mongoose": "^9.1.0",
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/swagger": "^5.2.1",
+    "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.43.1",
     "bs58": "^5.0.0",
     "class-transformer": "^0.5.1",
@@ -72,6 +75,9 @@
     "tsconfig-paths": "^3.10.1",
     "typescript": "^4.3.5",
     "webpack": "^5.0.0"
+  },
+  "resolutions": {
+    "@solana/spl-token": "^0.2.0"
   },
   "jest": {
     "moduleFileExtensions": [

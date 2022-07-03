@@ -6,7 +6,7 @@ import { SendSolDto } from './dto/send-sol.dto';
 
 @Injectable()
 export class AccountService {
-  getKeypair(privateKey: string): any {
+  getKeypair(privateKey: string): Keypair {
     const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
     return keypair;
   }

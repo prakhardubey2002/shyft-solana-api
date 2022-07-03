@@ -10,6 +10,7 @@ import { configuration } from './common/configs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { User, UserSchema } from './dal/user.schema';
 import { Emailer } from './common/utils/emailer';
+import { TokenModule } from './modules/token/token.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Emailer } from './common/utils/emailer';
     AccountModule,
     NftModule,
     AuthModule,
+    TokenModule,
   ],
   controllers: [AppController],
   providers: [AppService, Emailer],

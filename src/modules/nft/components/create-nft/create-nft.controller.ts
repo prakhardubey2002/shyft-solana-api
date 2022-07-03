@@ -14,7 +14,6 @@ import { CreateNftService } from './create-nft.service';
 import { CreateNftDto } from './dto/create-nft.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { CreateOpenApi } from './open-api';
-import { Request } from 'express';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
