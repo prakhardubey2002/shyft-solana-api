@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   getMinimumBalanceForRentExemptMint,
   getAssociatedTokenAddress,
@@ -25,81 +25,85 @@ import { actions, NodeWallet } from '@metaplex/js';
 export class CreateTokenService {
   constructor(private accountService: AccountService) {}
   async createToken(createTokenDto: CreateTokenDto, uri: string): Promise<any> {
-    const { network, private_key, name, symbol, royalty, share, decimals } = createTokenDto;
-    const connection = new Connection(clusterApiUrl(network), 'confirmed');
-    const feePayer = this.accountService.getKeypair(private_key);
-    const wallet = new NodeWallet(feePayer);
+    try {
+      const { network, private_key, name, symbol } = createTokenDto;
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const feePayer = this.accountService.getKeypair(private_key);
+      const wallet = new NodeWallet(feePayer);
 
-    const lamports = await getMinimumBalanceForRentExemptMint(connection);
-    const mintKeypair = Keypair.generate();
-    const metadataPDA = findMetadataPda(mintKeypair.publicKey);
-    const tokenATA = await getAssociatedTokenAddress(
-      mintKeypair.publicKey,
-      feePayer.publicKey,
-    );
-
-    const tokenMetadata = {
-      name,
-      symbol,
-      uri,
-      sellerFeeBasisPoints: royalty,
-      creators: [
-        {
-          address: feePayer.publicKey,
-          verified: true,
-          share,
-        },
-      ],
-      collection: null,
-      uses: null,
-    } as DataV2;
-
-    const createNewTokenTransaction = new Transaction().add(
-      SystemProgram.createAccount({
-        fromPubkey: feePayer.publicKey,
-        newAccountPubkey: mintKeypair.publicKey,
-        space: MINT_SIZE,
-        lamports: lamports,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      createInitializeMintInstruction(
+      const lamports = await getMinimumBalanceForRentExemptMint(connection);
+      const mintKeypair = Keypair.generate();
+      const metadataPDA = findMetadataPda(mintKeypair.publicKey);
+      const tokenATA = await getAssociatedTokenAddress(
         mintKeypair.publicKey,
-        decimals,
         feePayer.publicKey,
-        feePayer.publicKey,
-        TOKEN_PROGRAM_ID,
-      ),
-      createAssociatedTokenAccountInstruction(
-        feePayer.publicKey,
-        tokenATA,
-        feePayer.publicKey,
-        mintKeypair.publicKey,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-      ),
-      createCreateMetadataAccountV2Instruction(
-        {
-          metadata: metadataPDA,
-          mint: mintKeypair.publicKey,
-          mintAuthority: feePayer.publicKey,
-          payer: feePayer.publicKey,
-          updateAuthority: feePayer.publicKey,
-        },
-        {
-          createMetadataAccountArgsV2: {
-            data: tokenMetadata,
-            isMutable: true,
+      );
+
+      const tokenMetadata = {
+        name,
+        symbol,
+        uri,
+        sellerFeeBasisPoints: 0,
+        creators: [
+          {
+            address: feePayer.publicKey,
+            verified: true,
+            share: 100,
           },
-        },
-      ),
-    );
-    const txhash = await actions.sendTransaction({
-      connection,
-      wallet,
-      txs: [createNewTokenTransaction],
-      signers: [mintKeypair],
-    });
+        ],
+        collection: null,
+        uses: null,
+      } as DataV2;
 
-    return { txhash, mint_token_address: mintKeypair.publicKey.toBase58() };
+      const createNewTokenTransaction = new Transaction().add(
+        SystemProgram.createAccount({
+          fromPubkey: feePayer.publicKey,
+          newAccountPubkey: mintKeypair.publicKey,
+          space: MINT_SIZE,
+          lamports: lamports,
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        createInitializeMintInstruction(
+          mintKeypair.publicKey,
+          9, // decimals
+          feePayer.publicKey,
+          feePayer.publicKey,
+          TOKEN_PROGRAM_ID,
+        ),
+        createAssociatedTokenAccountInstruction(
+          feePayer.publicKey,
+          tokenATA,
+          feePayer.publicKey,
+          mintKeypair.publicKey,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+        ),
+        createCreateMetadataAccountV2Instruction(
+          {
+            metadata: metadataPDA,
+            mint: mintKeypair.publicKey,
+            mintAuthority: feePayer.publicKey,
+            payer: feePayer.publicKey,
+            updateAuthority: feePayer.publicKey,
+          },
+          {
+            createMetadataAccountArgsV2: {
+              data: tokenMetadata,
+              isMutable: true,
+            },
+          },
+        ),
+      );
+      const txhash = await actions.sendTransaction({
+        connection,
+        wallet,
+        txs: [createNewTokenTransaction],
+        signers: [mintKeypair],
+      });
+
+      return { txhash, mint_token_address: mintKeypair.publicKey.toBase58() };
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

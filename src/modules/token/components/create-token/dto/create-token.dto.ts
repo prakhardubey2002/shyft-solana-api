@@ -54,43 +54,10 @@ export class CreateTokenDto {
   readonly description: string;
 
   @ApiProperty({
-    title: 'share',
-    type: Number,
-    description: 'Token share on primary sale, between 0 - 100',
-    example: 100,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
-  readonly share: number;
-
-  @ApiProperty({
-    title: 'Royalty',
-    type: Number,
-    description: 'Token royalty on secondary sales, between 0 - 100',
-    example: 5,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
-  readonly royalty: number;
-
-  @ApiProperty({
     name: 'file',
     description: 'Token image to be uploaded',
     type: 'string',
     format: 'binary',
   })
   file: string;
-
-  @ApiProperty({
-    title: 'Decimals',
-    type: Number,
-    description: 'Number of base-10 digits to the right of the decimal place',
-    example: 9,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
-  readonly decimals: number;
 }

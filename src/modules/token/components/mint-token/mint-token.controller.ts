@@ -13,7 +13,7 @@ export class MintTokenController {
   @MintTokenOpenApi()
   @Post('mint')
   @Version('1')
-  async createToken(@Body() mintTokenDto: MintTokenDto): Promise<any> {
+  async mintToken(@Body() mintTokenDto: MintTokenDto): Promise<any> {
     const result = await this.mintTokenService.mintToken(mintTokenDto);
     return {
       success: true,

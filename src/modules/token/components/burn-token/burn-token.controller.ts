@@ -13,12 +13,12 @@ export class BurnTokenController {
   @BurnTokenOpenApi()
   @Delete('burn')
   @Version('1')
-  async createToken(@Body() burnTokenDto: BurnTokenDto): Promise<any> {
+  async burnToken(@Body() burnTokenDto: BurnTokenDto): Promise<any> {
     const result = await this.burnTokenService.burnToken(burnTokenDto);
     return {
       success: true,
       message: 'Token burned successfully',
-      result: result,
+      result,
     };
   }
 }

@@ -41,14 +41,4 @@ export class MintTokenDto {
   @IsNotEmpty()
   @IsNumber()
   readonly amount: number;
-
-  @ApiProperty({
-    title: 'Decimals',
-    type: Number,
-    description: 'Number of base-10 digits to the right of the decimal place',
-    example: 9,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  readonly decimals: number;
 }

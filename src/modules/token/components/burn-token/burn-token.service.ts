@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   clusterApiUrl,
   Connection,
@@ -43,9 +43,9 @@ export class BurnTokenService {
         LAMPORTS_PER_SOL * amount,
         9,
       );
-      return txhash;
+      return { txhash };
     } catch (err) {
-      console.log(err);
+      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
