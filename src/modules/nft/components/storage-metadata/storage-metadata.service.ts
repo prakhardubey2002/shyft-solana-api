@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NFTStorage, Blob } from 'nft.storage';
 import { AccountService } from 'src/modules/account/account.service';
 import { CreateMetadataDto } from './dto/create-metadata.dto';
+import { CreateTokenMetadataDto } from './dto/create-token-metadata.dto';
 
 const storageClient = new NFTStorage({
   token:
@@ -38,6 +39,20 @@ export class StorageMetadataService {
       properties: {
         creators: [{ address, verified: true, share }],
       },
+    });
+
+    const uploadResponse = await this.uploadToIPFS(new Blob([metadata], { type: 'application/json' }));
+    return uploadResponse;
+  }
+
+  async prepareTokenMetaData(createTokenMetadataDto: CreateTokenMetadataDto): Promise<any> {
+    const { name, symbol, description, image } = createTokenMetadataDto;
+
+    const metadata = JSON.stringify({
+      name,
+      symbol,
+      description,
+      image,
     });
 
     const uploadResponse = await this.uploadToIPFS(new Blob([metadata], { type: 'application/json' }));

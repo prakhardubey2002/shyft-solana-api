@@ -4,7 +4,7 @@ import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection, NodeWallet, programs } from '@metaplex/js';
 import { UpdateNftDto } from './dto/update.dto';
 import { AccountService } from 'src/modules/account/account.service';
-import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata';
+import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { NftUpdateEvent } from '../../../db/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 

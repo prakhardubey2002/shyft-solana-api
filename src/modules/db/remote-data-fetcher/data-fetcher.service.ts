@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { clusterApiUrl, PublicKey } from '@solana/web3.js';
-import { Connection } from '@solana/web3.js';
-import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata';
+import { Connection } from '@metaplex/js';
+import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { HttpService } from '@nestjs/axios';
 import { FetchNftDto, FetchAllNftDto, NftData } from './dto/data-fetcher.dto';
 
