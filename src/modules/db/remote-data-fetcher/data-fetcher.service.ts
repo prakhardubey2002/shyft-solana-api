@@ -25,7 +25,6 @@ export class RemoteDataFetcherService {
 
   async fetchAllNftDetails(fetchAllNftDto: FetchAllNftDto): Promise<NftData[]> {
     let nfts = await this.fetchAllNfts(fetchAllNftDto);
-
     //Filter based on updateAuthority if any
     if (fetchAllNftDto.updateAuthority) {
       nfts = nfts.filter((nft) => {
@@ -38,18 +37,22 @@ export class RemoteDataFetcherService {
     //Run all offchain requests parallely instead of one by one
     const promises: Promise<NftData>[] = [];
     for (const oncd of nfts) {
-      promises.push(this.getOffChainMetadata(oncd.data.uri));
-      //No need to fetch owner, we have the wallet Id
-      const owner = fetchAllNftDto.walletAddress;
-      result.push(new NftData(oncd, null, owner));
+      try {
+        promises.push(this.getOffChainMetadata(oncd.data.uri));
+        //No need to fetch owner, we have the wallet Id
+        const owner = fetchAllNftDto.walletAddress;
+        result.push(new NftData(oncd, null, owner));
+      } catch (error) {
+        //Ignore off chain data that cant be fetched or is taking too long.
+        console.log('ignoring');
+      }
     }
 
-    const res = await Promise.all(promises);
+    const res = await Promise.allSettled(promises);
 
-    res.forEach((data, i) => {
-      result[i].offChainMetadata = data;
+    res?.forEach((data, i) => {
+      result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
     });
-
     return result;
   }
 
@@ -97,7 +100,6 @@ export class RemoteDataFetcherService {
       const metadata = await Metadata.load(connection, pda);
 
       const uriRes = await this.getOffChainMetadata(metadata.data.data.uri);
-
       if (!metadata) {
         throw new HttpException("Maybe you've lost", HttpStatus.NOT_FOUND);
       }
@@ -110,11 +112,11 @@ export class RemoteDataFetcherService {
   }
 
   private async getOffChainMetadata(uri: string): Promise<any> {
-    const uriRes = await this.httpService.get(uri).toPromise();
-    if (uriRes.status != 200) {
-      throw new HttpException('Incorrect URI path', HttpStatus.INTERNAL_SERVER_ERROR);
+    try {
+      const uriRes = await this.httpService.get(uri).toPromise();
+      return uriRes.status === 200 ? uriRes.data : {};
+    } catch (error) {
+      throw error;
     }
-
-    return uriRes.data;
   }
 }
