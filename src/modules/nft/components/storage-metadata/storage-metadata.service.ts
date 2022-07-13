@@ -17,11 +17,11 @@ interface IpfsUploadResponse {
 
 @Injectable()
 export class StorageMetadataService {
-  constructor(private accountService: AccountService) {}
+  constructor(private accountService: AccountService) { }
 
   async uploadToIPFS(file: Blob): Promise<IpfsUploadResponse> {
     const ipfstx = await storageClient.storeBlob(file);
-    return { cid: ipfstx, uri: `${configuration().ipfsGateway} + ${ipfstx}` };
+    return { cid: ipfstx, uri: `${configuration().ipfsGateway}` + `${ipfstx}` };
   }
 
   async prepareNFTMetadata(createMetadataDto: CreateMetadataDto): Promise<any> {
