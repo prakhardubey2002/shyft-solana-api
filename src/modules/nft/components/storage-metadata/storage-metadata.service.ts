@@ -25,7 +25,17 @@ export class StorageMetadataService {
   }
 
   async prepareNFTMetadata(createMetadataDto: CreateMetadataDto): Promise<any> {
-    const { private_key, image, name, description, symbol, attributes, share, seller_fee_basis_points, external_url } = createMetadataDto;
+    const {
+      private_key,
+      image,
+      name,
+      description,
+      symbol,
+      attributes,
+      share,
+      seller_fee_basis_points,
+      external_url,
+    } = createMetadataDto;
     const accountInfo = await this.accountService.getKeypair(private_key);
     const address = accountInfo.publicKey.toBase58();
 
@@ -38,7 +48,7 @@ export class StorageMetadataService {
       image,
       attributes,
       properties: {
-        creators: [{ address, verified: true, share }],
+        creators: [{ address, verified: address === accountInfo.publicKey.toBase58(), share }],
       },
     });
 
