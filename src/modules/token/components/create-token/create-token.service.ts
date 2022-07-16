@@ -23,7 +23,7 @@ import { actions, NodeWallet } from '@metaplex/js';
 
 @Injectable()
 export class CreateTokenService {
-  constructor(private accountService: AccountService) {}
+  constructor(private accountService: AccountService) { }
   async createToken(createTokenDto: CreateTokenDto, uri: string): Promise<any> {
     try {
       const { network, private_key, name, symbol } = createTokenDto;
@@ -95,6 +95,8 @@ export class CreateTokenService {
         ),
       );
 
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      createNewTokenTransaction.recentBlockhash = blockHash;
       const signedTx = await wallet.signTransaction(createNewTokenTransaction);
       const txhash = await connection.sendRawTransaction(signedTx.serialize());
 
