@@ -6,7 +6,7 @@ import { AccountService } from 'src/modules/account/account.service';
 import { NftCreationEvent } from '../../../db/db-sync/db.events';
 import { Network } from 'src/dto/netwotk.dto';
 import { ObjectId } from 'mongoose';
-
+import { AccountUtils } from 'src/common/utils/account-utils';
 export interface CreateParams {
   network: Network;
   privateKey: string;
@@ -17,7 +17,7 @@ export interface CreateParams {
 
 @Injectable()
 export class CreateNftService {
-  constructor(private accountService: AccountService, private eventEmitter: EventEmitter2) { }
+  constructor(private eventEmitter: EventEmitter2) { }
 
   async mintNft(createParams: CreateParams): Promise<unknown> {
     const { metadataUri: metadataUri, maxSupply: maxSupply, network, privateKey: privateKey } = createParams;
@@ -25,7 +25,7 @@ export class CreateNftService {
       throw new Error('No metadata URI');
     }
     const connection = new Connection(clusterApiUrl(network), 'confirmed');
-    const from = this.accountService.getKeypair(privateKey);
+    const from = AccountUtils.getKeypair(privateKey);
     const wallet = new NodeWallet(from);
     const nft = await actions.mintNFT({
       connection,
