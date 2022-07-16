@@ -4,7 +4,7 @@ import { applyDecorators } from '@nestjs/common';
 
 export function GetTokenOpenApi() {
   return applyDecorators(
-    ApiOperation({ summary: 'Mint Token' }),
+    ApiOperation({ summary: 'Get Token Info' }),
     ApiCreatedResponse({
       description: 'Token info',
       schema: {
