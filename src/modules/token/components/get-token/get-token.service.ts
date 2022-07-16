@@ -45,7 +45,7 @@ async function transformTokenInfo(connection: Connection,  mint: Mint): Promise<
 export class GetTokenService {
   async getToken(getTokenDto: GetTokenDto): Promise<any> {
     try {
-      const { network, token_address  } = getTokenDto;
+      const { network, token_address } = getTokenDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
       const tokenInfo = await getMint(connection, new PublicKey(token_address));
