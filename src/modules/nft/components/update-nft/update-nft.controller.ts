@@ -14,7 +14,7 @@ import { AccountUtils } from 'src/common/utils/account-utils';
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class UpdateNftController {
-  constructor(private updateNftService: UpdateNftService, private storageService: StorageMetadataService, private dataFetcher: RemoteDataFetcherService) {}
+  constructor(private updateNftService: UpdateNftService, private storageService: StorageMetadataService, private dataFetcher: RemoteDataFetcherService) { }
 
   @UpdateOpenApi()
   @Put('update')
@@ -45,7 +45,7 @@ export class UpdateNftController {
       description: updateNftDto.description,
       symbol: updateNftDto.symbol,
       attributes: attr,
-      seller_fee_basis_points: updateNftDto.royalty,
+      royalty: updateNftDto.royalty,
       share: 100,
       external_url: nftInfo.external_url,
     };
