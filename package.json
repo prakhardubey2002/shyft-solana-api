@@ -1,10 +1,10 @@
 {
-  "name": "shyft-solana-api",
+  "name": "Shyft APIs",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "The ultimate standard for web3 development.",
+  "author": "team@shyft.to",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",

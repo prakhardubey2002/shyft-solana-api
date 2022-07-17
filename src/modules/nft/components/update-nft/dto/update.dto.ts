@@ -39,7 +39,6 @@ export class UpdateNftDto {
     description: 'NFT name',
     example: 'fish eyes',
   })
-  @IsNotEmpty()
   @IsString()
   @IsOptional()
   readonly name: string;
@@ -50,7 +49,6 @@ export class UpdateNftDto {
     description: 'NFT symbol',
     example: 'FYE',
   })
-  @IsNotEmpty()
   @IsString()
   @IsOptional()
   readonly symbol: string;
@@ -61,7 +59,6 @@ export class UpdateNftDto {
     description: 'NFT description',
     example: 'Girl with beautiful eyes',
   })
-  @IsNotEmpty()
   @IsString()
   @IsOptional()
   readonly description: string;
@@ -72,7 +69,6 @@ export class UpdateNftDto {
     description: 'attributes associated to this NFT ',
     example: [{ trait_type: 'edification', value: '100' }],
   })
-  @IsNotEmpty()
   @Transform(({ value }) => JSON.parse(value), { toClassOnly: true })
   @IsOptional()
   attributes: object;
@@ -83,7 +79,6 @@ export class UpdateNftDto {
     description: 'NFT royalty on secondary sales, between 0 - 100',
     example: '100',
   })
-  @IsNotEmpty()
   @IsNumber()
   @Transform(({ value }) => {
     value = Math.max(0, Math.min(value, 100));
