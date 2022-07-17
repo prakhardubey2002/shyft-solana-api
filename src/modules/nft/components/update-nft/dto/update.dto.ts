@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
 export class UpdateNftDto {
@@ -41,6 +41,7 @@ export class UpdateNftDto {
   })
   @IsNotEmpty()
   @IsString()
+  @IsOptional()
   readonly name: string;
 
   @ApiProperty({
@@ -51,6 +52,7 @@ export class UpdateNftDto {
   })
   @IsNotEmpty()
   @IsString()
+  @IsOptional()
   readonly symbol: string;
 
   @ApiProperty({
@@ -61,6 +63,7 @@ export class UpdateNftDto {
   })
   @IsNotEmpty()
   @IsString()
+  @IsOptional()
   readonly description: string;
 
   @ApiProperty({
@@ -71,6 +74,7 @@ export class UpdateNftDto {
   })
   @IsNotEmpty()
   @Transform(({ value }) => JSON.parse(value), { toClassOnly: true })
+  @IsOptional()
   attributes: object;
 
   @ApiProperty({
@@ -85,9 +89,10 @@ export class UpdateNftDto {
     value = Math.max(0, Math.min(value, 100));
     value = value * 100; // since 100 = 1%
     return value;
-    },
+  },
     { toClassOnly: true },
   )
+  @IsOptional()
   readonly royalty: number;
 
   @ApiProperty({
@@ -96,5 +101,6 @@ export class UpdateNftDto {
     type: 'string',
     format: 'binary',
   })
+  @IsOptional()
   file: string;
 }
