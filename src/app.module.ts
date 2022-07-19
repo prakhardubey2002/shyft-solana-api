@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { User, UserSchema } from './dal/user.schema';
 import { Emailer } from './common/utils/emailer';
 import { TokenModule } from './modules/token/token.module';
+import { ApiMonitorModule } from './modules/api-monitor/api-monitor.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TokenModule } from './modules/token/token.module';
     NftModule,
     AuthModule,
     TokenModule,
+    ApiMonitorModule,
   ],
   controllers: [AppController],
   providers: [AppService, Emailer],

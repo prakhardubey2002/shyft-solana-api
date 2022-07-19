@@ -14,8 +14,6 @@ import { CreateTokenService } from './create-token.service';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { CreateTokenOpenApi } from './open-api';
 import { StorageMetadataService } from 'src/modules/nft/components/storage-metadata/storage-metadata.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiInvokeEvent } from 'src/modules/api-monitor/api.event';
 
 @ApiTags('Token')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -24,7 +22,6 @@ export class CreateTokenController {
   constructor(
     private createTokenService: CreateTokenService,
     private storageService: StorageMetadataService,
-    private eventEmitter: EventEmitter2
   ) { }
 
   @CreateTokenOpenApi()
@@ -33,8 +30,7 @@ export class CreateTokenController {
   @UseInterceptors(FileInterceptor('file'))
   async createToken(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createTokenDto: CreateTokenDto,
-    @Req() request: any
+    @Body() createTokenDto: CreateTokenDto
   ): Promise<any> {
     let image: string;
     if (file) {
@@ -54,9 +50,6 @@ export class CreateTokenController {
     });
 
     const result = await this.createTokenService.createToken(createTokenDto, uri);
-
-    const nftCreationEvent = new ApiInvokeEvent('token.create', request.apiKey);
-    this.eventEmitter.emit('api.invoked', nftCreationEvent);
 
     return {
       success: true,

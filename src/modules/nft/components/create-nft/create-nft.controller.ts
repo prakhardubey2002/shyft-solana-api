@@ -14,7 +14,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class CreateNftController {
-  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService, private eventEmitter: EventEmitter2) { }
+  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService) { }
 
   @CreateOpenApi()
   @Post('create')
@@ -46,9 +46,6 @@ export class CreateNftController {
     };
 
     const nft = await this.createNftService.mintNft(mintNftRequest);
-
-    const nftCreationEvent = new ApiInvokeEvent('nft.create', request.apiKey);
-    this.eventEmitter.emit('api.invoked', nftCreationEvent);
 
     return {
       success: true,

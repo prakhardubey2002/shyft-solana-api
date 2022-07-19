@@ -1,9 +1,9 @@
 export class ApiInvokeEvent {
-	constructor(apiEndpoint: string, apiKey: string) {
-		this.apiKey = apiKey;
-		this.endpoint = apiEndpoint;
-	}
+  constructor(apiEndpoint: string, apiKey: string) {
+    this.apiKey = apiKey;
+    this.endpoint = apiEndpoint;
+  }
 
-	endpoint: string;
-	apiKey: string;
+  endpoint: string;
+  apiKey: string;
 }

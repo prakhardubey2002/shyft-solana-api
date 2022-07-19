@@ -66,9 +66,6 @@ export class UpdateNftController {
       primary_sale_happened: nftInfo.primary_sale_happened,
     });
 
-    const nftCreationEvent = new ApiInvokeEvent('nft.update', request.apiKey);
-    this.eventEmitter.emit('api.invoked', nftCreationEvent);
-
     return {
       success: true,
       message: 'NFT updated',
