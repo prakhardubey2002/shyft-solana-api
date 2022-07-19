@@ -30,8 +30,7 @@ export class CreateNftService {
       const nft = await actions.mintNFT({
         connection,
         wallet,
-        uri: metadataUri,
-        maxSupply: maxSupply || 1,
+        maxSupply: maxSupply ?? 0,
       });
 
       const nftCreationEvent = new NftCreationEvent(nft.mint.toString(), createParams.network, createParams.userId);
