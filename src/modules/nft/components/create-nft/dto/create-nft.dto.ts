@@ -79,10 +79,10 @@ export class CreateNftDto {
   @ApiProperty({
     title: 'max_supply',
     type: Number,
-    description: 'NFT max_supply_number',
+    description: 'NFT max_supply_number, defaults to 0',
     example: '1',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly max_supply: number;
@@ -90,10 +90,10 @@ export class CreateNftDto {
   @ApiProperty({
     title: 'Royalty',
     type: Number,
-    description: 'NFT royalty on secondary sales, between 0 - 100',
+    description: 'NFT royalty on secondary sales, between 0 - 100, default 0',
     example: '5',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly royalty: number;
