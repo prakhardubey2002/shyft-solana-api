@@ -4,8 +4,9 @@
 name: Solana API CI
 
 on:
-  push:
+  release:
     branches: [ main ]
+    action: published 
 
 jobs:
   build:

@@ -2,17 +2,15 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection, NodeWallet, programs } from '@metaplex/js';
-import { AccountService } from 'src/modules/account/account.service';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { NftUpdateEvent } from '../../../db/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Network } from 'src/dto/network.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 
-interface UpdateParams
-{
-  update_authority : string,
-  seller_fee_basis_points: number,
+interface UpdateParams {
+  update_authority: string,
+  royalty: number,
   private_key: string,
   is_mutable: boolean,
   primary_sale_happened: boolean,
@@ -38,7 +36,7 @@ export class UpdateNftService {
         name,
         symbol,
         update_authority,
-        seller_fee_basis_points,
+        royalty,
         private_key,
         is_mutable,
         primary_sale_happened,
@@ -67,7 +65,7 @@ export class UpdateNftService {
           name: name,
           symbol: symbol,
           uri: metaDataUri,
-          sellerFeeBasisPoints: seller_fee_basis_points,
+          sellerFeeBasisPoints: royalty,
           creators: creators,
           uses: null,
           collection: null

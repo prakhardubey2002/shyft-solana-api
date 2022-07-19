@@ -17,8 +17,6 @@ interface IpfsUploadResponse {
 
 @Injectable()
 export class StorageMetadataService {
-  constructor(private accountService: AccountService) { }
-
   async uploadToIPFS(file: Blob): Promise<IpfsUploadResponse> {
     const ipfstx = await storageClient.storeBlob(file);
     return { cid: ipfstx, uri: `${configuration().ipfsGateway}` + `${ipfstx}` };
@@ -33,7 +31,7 @@ export class StorageMetadataService {
       symbol,
       attributes,
       share,
-      seller_fee_basis_points,
+      royalty,
       external_url,
     } = createMetadataDto;
 
@@ -41,12 +39,12 @@ export class StorageMetadataService {
       name,
       symbol,
       description,
-      seller_fee_basis_points: seller_fee_basis_points ? seller_fee_basis_points : 0,
+      seller_fee_basis_points: royalty ? royalty : 0,
       external_url: external_url ? external_url : '',
       image,
       attributes,
       properties: {
-        creators: [{ creator, verified: true, share }],
+        creators: [{ address: creator, verified: true, share }],
       },
     });
 
@@ -61,7 +59,7 @@ export class StorageMetadataService {
       name,
       symbol,
       description: description ?? 'Created with Shyft.to',
-      image,
+      image, //set shyft logo as default
     });
 
     const uploadResponse = await this.uploadToIPFS(new Blob([metadata], { type: 'application/json' }));

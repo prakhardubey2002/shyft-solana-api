@@ -17,7 +17,7 @@ export class GetTokenController {
     const result = await this.getTokenService.getToken(getTokenDto);
     return {
       success: true,
-      message: 'Token minted successfully',
+      message: 'Tokens info',
       result,
     };
   }

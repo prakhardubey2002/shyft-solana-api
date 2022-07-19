@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Network } from 'src/dto/netwotk.dto';
 
 export class UpdateNftDto {
@@ -8,7 +8,7 @@ export class UpdateNftDto {
     title: 'network',
     type: String,
     enum: Network,
-    description: 'Select network',
+    description: 'Select solana blockchain environment ',
   })
   @IsNotEmpty()
   readonly network: Network;
@@ -16,7 +16,7 @@ export class UpdateNftDto {
   @ApiProperty({
     title: 'private_key',
     type: String,
-    description: 'YOUR_WALLET_PRIVATE_KEY',
+    description: 'NFT holder\'s wallet\'s private key',
     example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
@@ -26,7 +26,7 @@ export class UpdateNftDto {
   @ApiProperty({
     title: 'token_address',
     type: String,
-    description: 'YOUR_NFT_TOKEN_ADDRESS',
+    description: 'address of the NFT to be updated',
     example: 'HJ32KZye152eCFQYrKDcoyyq77dVDpa8SXE6v8T1HkBP',
   })
   @IsNotEmpty()
@@ -39,8 +39,8 @@ export class UpdateNftDto {
     description: 'NFT name',
     example: 'fish eyes',
   })
-  @IsNotEmpty()
   @IsString()
+  @IsOptional()
   readonly name: string;
 
   @ApiProperty({
@@ -49,8 +49,8 @@ export class UpdateNftDto {
     description: 'NFT symbol',
     example: 'FYE',
   })
-  @IsNotEmpty()
   @IsString()
+  @IsOptional()
   readonly symbol: string;
 
   @ApiProperty({
@@ -59,36 +59,43 @@ export class UpdateNftDto {
     description: 'NFT description',
     example: 'Girl with beautiful eyes',
   })
-  @IsNotEmpty()
   @IsString()
+  @IsOptional()
   readonly description: string;
 
   @ApiProperty({
     title: 'attributes',
     type: Object,
-    description: 'NFT attributes',
+    description: 'attributes associated to this NFT ',
     example: [{ trait_type: 'edification', value: '100' }],
   })
-  @IsNotEmpty()
   @Transform(({ value }) => JSON.parse(value), { toClassOnly: true })
+  @IsOptional()
   attributes: object;
 
   @ApiProperty({
     title: 'seller_fee_basis_points',
     type: String,
-    description: 'NFT seller fee basis points',
+    description: 'NFT royalty on secondary sales, between 0 - 100',
     example: '100',
   })
-  @IsNotEmpty()
   @IsNumber()
-  @Transform(({ value }) => parseInt(value), { toClassOnly: true })
+  @Transform(({ value }) => {
+    value = Math.max(0, Math.min(value, 100));
+    value = value * 100; // since 100 = 1%
+    return value;
+  },
+    { toClassOnly: true },
+  )
+  @IsOptional()
   readonly royalty: number;
 
   @ApiProperty({
     name: 'file',
-    description: 'File to be uploaded',
+    description: 'digital file that NFT represents',
     type: 'string',
     format: 'binary',
   })
+  @IsOptional()
   file: string;
 }

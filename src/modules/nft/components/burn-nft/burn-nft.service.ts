@@ -9,7 +9,7 @@ import { NftDeleteEvent } from '../../../db/db-sync/db.events';
 
 @Injectable()
 export class BurnNftService {
-  constructor( private eventEmitter: EventEmitter2 ) { }
+  constructor(private eventEmitter: EventEmitter2) { }
   async burnNft(burnNftDto: BurnNftDto): Promise<any> {
     try {
       const { network, private_key, token_address, close, amount } = burnNftDto;

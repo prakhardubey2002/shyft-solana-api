@@ -30,6 +30,7 @@ export class CreateTokenService {
         symbol,
         mint_authority,
         freeze_authority,
+        decimals,
       } = createTokenDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
@@ -69,7 +70,7 @@ export class CreateTokenService {
         }),
         createInitializeMintInstruction(
           mintKeypair.publicKey,
-          9, // decimals
+          decimals ?? 9, // decimals
           mintAuthority,
           freezeAuthority,
           TOKEN_PROGRAM_ID,
