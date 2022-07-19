@@ -20,24 +20,34 @@ interface TokenResponse
   decimals: number,
 }
 
-async function transformTokenInfo(connection: Connection,  mint: Mint): Promise<TokenResponse>
-{
+async function transformTokenInfo(connection: Connection, mint: Mint): Promise<TokenResponse> {
   if (mint) {
-    //Get metadata
-    const pda = findMetadataPda(mint.address);
-    const meta = await Metadata.load(connection, pda);
+    let uriData;
+    try {
+      //Get metadata
+      const pda = findMetadataPda(mint.address);
+      const meta = await Metadata.load(connection, pda);
 
-    const uriData = await Utility.request(meta.data.data.uri);
-    const decimalAmt = Math.pow(10, mint.decimals);
-
-    return {
-      ...uriData,
-      address: mint.address,
-      mint_authority: mint.mintAuthority,
-      freeze_authority: mint.mintAuthority,
-      current_supply: Number(mint.supply) / decimalAmt,
-      decimals: mint.decimals,
-    };
+      if (meta) {
+        uriData = await Utility.request(meta.data.data.uri);
+      }
+    } catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      const decimalAmt = Math.pow(10, mint.decimals);
+      return {
+        name: uriData?.name,
+        symbol: uriData?.symbol,
+        description: uriData?.description,
+        image: uriData?.image,
+        address: mint.address.toBase58(),
+        mint_authority: mint.mintAuthority.toBase58(),
+        freeze_authority: mint.mintAuthority.toBase58(),
+        current_supply: Number(mint.supply) / decimalAmt,
+        decimals: mint.decimals,
+      };
+    }
   }
 }
 
@@ -49,6 +59,7 @@ export class GetTokenService {
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
       const tokenInfo = await getMint(connection, new PublicKey(token_address));
+      console.log(tokenInfo);
       return await transformTokenInfo(connection, tokenInfo);
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);

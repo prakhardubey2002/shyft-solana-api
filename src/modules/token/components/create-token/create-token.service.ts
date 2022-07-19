@@ -1,12 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   getMinimumBalanceForRentExemptMint,
-  getAssociatedTokenAddress,
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
   createInitializeMintInstruction,
-  createAssociatedTokenAccountInstruction,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import {
