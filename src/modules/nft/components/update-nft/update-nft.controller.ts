@@ -1,4 +1,4 @@
-import { Body, Controller, Put, UploadedFile, UseInterceptors, Version } from '@nestjs/common';
+import { Body, Controller, Put, Req, UploadedFile, UseInterceptors, Version } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
@@ -9,6 +9,8 @@ import { UpdateOpenApi } from './open-api';
 import { RemoteDataFetcherService } from 'src/modules/db/remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto } from 'src/modules/db/remote-data-fetcher/dto/data-fetcher.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ApiInvokeEvent } from 'src/modules/api-monitor/api.event';
 
 function transformAttributes(attributes) {
   const attr = []
@@ -23,7 +25,7 @@ function transformAttributes(attributes) {
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class UpdateNftController {
-  constructor(private updateNftService: UpdateNftService, private storageService: StorageMetadataService, private dataFetcher: RemoteDataFetcherService) { }
+  constructor(private updateNftService: UpdateNftService, private storageService: StorageMetadataService, private dataFetcher: RemoteDataFetcherService, private eventEmitter: EventEmitter2) { }
 
   @UpdateOpenApi()
   @Put('update')
@@ -32,6 +34,7 @@ export class UpdateNftController {
   async update(
     @UploadedFile() file: Express.Multer.File,
     @Body() updateNftDto: UpdateNftDto,
+    @Req() request: any
   ): Promise<any> {
     const nftInfo = (await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDto.network, updateNftDto.token_address))).getNftInfoDto();
     let image = nftInfo.image_uri;
@@ -62,6 +65,10 @@ export class UpdateNftController {
       is_mutable: nftInfo.is_mutable,
       primary_sale_happened: nftInfo.primary_sale_happened,
     });
+
+    const nftCreationEvent = new ApiInvokeEvent('nft.update', request.apiKey);
+    this.eventEmitter.emit('api.invoked', nftCreationEvent);
+
     return {
       success: true,
       message: 'NFT updated',

@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Req } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongoose';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
+import { ApiInvokeEvent } from 'src/modules/api-monitor/api.event';
 
 @Injectable()
 export class SearchNftService {
-	constructor(private nftInfoAccessor: NftInfoAccessor) { }
-	async searchNftsByAttributes(query: any, apiKeyId: ObjectId): Promise<any> {
+	constructor(private nftInfoAccessor: NftInfoAccessor, private eventEmitter: EventEmitter2) { }
+	async searchNftsByAttributes(query: any, apiKeyId: ObjectId, @Req() request: any): Promise<any> {
 		const filter = {}
 		for (const key in query) {
 			const k = "attributes." + key;
@@ -23,6 +25,9 @@ export class SearchNftService {
 		const result = filteredResult.map(r => {
 			return getNftDbResponseFromNftInfo(r);
 		})
+
+		const nftCreationEvent = new ApiInvokeEvent('nft.search', request.apiKey);
+		this.eventEmitter.emit('api.invoked', nftCreationEvent);
 
 		return result;
 	}
