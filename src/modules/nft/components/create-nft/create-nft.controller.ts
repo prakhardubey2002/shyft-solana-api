@@ -7,12 +7,14 @@ import { CreateNftDto } from './dto/create-nft.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { CreateOpenApi } from './open-api';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { ApiInvokeEvent } from 'src/modules/api-monitor/api.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class CreateNftController {
-  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService) { }
+  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService, private eventEmitter: EventEmitter2) { }
 
   @CreateOpenApi()
   @Post('create')
@@ -21,18 +23,17 @@ export class CreateNftController {
   async createNft(@UploadedFile() file: Express.Multer.File, @Body() createNftDto: CreateNftDto, @Req() request: any): Promise<any> {
     const uploadImage = await this.storageService.uploadToIPFS(new Blob([file.buffer], { type: file.mimetype }));
     const image = uploadImage.uri;
-    const creator = AccountUtils.getKeypair(createNftDto.private_key).publicKey.toBase58();
 
     const { uri } = await this.storageService.prepareNFTMetadata({
       network: createNftDto.network,
-      creator: creator,
+      creator: AccountUtils.getKeypair(createNftDto.private_key).publicKey.toBase58(),
       image,
       name: createNftDto.name,
       description: createNftDto.description,
       symbol: createNftDto.symbol,
       attributes: createNftDto.attributes,
       share: 100, //keeping it 100 by default for now createNftDto.share,
-      royalty: createNftDto.royalty, //500 = 5%
+      royalty: createNftDto.royalty * 100, //500 = 5%
       external_url: createNftDto.external_url,
     });
 
@@ -45,6 +46,10 @@ export class CreateNftController {
     };
 
     const nft = await this.createNftService.mintNft(mintNftRequest);
+
+    const nftCreationEvent = new ApiInvokeEvent('nft.create', request.apiKey);
+    this.eventEmitter.emit('api.invoked', nftCreationEvent);
+
     return {
       success: true,
       message: 'NFT created successfully',
