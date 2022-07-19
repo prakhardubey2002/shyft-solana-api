@@ -15,7 +15,6 @@ export class ApiMonitorService {
 				api_key: event.apiKey,
 				endpoint: event.endpoint,
 			}
-			console.log(event);
 			const result = await this.apiMetricAccessor.insert(metric)
 			return result
 		} catch (error) {
