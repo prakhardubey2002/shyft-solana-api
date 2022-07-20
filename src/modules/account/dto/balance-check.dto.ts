@@ -21,5 +21,5 @@ export class BalanceCheckDto {
   })
   @IsNotEmpty()
   @IsString()
-  readonly address: string;
+  readonly wallet: string;
 }

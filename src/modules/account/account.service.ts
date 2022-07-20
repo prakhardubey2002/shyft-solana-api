@@ -1,21 +1,108 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Connection, clusterApiUrl, LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey, sendAndConfirmTransaction } from '@solana/web3.js';
+import {
+  Connection,
+  clusterApiUrl,
+  LAMPORTS_PER_SOL,
+  Transaction,
+  SystemProgram,
+  PublicKey,
+  sendAndConfirmTransaction,
+} from '@solana/web3.js';
 import { BalanceCheckDto } from './dto/balance-check.dto';
 import { SendSolDto } from './dto/send-sol.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { RemoteDataFetcherService } from '../db/remote-data-fetcher/data-fetcher.service';
+import { FetchAllNftDto } from '../db/remote-data-fetcher/dto/data-fetcher.dto';
 
 @Injectable()
-export class AccountService {
-
-  async checkBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
+export class WalletService {
+  constructor(private dataFetcher: RemoteDataFetcherService) {}
+  async getBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
-      const { address, network } = balanceCheckDto;
+      const { wallet, network } = balanceCheckDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      const balance = await connection.getBalance(new PublicKey(address));
+      const balance = await connection.getBalance(new PublicKey(wallet));
       return balance / LAMPORTS_PER_SOL;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  async getTokenBalance(balanceCheckDto: TokenBalanceCheckDto): Promise<number> {
+    try {
+      const { wallet, network, token } = balanceCheckDto;
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      let tokenAccount;
+      try {
+        tokenAccount = await connection.getParsedTokenAccountsByOwner(
+          new PublicKey(wallet),
+          { mint: new PublicKey(token) },
+        );
+      } catch (error) {
+        //Do nothing, if mint account isnt found in the wallet, just return 0
+        console.log(error);
+      } finally {
+        return tokenAccount?.value[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
+      }
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async getAllTokensBalance(balanceCheckDto: BalanceCheckDto): Promise<Record<string, number>[]> {
+    try {
+      const { wallet, network } = balanceCheckDto;
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const allTokenInfo = [];
+      try {
+        const parsedSplAccts = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), {programId: TOKEN_PROGRAM_ID});
+        parsedSplAccts.value.forEach((token) => {
+          const amount = token.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
+          const decimals = token.account?.data?.parsed?.info?.tokenAmount?.decimals;
+          if (decimals > 0 && amount > 0) {
+            const address = token.account?.data?.parsed?.info?.mint;
+            allTokenInfo.push({ address: address, balance: amount });
+          }
+        });
+        return allTokenInfo;
+      } catch (error) {
+        //Do nothing, if mint account isnt found in the wallet, just return 0
+        console.log(error);
+      }
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async getPortfolio(walletDto: BalanceCheckDto) {
+    const portfolio = {};
+    const promises = [];
+    const amtPromise = this.getBalance(walletDto);
+    amtPromise.then((amount) => {
+      portfolio['sol_balance'] = amount;
+    });
+
+    promises.push(amtPromise);
+
+    const tokenPromise = this.getAllTokensBalance(walletDto);
+    tokenPromise.then((res) => {
+      portfolio['num_tokens'] = Object.keys(res)?.length ?? 0;
+      portfolio['tokens'] = res;
+    });
+    promises.push(tokenPromise);
+
+    const nftpromise = this.dataFetcher.fetchAllNfts(new FetchAllNftDto(walletDto.network, walletDto.wallet))
+    nftpromise.then((nfts) => {
+      portfolio['num_nfts'] = nfts.length;
+      portfolio['nfts'] = nfts;
+    });
+
+    promises.push(nftpromise);
+
+    await Promise.allSettled(promises);
+    return portfolio;
   }
 
   async sendSol(sendSolDto: SendSolDto): Promise<string> {

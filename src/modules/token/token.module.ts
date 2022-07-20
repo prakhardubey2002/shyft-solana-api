@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AccountService } from '../account/account.service';
 import { StorageMetadataService } from '../nft/components/storage-metadata/storage-metadata.service';
 import { CreateTokenController } from './components/create-token/create-token.controller';
 import { CreateTokenService } from './components/create-token/create-token.service';
@@ -12,6 +11,6 @@ import { GetTokenService } from './components/get-token/get-token.service';
 
 @Module({
   controllers: [CreateTokenController, BurnTokenController, MintTokenController, GetTokenController],
-  providers: [CreateTokenService, BurnTokenService, MintTokenService, AccountService, StorageMetadataService, GetTokenService],
+  providers: [CreateTokenService, BurnTokenService, MintTokenService, StorageMetadataService, GetTokenService],
 })
 export class TokenModule {}
