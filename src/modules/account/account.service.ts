@@ -42,6 +42,7 @@ export class WalletService {
         );
       } catch (error) {
         //Do nothing, if mint account isnt found in the wallet, just return 0
+        console.log(error);
       } finally {
         return tokenAccount?.value[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
       }
@@ -68,6 +69,7 @@ export class WalletService {
         return allTokenInfo;
       } catch (error) {
         //Do nothing, if mint account isnt found in the wallet, just return 0
+        console.log(error);
       }
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
