@@ -33,7 +33,7 @@ export class CreateNftController {
       symbol: createNftDto.symbol,
       attributes: createNftDto.attributes,
       share: 100, //keeping it 100 by default for now createNftDto.share,
-      royalty: createNftDto.royalty * 100 ?? 0, //500 = 5%
+      royalty: createNftDto.royalty ?? 0, //500 = 5%
       external_url: createNftDto.external_url,
     });
 
