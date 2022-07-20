@@ -7,12 +7,14 @@ import { CreateNftDto } from './dto/create-nft.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { CreateOpenApi } from './open-api';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { ApiInvokeEvent } from 'src/modules/api-monitor/api.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class CreateNftController {
-  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService) {}
+  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService) { }
 
   @CreateOpenApi()
   @Post('create')
@@ -44,6 +46,7 @@ export class CreateNftController {
     };
 
     const nft = await this.createNftService.mintNft(mintNftRequest);
+
     return {
       success: true,
       message: 'NFT created successfully',

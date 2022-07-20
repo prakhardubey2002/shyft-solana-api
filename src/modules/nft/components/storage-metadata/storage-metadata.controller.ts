@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Post,
+  Req,
   UploadedFile,
   UseInterceptors,
   Version,
@@ -17,8 +18,7 @@ import { StorageMetadataService } from './storage-metadata.service';
 @Controller()
 export class StorageMetadataController {
   constructor(
-    private readonly storageMetadataService: StorageMetadataService,
-  ) {}
+    private readonly storageMetadataService: StorageMetadataService) { }
 
   @StorageUploadOpenApi()
   @Post('storage/upload')
@@ -28,6 +28,7 @@ export class StorageMetadataController {
     const uploadResponse = await this.storageMetadataService.uploadToIPFS(
       new Blob([file.buffer], { type: file.mimetype }),
     );
+
     return {
       success: true,
       message: 'File uploaded successfully',
@@ -39,11 +40,11 @@ export class StorageMetadataController {
   @Post('metadata/create')
   @Version('1')
   async createMetadata(
-    @Body() createMetadataDto: CreateMetadataDto,
-  ): Promise<any> {
+    @Body() createMetadataDto: CreateMetadataDto): Promise<any> {
     const metadata = await this.storageMetadataService.prepareNFTMetadata(
       createMetadataDto,
     );
+
     return {
       success: true,
       message: 'Metadata created successfully',

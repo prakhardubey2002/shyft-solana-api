@@ -59,7 +59,6 @@ export class GetTokenService {
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
       const tokenInfo = await getMint(connection, new PublicKey(token_address));
-      console.log(tokenInfo);
       return await transformTokenInfo(connection, tokenInfo);
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);

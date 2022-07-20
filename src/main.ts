@@ -8,7 +8,9 @@ import {
 import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { ApiMetricAccessor } from './dal/api-repo/api-metric.accessor';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { ApiMonitorService } from './modules/api-monitor/api.event-handeler';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthService } from './modules/auth/auth.service';
 
@@ -38,6 +40,7 @@ async function bootstrap() {
   const authService = app.get(AuthService);
   app.useGlobalGuards(new AuthGuard(reflector, authService));
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new ApiMonitorService(app.get(ApiMetricAccessor)));
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

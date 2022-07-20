@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Post,
+  Req,
   UploadedFile,
   UseInterceptors,
   Version,
@@ -21,7 +22,7 @@ export class CreateTokenController {
   constructor(
     private createTokenService: CreateTokenService,
     private storageService: StorageMetadataService,
-  ) {}
+  ) { }
 
   @CreateTokenOpenApi()
   @Post('create')
@@ -29,7 +30,7 @@ export class CreateTokenController {
   @UseInterceptors(FileInterceptor('file'))
   async createToken(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createTokenDto: CreateTokenDto,
+    @Body() createTokenDto: CreateTokenDto
   ): Promise<any> {
     let image: string;
     if (file) {
@@ -49,6 +50,7 @@ export class CreateTokenController {
     });
 
     const result = await this.createTokenService.createToken(createTokenDto, uri);
+
     return {
       success: true,
       message: 'Token created successfully',
