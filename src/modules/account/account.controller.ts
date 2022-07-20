@@ -9,24 +9,25 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { BalanceCheckDto } from './dto/balance-check.dto';
-import { AccountService } from './account.service';
+import { WalletService } from './account.service';
 import { SendSolDto } from './dto/send-sol.dto';
-import { BalanceCheckOpenApi, SendBalanceOpenApi } from './open-api';
+import { AllTokensOpenApi, BalanceCheckOpenApi, PortfoliOpenApi, SendBalanceOpenApi, TokenBalanceOpenApi } from './open-api';
+import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
 
-@ApiTags('Account')
+@ApiTags('Wallet')
 @ApiSecurity('api_key', ['x-api-key'])
-@Controller('account')
+@Controller('wallet')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly walletService: WalletService) {}
   @BalanceCheckOpenApi()
   @Get('balance')
   @Version('1')
   async balance(@Query() balanceCheckDto: BalanceCheckDto): Promise<any> {
-    const balance = await this.accountService.checkBalance(balanceCheckDto);
+    const balance = await this.walletService.getBalance(balanceCheckDto);
     return {
       success: true,
       message: 'Balance fetched successfully',
-      result: balance,
+      result: { balance: balance },
     };
   }
 
@@ -36,7 +37,7 @@ export class AccountController {
   @HttpCode(200)
   async sendSol(@Body() sendSolDto: SendSolDto): Promise<any> {
     const { amount } = sendSolDto;
-    const transactionHash = await this.accountService.sendSol(sendSolDto);
+    const transactionHash = await this.walletService.sendSol(sendSolDto);
     return {
       success: true,
       message: `${amount} SOL transferred successfully`,
@@ -44,6 +45,43 @@ export class AccountController {
         amount,
         transactionHash,
       },
+    };
+  }
+
+  @TokenBalanceOpenApi()
+  @Get('token_balance')
+  @Version('1')
+  async tokenBalance(@Query() tokenBalanceCheckDto: TokenBalanceCheckDto): Promise<any> {
+    const balance = await this.walletService.getTokenBalance(tokenBalanceCheckDto);
+    return {
+      success: true,
+      message: 'Token balance fetched successfully',
+      result: { balance: balance },
+    };
+  }
+
+  @PortfoliOpenApi()
+  @Get('get_portfolio')
+  @Version('1')
+  async portfolio(@Query() balanceCheckDto: BalanceCheckDto): Promise<any> {
+    const res = await this.walletService.getPortfolio(balanceCheckDto);
+    return {
+      success: true,
+      message: 'Portfolio fetched successfully',
+      result: res,
+    };
+  }
+
+  @AllTokensOpenApi()
+  @Get('all_tokens')
+  @Version('1')
+  async allTokens(@Query() balanceCheckDto: BalanceCheckDto): Promise<any> {
+    const allTokens = await this.walletService.getAllTokensBalance(balanceCheckDto);
+    const count = Object.keys(allTokens)?.length ?? 0;
+    return {
+      success: true,
+      message: `${count} tokens fetched successfully`,
+      result: allTokens,
     };
   }
 }

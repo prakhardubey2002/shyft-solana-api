@@ -15,7 +15,6 @@ export class ReadNftService {
     try {
       const { network, address, update_authority } = readAllNftDto;
       const fetchAllNft = new FetchAllNftDto(network, address, update_authority);
-
       const dbFilter = { owner: address, network: network };
 
       if (update_authority) {

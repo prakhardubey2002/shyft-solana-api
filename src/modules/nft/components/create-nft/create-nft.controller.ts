@@ -7,8 +7,6 @@ import { CreateNftDto } from './dto/create-nft.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { CreateOpenApi } from './open-api';
 import { AccountUtils } from 'src/common/utils/account-utils';
-import { ApiInvokeEvent } from 'src/modules/api-monitor/api.event';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -33,7 +31,7 @@ export class CreateNftController {
       symbol: createNftDto.symbol,
       attributes: createNftDto.attributes,
       share: 100, //keeping it 100 by default for now createNftDto.share,
-      royalty: createNftDto.royalty * 100 ?? 0, //500 = 5%
+      royalty: createNftDto.royalty ?? 0, //500 = 5%
       external_url: createNftDto.external_url,
     });
 

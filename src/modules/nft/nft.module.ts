@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AccountService } from '../account/account.service';
+import { WalletService } from '../account/account.service';
 import { CreateNftController } from './components/create-nft/create-nft.controller';
 import { CreateNftService } from './components/create-nft/create-nft.service';
 import { ReadNftController } from './components/read-nft/read-nft.controller';
@@ -22,6 +22,6 @@ import { ApiMonitorService } from '../api-monitor/api.event-handeler';
 @Module({
   controllers: [CreateNftController, ReadNftController, BurnNftController, UpdateNftController, StorageMetadataController, SearchNftcontroller],
   imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), EventEmitterModule.forRoot(), DbModule, ApiMonitorModule],
-  providers: [CreateNftService, AccountService, ReadNftService, BurnNftService, UpdateNftService, StorageMetadataService, SearchNftService, ApiMonitorService],
+  providers: [CreateNftService, WalletService, ReadNftService, BurnNftService, UpdateNftService, StorageMetadataService, SearchNftService, ApiMonitorService],
 })
 export class NftModule { }

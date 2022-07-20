@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { HttpModule, HttpService } from '@nestjs/axios';
+import { HttpModule } from '@nestjs/axios';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo, NftInfoSchema } from 'src/dal/nft-repo/nft-info.schema';
