@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://shyft.to/" target="blank"><img src="	https://shyft.to/assets/images/shyft_logo_2.svg" width="320" alt="Shyft Logo" /></a>
+  <a href="http://shyft.to/" target="blank"><img src="https://shyft.to/assets/images/shyft_logo_2.svg" width="320" alt="Shyft Logo" /></a>
 </p>
 
 # Why is SHYFT required?
