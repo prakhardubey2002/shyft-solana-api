@@ -10,11 +10,11 @@ Launching a scalable decentralized app in today's time is like going on a monste
 
 [Get your free API key](https://shyft.to/get-api-key) to start hacking with SHYFT and equip yourself with the above and more super powers.
 
-[API Documentation](https://docs.shyft.to/)
+[Documentation](https://docs.shyft.to/)
 
 [Try out in Swagger UI](https://api.shyft.to/sol/api/explore/)
 
-[Postman API Documentation](https://documenter.getpostman.com/view/18419720/UzQvt5Kf)
+[Postman Documentation](https://documenter.getpostman.com/view/18419720/UzQvt5Kf)
 
 [Import Postman Collection](https://www.getpostman.com/collections/eb766924a309c10d6d7e)
 
