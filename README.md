@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://shyft.to/" target="blank"><img src="	https://shyft.to/assets/images/shyft_logo_2.svg" width="320" alt="Shyft Logo" /></a>
+  <a href="http://shyft.to/" target="blank"><img src="https://shyft.to/assets/images/shyft_logo_2.svg" width="320" alt="Shyft Logo" /></a>
 </p>
 
 # Why is SHYFT required?
@@ -10,9 +10,9 @@ Launching a scalable decentralized app in today's time is like going on a monste
 
 [Get your free API key](https://shyft.to/get-api-key) to start hacking with SHYFT and equip yourself with the above and more super powers.
 
-[API Docs](https://docs.shyft.to/)
+[API Documentation](https://docs.shyft.to/)
 
-[Swagger UI](https://api.shyft.to/sol/api/explore/)
+[Try out in Swagger UI](https://api.shyft.to/sol/api/explore/)
 
 [Postman API Documentation](https://documenter.getpostman.com/view/18419720/UzQvt5Kf)
 
