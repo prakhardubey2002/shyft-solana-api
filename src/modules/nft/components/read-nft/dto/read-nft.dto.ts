@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class ReadNftDto {
   @ApiProperty({
     title: 'network',
     type: String,
-    enum: Network,
+    enum: WalletAdapterNetwork,
     description: 'Select solana blockchain environment',
   })
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
     title: 'token_address',

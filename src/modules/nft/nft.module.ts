@@ -18,10 +18,39 @@ import { SearchNftcontroller } from './components/search-nft/search-nft.controll
 import { SearchNftService } from './components/search-nft/search-nft.service';
 import { TransferNftService } from './components/transfer-nft/transfer-nft.service';
 import { TransferNftController } from './components/transfer-nft/transfer-nft.controller';
+import { CreateNftDetachController } from './components/create-nft-detach/create-nft-detach.controller';
+import { CreateNftDetachService } from './components/create-nft-detach/create-nft-detach.service';
+import { BurnNftDetachController } from './components/burn-nft-detach/burn-nft-detach.controller';
+import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-detach.service';
 
 @Module({
-  controllers: [CreateNftController, ReadNftController, BurnNftController, UpdateNftController, StorageMetadataController, SearchNftcontroller, TransferNftController],
-  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), EventEmitterModule.forRoot(), DbModule],
-  providers: [CreateNftService, WalletService, ReadNftService, BurnNftService, UpdateNftService, StorageMetadataService, SearchNftService, TransferNftService],
+  controllers: [
+    CreateNftController,
+    CreateNftDetachController,
+    ReadNftController,
+    BurnNftController,
+    BurnNftDetachController,
+    UpdateNftController,
+    StorageMetadataController,
+    SearchNftcontroller,
+    TransferNftController,
+  ],
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    EventEmitterModule.forRoot(),
+    DbModule,
+  ],
+  providers: [
+    CreateNftService,
+    CreateNftDetachService,
+    WalletService,
+    ReadNftService,
+    BurnNftService,
+    BurnNftDetachService,
+    UpdateNftService,
+    StorageMetadataService,
+    SearchNftService,
+    TransferNftService,
+  ],
 })
-export class NftModule { }
+export class NftModule {}

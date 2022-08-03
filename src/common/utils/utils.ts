@@ -1,6 +1,6 @@
 import { clusterApiUrl } from '@solana/web3.js';
 import axios from 'axios';
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { configuration } from '../configs/config';
 
 const endpoint = {
@@ -26,12 +26,12 @@ export const Utility = {
     }
   },
 
-  clusterUrl: function (network: Network): string {
+  clusterUrl: function (network: WalletAdapterNetwork): string {
     try {
       switch (network) {
-        case Network.devnet:
+        case WalletAdapterNetwork.Devnet:
           return endpoint.https.devnet;
-        case Network.mainnet:
+        case WalletAdapterNetwork.Mainnet:
           return endpoint.https['mainnet-beta'];
         default:
           return clusterApiUrl(network);
@@ -40,5 +40,4 @@ export const Utility = {
       throw error;
     }
   },
-
 };

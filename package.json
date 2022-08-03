@@ -50,6 +50,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
+    "shyft-js": "github:Shyft-to/js",
     "swagger-ui-express": "^4.4.0"
   },
   "devDependencies": {
@@ -87,7 +88,9 @@
       "ts"
     ],
     "rootDir": "./",
-    "modulePaths": ["<rootDir>"],
+    "modulePaths": [
+      "<rootDir>"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

@@ -5,7 +5,7 @@ import { Connection, NodeWallet, programs } from '@metaplex/js';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { NftUpdateEvent } from '../../../db/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Network } from 'src/dto/network.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
 
 interface UpdateParams {
@@ -15,7 +15,7 @@ interface UpdateParams {
   private_key: string,
   is_mutable: boolean,
   primary_sale_happened: boolean,
-  network: Network,
+  network: WalletAdapterNetwork,
   token_address: string,
   name: string,
   symbol: string,

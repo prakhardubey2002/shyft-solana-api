@@ -1,17 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
-
-import { Network } from '../../../dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class BalanceCheckDto {
   @ApiProperty({
     title: 'network',
     type: String,
-    enum: Network,
+    enum: WalletAdapterNetwork,
     description: 'Select solana blockchain environment',
   })
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
     title: 'address',
@@ -29,11 +28,11 @@ export class ResolveAddressDto {
   @ApiProperty({
     title: 'network',
     type: String,
-    enum: Network,
+    enum: WalletAdapterNetwork,
     description: 'Select solana blockchain environment',
   })
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
     title: 'address',

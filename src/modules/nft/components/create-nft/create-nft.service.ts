@@ -3,11 +3,11 @@ import { clusterApiUrl } from '@solana/web3.js';
 import { actions, Connection, NodeWallet } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NftCreationEvent } from '../../../db/db-sync/db.events';
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ObjectId } from 'mongoose';
 import { AccountUtils } from 'src/common/utils/account-utils';
 export interface CreateParams {
-  network: Network;
+  network: WalletAdapterNetwork;
   privateKey: string;
   metadataUri: string;
   maxSupply: number;

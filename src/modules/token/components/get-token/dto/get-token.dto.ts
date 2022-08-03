@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Network } from 'src/dto/netwotk.dto';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class GetTokenDto {
   @ApiProperty({
     title: 'network',
     type: String,
-    enum: Network,
+    enum: WalletAdapterNetwork,
     description: 'Select network',
   })
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
     title: 'mint_token',
