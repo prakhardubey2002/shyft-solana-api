@@ -43,7 +43,7 @@ export class CreateNftController {
       userId: request.id,
     };
 
-    const nft = await this.createNftService.mintNft(mintNftRequest);
+    const nft = await this.createNftService.createMasterNft(mintNftRequest);
 
     return {
       success: true,

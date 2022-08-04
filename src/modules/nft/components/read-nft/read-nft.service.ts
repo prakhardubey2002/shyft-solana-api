@@ -9,7 +9,11 @@ import { FetchAllNftDto, FetchNftDto, NftDbResponse } from '../../../db/remote-d
 
 @Injectable()
 export class ReadNftService {
-  constructor(private remoteDataFetcher: RemoteDataFetcherService, private nftInfoAccessor: NftInfoAccessor, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private remoteDataFetcher: RemoteDataFetcherService,
+    private nftInfoAccessor: NftInfoAccessor,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {

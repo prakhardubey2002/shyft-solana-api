@@ -18,7 +18,7 @@ export interface CreateParams {
 export class CreateNftService {
   constructor(private eventEmitter: EventEmitter2) { }
 
-  async mintNft(createParams: CreateParams): Promise<unknown> {
+  async createMasterNft(createParams: CreateParams): Promise<unknown> {
     const { metadataUri: metadataUri, maxSupply: maxSupply, network, privateKey: privateKey } = createParams;
     if (!metadataUri) {
       throw new Error('No metadata URI');

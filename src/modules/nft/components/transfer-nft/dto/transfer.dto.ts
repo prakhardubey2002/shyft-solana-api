@@ -54,5 +54,5 @@ export class TransferNftDto {
   @Transform(({ value }) => {
     return value ?? true;
   })
-  readonly transfer_authority: string;
+  readonly transfer_authority: boolean;
 }

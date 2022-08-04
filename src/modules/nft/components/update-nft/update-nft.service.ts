@@ -58,7 +58,7 @@ export class UpdateNftService {
         share: 100,
       }))
 
-      const newAuthority = new_update_authority ? new_update_authority : undefined;;
+      const newAuthority = new_update_authority ? new_update_authority : update_authority;
 
       const res = new programs.metadata.UpdateMetadataV2({
         recentBlockhash: (await connection.getLatestBlockhash('finalized')).blockhash,

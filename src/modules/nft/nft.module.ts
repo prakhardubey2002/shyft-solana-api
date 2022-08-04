@@ -18,10 +18,12 @@ import { SearchNftcontroller } from './components/search-nft/search-nft.controll
 import { SearchNftService } from './components/search-nft/search-nft.service';
 import { TransferNftService } from './components/transfer-nft/transfer-nft.service';
 import { TransferNftController } from './components/transfer-nft/transfer-nft.controller';
+import { MintNftController } from './components/mint-nft/mint-nft.controller';
+import { MintNftService } from './components/mint-nft/mint-nft.service';
 
 @Module({
-  controllers: [CreateNftController, ReadNftController, BurnNftController, UpdateNftController, StorageMetadataController, SearchNftcontroller, TransferNftController],
+  controllers: [CreateNftController, ReadNftController, BurnNftController, UpdateNftController, StorageMetadataController, SearchNftcontroller, TransferNftController, MintNftController],
   imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), EventEmitterModule.forRoot(), DbModule],
-  providers: [CreateNftService, WalletService, ReadNftService, BurnNftService, UpdateNftService, StorageMetadataService, SearchNftService, TransferNftService],
+  providers: [CreateNftService, WalletService, ReadNftService, BurnNftService, UpdateNftService, StorageMetadataService, SearchNftService, TransferNftService, MintNftService],
 })
 export class NftModule { }

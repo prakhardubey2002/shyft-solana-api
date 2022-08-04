@@ -1,11 +1,10 @@
-import { ApiOperation, ApiConsumes, ApiOkResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 
 import { applyDecorators } from '@nestjs/common';
 
 export function TransferOpenApi() {
   return applyDecorators(
     ApiOperation({ summary: 'Transfer NFT' }),
-    ApiConsumes('multipart/form-data'),
     ApiOkResponse({
       description: 'NFT Transfer',
       schema: {
