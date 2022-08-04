@@ -40,6 +40,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/swagger": "^5.2.1",
     "@solana/spl-token": "^0.2.0",
+    "@solana/spl-token-registry": "^0.2.4574",
     "@solana/web3.js": "^1.43.1",
     "bs58": "^5.0.0",
     "class-transformer": "^0.5.1",

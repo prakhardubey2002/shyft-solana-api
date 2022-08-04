@@ -34,28 +34,6 @@ export class CreateTokenDto {
   readonly name: string;
 
   @ApiProperty({
-    title: 'Freeze Authority',
-    type: String,
-    description: 'Who has the authority to freeze this token, no more tokens would be created.',
-    example: 'BvzKvn6nUUAYtKu2pH3h5SbUkUNcRPQawg4bURBiojJx',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  readonly freeze_authority: string;
-
-  @ApiProperty({
-    title: 'mint Authority',
-    type: String,
-    description: 'Who has the authority to mint more of these tokens.',
-    example: 'BvzKvn6nUUAYtKu2pH3h5SbUkUNcRPQawg4bURBiojJx',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  readonly mint_authority: string;
-
-  @ApiProperty({
     title: 'symbol',
     type: String,
     description: 'Token symbol',

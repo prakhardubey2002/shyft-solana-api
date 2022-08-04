@@ -4,7 +4,6 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Observable } from 'rxjs';
 import { ApiMetricAccessor } from 'src/dal/api-repo/api-metric.accessor';
 import { ApiMetric } from 'src/dal/api-repo/api-metric.schema';
@@ -18,7 +17,10 @@ export class ApiMonitorService implements NestInterceptor {
     next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {
     const req = context.switchToHttp().getRequest();
-    this.handleApiInvoked({ endpoint: req.route.path, apiKey: req.apiKey });
+
+    if (req.apiKey) {
+      this.handleApiInvoked({ endpoint: req.route.path, apiKey: req.apiKey });
+    }
 
     return next.handle();
   }

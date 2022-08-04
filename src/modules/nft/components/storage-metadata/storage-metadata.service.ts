@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { NFTStorage, Blob } from 'nft.storage';
 import { configuration } from 'src/common/configs/config';
-import { WalletService } from 'src/modules/account/account.service';
 import { CreateMetadataDto } from './dto/create-metadata.dto';
 import { CreateTokenMetadataDto } from './dto/create-token-metadata.dto';
 

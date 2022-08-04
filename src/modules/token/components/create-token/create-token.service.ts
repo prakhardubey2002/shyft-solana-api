@@ -28,8 +28,6 @@ export class CreateTokenService {
         private_key,
         name,
         symbol,
-        mint_authority,
-        freeze_authority,
         decimals,
       } = createTokenDto;
 
@@ -57,9 +55,6 @@ export class CreateTokenService {
         uses: null,
       } as DataV2;
 
-      const mintAuthority = mint_authority ? new PublicKey(mint_authority) : feePayer.publicKey;
-      const freezeAuthority = freeze_authority ? new PublicKey(freeze_authority) : feePayer.publicKey;
-
       const createNewTokenTransaction = new Transaction().add(
         SystemProgram.createAccount({
           fromPubkey: feePayer.publicKey,
@@ -71,8 +66,8 @@ export class CreateTokenService {
         createInitializeMintInstruction(
           mintKeypair.publicKey,
           decimals ?? 9, // decimals
-          mintAuthority,
-          freezeAuthority,
+          mintKeypair.publicKey,
+          mintKeypair.publicKey,
           TOKEN_PROGRAM_ID,
         ),
         createCreateMetadataAccountV2Instruction(
