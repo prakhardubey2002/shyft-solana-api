@@ -98,9 +98,11 @@ export class NftData {
     nftDbDto.description = this.offChainMetadata?.description;
     nftDbDto.external_url = this.offChainMetadata?.external_url;
     nftDbDto.attributes = {};
-    this.offChainMetadata?.attributes?.map((trait) => {
-      nftDbDto.attributes[trait?.trait_type] = trait?.value;
-    });
+    if (Array.isArray(this.offChainMetadata?.attributes)) {
+      this.offChainMetadata?.attributes?.map((trait) => {
+        nftDbDto.attributes[trait?.trait_type] = trait?.value;
+      });
+    }
     return nftDbDto;
   }
 }
