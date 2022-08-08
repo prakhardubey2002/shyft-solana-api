@@ -12,7 +12,6 @@ import {
   Keypair,
   SystemProgram,
   Transaction,
-  PublicKey,
 } from '@solana/web3.js';
 import { findMetadataPda } from '@metaplex-foundation/js';
 import { CreateTokenDto } from './dto/create-token.dto';
@@ -66,8 +65,8 @@ export class CreateTokenService {
         createInitializeMintInstruction(
           mintKeypair.publicKey,
           decimals ?? 9, // decimals
-          mintKeypair.publicKey,
-          mintKeypair.publicKey,
+          feePayer.publicKey,
+          feePayer.publicKey,
           TOKEN_PROGRAM_ID,
         ),
         createCreateMetadataAccountV2Instruction(
