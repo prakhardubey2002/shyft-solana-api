@@ -17,11 +17,23 @@ import { RemoteDataFetcherService } from 'src/modules/db/remote-data-fetcher/dat
 import { FetchNftDto } from 'src/modules/db/remote-data-fetcher/dto/data-fetcher.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 
+/*Should either be
+[{"trait_type":"health","value":50}, {"trait_type":"attack","value":100}]
+or
+{"health":50, "attack":100}
+*/
 function transformAttributes(attributes) {
-  const attr = []
-  Object.keys(attributes).map((trait) => {
-    attr.push({ trait_type: trait, value: attributes[trait] });
-  });
+  const attr = [];
+
+  if (Array.isArray(attributes)) {
+    attributes.map((trait) => {
+      attr.push({ trait_type: trait?.trait_type, value: trait?.value });
+    });
+  } else {
+    Object.keys(attributes).map((trait) => {
+      attr.push({ trait_type: trait, value: attributes[trait] });
+    });
+  }
 
   return attr;
 }
