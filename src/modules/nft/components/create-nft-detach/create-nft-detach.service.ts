@@ -19,8 +19,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda } from '@metaplex-foundation/js';
-import { MasterEdition } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 export interface CreateParams {
   network: WalletAdapterNetwork;
   name: string;
@@ -46,9 +45,7 @@ export class CreateNftDetachService {
       const mintKeypair = Keypair.generate();
 
       const metadataPda = findMetadataPda(mintKeypair.publicKey);
-      // const masterEditionPda = findMasterEditionV2Pda(mintKeypair.publicKey);
-      const editionPDA = await MasterEdition.getPDA(mintKeypair.publicKey);
-      console.log('editionPDA', editionPDA);
+      const masterEditionPda = findMasterEditionV2Pda(mintKeypair.publicKey);
 
       const addressPubKey = new PublicKey(address);
       const associatedToken = findAssociatedTokenAccountPda(
@@ -101,7 +98,7 @@ export class CreateNftDetachService {
           mintKeypair.publicKey,
           associatedToken,
           addressPubKey,
-          mintRent,
+          1,
         ),
         createCreateMetadataAccountV2Instruction(
           {
@@ -115,17 +112,17 @@ export class CreateNftDetachService {
             createMetadataAccountArgsV2: { data: nftMetadata, isMutable: true },
           },
         ),
-        // createCreateMasterEditionV3Instruction(
-        //   {
-        //     edition: masterEditionPda,
-        //     mint: mintKeypair.publicKey,
-        //     updateAuthority: addressPubKey,
-        //     mintAuthority: addressPubKey,
-        //     payer: addressPubKey,
-        //     metadata: metadataPda,
-        //   },
-        //   { createMasterEditionArgs: { maxSupply: 0 } },
-        // ),
+        createCreateMasterEditionV3Instruction(
+          {
+            edition: masterEditionPda,
+            mint: mintKeypair.publicKey,
+            updateAuthority: addressPubKey,
+            mintAuthority: addressPubKey,
+            payer: addressPubKey,
+            metadata: metadataPda,
+          },
+          { createMasterEditionArgs: { maxSupply } },
+        ),
       );
 
       const blockHash = (await connection.getLatestBlockhash('finalized'))
@@ -134,7 +131,6 @@ export class CreateNftDetachService {
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
       const serializedTransaction = tx.serialize({ requireAllSignatures: false });
-      console.log('serializedTransaction', serializedTransaction);
       const transactionBase64 = serializedTransaction.toString('base64');
 
       return transactionBase64;
