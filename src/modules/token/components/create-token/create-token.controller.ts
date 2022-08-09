@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Post,
-  Req,
   UploadedFile,
   UseInterceptors,
   Version,
@@ -11,8 +10,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { CreateTokenService } from './create-token.service';
-import { CreateTokenDto } from './dto/create-token.dto';
-import { CreateTokenOpenApi } from './open-api';
+import { CreateTokenDto, CreateTokenDetachDto } from './dto/create-token.dto';
+import { CreateTokenOpenApi, CreateTokenDetachOpenApi } from './open-api';
 import { StorageMetadataService } from 'src/modules/nft/components/storage-metadata/storage-metadata.service';
 
 @ApiTags('Token')
@@ -30,7 +29,7 @@ export class CreateTokenController {
   @UseInterceptors(FileInterceptor('file'))
   async createToken(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createTokenDto: CreateTokenDto
+    @Body() createTokenDto: CreateTokenDto,
   ): Promise<any> {
     let image: string;
     if (file) {
@@ -54,6 +53,40 @@ export class CreateTokenController {
     return {
       success: true,
       message: 'Token created successfully',
+      result,
+    };
+  }
+
+  @CreateTokenDetachOpenApi()
+  @Post('create_detach')
+  @Version('1')
+  @UseInterceptors(FileInterceptor('file'))
+  async createTokenDetach(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createTokenDetachDto: CreateTokenDetachDto
+  ): Promise<any> {
+    let image: string;
+    if (file) {
+      const uploadImage = await this.storageService.uploadToIPFS(
+        new Blob([file.buffer], { type: file.mimetype }),
+      );
+      image = uploadImage.uri;
+    }
+
+    const { name, description, symbol } = createTokenDetachDto;
+
+    const { uri } = await this.storageService.prepareTokenMetadata({
+      name,
+      symbol,
+      description,
+      image,
+    });
+
+    const result = await this.createTokenService.createTokenDetach(createTokenDetachDto, uri);
+
+    return {
+      success: true,
+      message: 'Token create request generated successfully',
       result,
     };
   }

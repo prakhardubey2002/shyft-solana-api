@@ -6,6 +6,24 @@ export function BurnTokenOpenApi() {
   return applyDecorators(
     ApiOperation({ summary: 'Burn Token' }),
     ApiOkResponse({
+      description: 'Token burned successfully',
+      schema: {
+        example: {
+          success: true,
+          message: 'Token burned successfully',
+          result: {
+            txhash: '4qUvyoFd7dfbsdRWiXaTV9zdpCJS7ZAzXGQQET1cFcbaXJ1f539MnDbmKaGGxKDbaFjyJjSJ6UvDk5ytRPqfSPAb',
+          },
+        },
+      },
+    }),
+  );
+}
+
+export function BurnTokenDetachOpenApi() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Burn token without private_key' }),
+    ApiOkResponse({
       description: 'Token burn request created successfully',
       schema: {
         example: {

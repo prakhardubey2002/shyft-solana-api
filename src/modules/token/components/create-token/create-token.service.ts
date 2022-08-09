@@ -14,14 +14,90 @@ import {
   Transaction,
   PublicKey,
 } from '@solana/web3.js';
+import { NodeWallet } from '@metaplex/js';
 import { findMetadataPda } from '@metaplex-foundation/js';
-import { CreateTokenDto } from './dto/create-token.dto';
+import { CreateTokenDto, CreateTokenDetachDto } from './dto/create-token.dto';
+import { AccountUtils } from 'src/common/utils/account-utils';
 
 @Injectable()
 export class CreateTokenService {
   async createToken(createTokenDto: CreateTokenDto, uri: string): Promise<any> {
     try {
-      const { network, address, name, symbol, decimals } = createTokenDto;
+      const { network, private_key, name, symbol, decimals } = createTokenDto;
+
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const feePayer = AccountUtils.getKeypair(private_key);
+      const wallet = new NodeWallet(feePayer);
+
+      const lamports = await getMinimumBalanceForRentExemptMint(connection);
+      const mintKeypair = Keypair.generate();
+      const metadataPDA = findMetadataPda(mintKeypair.publicKey);
+
+      const tokenMetadata = {
+        name,
+        symbol,
+        uri,
+        sellerFeeBasisPoints: 0,
+        creators: [
+          {
+            address: feePayer.publicKey,
+            verified: true,
+            share: 100,
+          },
+        ],
+        collection: null,
+        uses: null,
+      } as DataV2;
+
+      const createNewTokenTransaction = new Transaction().add(
+        SystemProgram.createAccount({
+          fromPubkey: feePayer.publicKey,
+          newAccountPubkey: mintKeypair.publicKey,
+          space: MINT_SIZE,
+          lamports: lamports,
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        createInitializeMintInstruction(
+          mintKeypair.publicKey,
+          decimals ?? 9, // decimals
+          feePayer.publicKey,
+          feePayer.publicKey,
+          TOKEN_PROGRAM_ID,
+        ),
+        createCreateMetadataAccountV2Instruction(
+          {
+            metadata: metadataPDA,
+            mint: mintKeypair.publicKey,
+            mintAuthority: feePayer.publicKey,
+            payer: feePayer.publicKey,
+            updateAuthority: feePayer.publicKey,
+          },
+          {
+            createMetadataAccountArgsV2: {
+              data: tokenMetadata,
+              isMutable: true,
+            },
+          },
+        ),
+      );
+
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      createNewTokenTransaction.recentBlockhash = blockHash;
+      createNewTokenTransaction.feePayer = feePayer.publicKey;
+      createNewTokenTransaction.partialSign(mintKeypair);
+
+      const signedTx = await wallet.signTransaction(createNewTokenTransaction);
+      const txhash = await connection.sendRawTransaction(signedTx.serialize());
+
+      return { txhash, token_address: mintKeypair.publicKey.toBase58() };
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async createTokenDetach(createTokenDetachDto: CreateTokenDetachDto, uri: string): Promise<any> {
+    try {
+      const { network, address, name, symbol, decimals } = createTokenDetachDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
@@ -36,13 +112,16 @@ export class CreateTokenService {
         symbol,
         uri,
         sellerFeeBasisPoints: 0,
-        creators: null,
+        creators: [
+          {
+            address: addressPubKey,
+            verified: true,
+            share: 100,
+          },
+        ],
         collection: null,
         uses: null,
       } as DataV2;
-
-      const mintAuthority = addressPubKey;
-      const freezeAuthority = addressPubKey;
 
       const createNewTokenTransaction = new Transaction().add(
         SystemProgram.createAccount({
@@ -55,17 +134,17 @@ export class CreateTokenService {
         createInitializeMintInstruction(
           mintKeypair.publicKey,
           decimals ?? 9, // decimals
-          mintAuthority,
-          freezeAuthority,
+          addressPubKey,
+          addressPubKey,
           TOKEN_PROGRAM_ID,
         ),
         createCreateMetadataAccountV2Instruction(
           {
             metadata: metadataPDA,
             mint: mintKeypair.publicKey,
-            mintAuthority,
+            mintAuthority: addressPubKey,
             payer: addressPubKey,
-            updateAuthority: mintAuthority,
+            updateAuthority: addressPubKey,
           },
           {
             createMetadataAccountArgsV2: {
