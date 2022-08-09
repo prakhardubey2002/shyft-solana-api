@@ -13,6 +13,7 @@ export interface NftDbResponse {
   mint: string;
   attributes: { [k: string]: string | number };
   owner: string;
+  update_authority: string;
 }
 
 export class FetchAllNftDto {
@@ -59,13 +60,14 @@ export class NftData {
 
   public getNftDbResponse(): NftDbResponse {
     const nftDbResponse = {
-      name: this.onChainMetadata.data.name,
-      symbol: this.onChainMetadata.data.symbol,
-      royalty: this.onChainMetadata.data.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
+      name: this.onChainMetadata?.data?.name,
+      symbol: this.onChainMetadata?.data?.symbol,
+      royalty: this.onChainMetadata?.data?.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
       image_uri: this.offChainMetadata?.image,
       description: this.offChainMetadata?.description,
+      update_authority: this.onChainMetadata?.updateAuthority,
       attributes: {},
-      mint: this.onChainMetadata.mint,
+      mint: this.onChainMetadata?.mint,
       owner: this.owner,
     };
 

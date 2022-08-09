@@ -6,6 +6,7 @@ import { NftReadEvent, NftReadInWalletEvent } from '../../../db/db-sync/db.event
 import { RemoteDataFetcherService } from '../../../db/remote-data-fetcher/data-fetcher.service';
 import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
 import { FetchAllNftDto, FetchNftDto, NftDbResponse } from '../../../db/remote-data-fetcher/dto/data-fetcher.dto';
+import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
 
 @Injectable()
 export class ReadNftService {
@@ -32,16 +33,7 @@ export class ReadNftService {
 
       if (dbNftInfo.length) {
         return dbNftInfo.map((nft) => {
-          return {
-            name: nft.name,
-            description: nft.description,
-            symbol: nft.symbol,
-            image_uri: nft.image_uri,
-            attributes: nft.attributes,
-            royalty: nft.royalty,
-            mint: nft.mint,
-            owner: nft.owner,
-          };
+          return getNftDbResponseFromNftInfo(nft);
         });
       } else {
         //not available in DB, fetch from blockchain
@@ -64,16 +56,7 @@ export class ReadNftService {
       this.eventEmitter.emit('nft.read', nftReadEvent);
 
       if (dbNftInfo) {
-        return {
-          name: dbNftInfo.name,
-          description: dbNftInfo.description,
-          symbol: dbNftInfo.symbol,
-          image_uri: dbNftInfo.image_uri,
-          attributes: dbNftInfo.attributes,
-          royalty: dbNftInfo.royalty,
-          mint: dbNftInfo.mint,
-          owner: dbNftInfo.owner,
-        };
+        return getNftDbResponseFromNftInfo(dbNftInfo);
       } else {
         //not available in DB, fetch from blockchain
         return (await this.remoteDataFetcher.fetchNftDetails(fetchNft)).getNftDbResponse();
