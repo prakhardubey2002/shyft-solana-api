@@ -1,18 +1,31 @@
 /* eslint-disable prettier/prettier */
 import { HttpException, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey } from '@solana/web3.js';
+import { clusterApiUrl, PublicKey, Transaction } from '@solana/web3.js';
 import { Connection, NodeWallet, programs } from '@metaplex/js';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { NftUpdateEvent } from '../../../db/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { Creator as CreatorV2, createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 
 interface UpdateParams {
   update_authority: string,
   new_update_authority: string,
   royalty: number,
   private_key: string,
+  is_mutable: boolean,
+  primary_sale_happened: boolean,
+  network: WalletAdapterNetwork,
+  token_address: string,
+  name: string,
+  symbol: string,
+}
+
+interface UpdateDetachParams {
+  update_authority: string,
+  royalty: number,
+  address: string,
   is_mutable: boolean,
   primary_sale_happened: boolean,
   network: WalletAdapterNetwork,
@@ -89,6 +102,74 @@ export class UpdateNftService {
       return { txId: result };
     } catch (error) {
 
+      throw new HttpException(error.message, error.status);
+    }
+  }
+
+
+  async updateNftDetach(metaDataUri: string, updateParams: UpdateDetachParams): Promise<any> {
+    if (!metaDataUri) {
+      throw new Error('metadata URI missing');
+    }
+    try {
+      const {
+        network,
+        token_address,
+        name,
+        symbol,
+        update_authority,
+        royalty,
+        address,
+        is_mutable,
+        primary_sale_happened,
+      } = updateParams;
+
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+
+      const addressPubKey = new PublicKey(address);
+
+      //get token's PDA (metadata address)
+      const pda = await Metadata.getPDA(token_address);
+      const creator: CreatorV2 = {
+        address: addressPubKey,
+        verified: true,
+        share: 100,
+      };
+      const updateAuthority = update_authority ? new PublicKey(update_authority) : addressPubKey;
+
+      const tx = new Transaction().add(
+        createUpdateMetadataAccountV2Instruction(
+          {
+            metadata: pda,
+            updateAuthority,
+          },
+          {
+            updateMetadataAccountArgsV2: {
+              data: {
+                name,
+                symbol,
+                uri: metaDataUri,
+                sellerFeeBasisPoints: royalty,
+                creators: [creator],
+                collection: null,
+                uses: null,
+              } as DataV2,
+              updateAuthority,
+              primarySaleHappened: primary_sale_happened,
+              isMutable: is_mutable,
+            }
+          }
+      ));
+
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      tx.feePayer = addressPubKey;
+      tx.recentBlockhash = blockHash;
+      const serializedTransaction = tx.serialize({ requireAllSignatures: false });
+      const transactionBase64 = serializedTransaction.toString('base64');
+
+      return transactionBase64;
+    } catch (error) {
+      console.error(error);
       throw new HttpException(error.message, error.status);
     }
   }
