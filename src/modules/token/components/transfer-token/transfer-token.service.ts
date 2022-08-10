@@ -10,6 +10,7 @@ import {
 } from '@solana/spl-token';
 import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { getAssociatedTokenAccountOrCreateAsscociatedAccountTx } from 'src/common/utils/get-or-create-associated-token-account';
 import { TransferTokenDto, TransferTokenDetachDto } from './dto/transfer-token.dto';
 
 @Injectable()
@@ -88,13 +89,13 @@ export class TransferTokenService {
       const fromAddressPubKey = new PublicKey(from_address);
       const toAddressPubKey = new PublicKey(to_address);
 
-      const tokenAddressPubkey = new PublicKey(token_address);
-      const tokenInfo = await getMint(connection, tokenAddressPubkey);
+      const tokenAddressPubKey = new PublicKey(token_address);
+      const tokenInfo = await getMint(connection, tokenAddressPubKey);
 
       if (tokenInfo.isInitialized) {
         // Get an associated token address for receiver.
         const fromAccount = await getAssociatedTokenAddress(
-          tokenAddressPubkey,
+          tokenAddressPubKey,
           fromAddressPubKey,
           false,
           TOKEN_PROGRAM_ID,
@@ -102,7 +103,7 @@ export class TransferTokenService {
         );
 
         const toAccount = await getAssociatedTokenAddress(
-          tokenAddressPubkey,
+          tokenAddressPubKey,
           toAddressPubKey,
           false,
           TOKEN_PROGRAM_ID,
@@ -111,10 +112,17 @@ export class TransferTokenService {
 
         const amtToTransfer = Math.pow(10, tokenInfo.decimals) * amount;
 
-        const tx = new Transaction().add(
+        let tx: Transaction = new Transaction();
+        // create associatedTokenAccount if not exist
+        const associatedAccountTx = await getAssociatedTokenAccountOrCreateAsscociatedAccountTx(connection, fromAddressPubKey, tokenAddressPubKey, toAddressPubKey);
+        if (associatedAccountTx instanceof Transaction) {
+          tx.add(associatedAccountTx);
+        }
+
+        tx = tx.add(
           createTransferCheckedInstruction(
             fromAccount,
-            tokenAddressPubkey,
+            tokenAddressPubKey,
             toAccount,
             fromAddressPubKey,
             amtToTransfer,

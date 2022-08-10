@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -43,7 +43,7 @@ export class TransferNftDto {
   @IsString()
   readonly to_address: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'Transfer Authority',
     type: Boolean,
     description: 'Transfer update authority to the receiver or not, default TRUE',
@@ -97,7 +97,7 @@ export class TransferNftDetachDto {
   @IsString()
   readonly to_address: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'Transfer Authority',
     type: Boolean,
     description: 'Transfer update authority to the receiver or not, default TRUE',

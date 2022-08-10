@@ -6,6 +6,7 @@ import { TransferNftDto } from './dto/transfer.dto';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferCheckedInstruction,
+  getAccount,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
@@ -14,6 +15,7 @@ import { UpdateNftService } from '../update-nft/update-nft.service';
 import { Metaplex } from '@metaplex-foundation/js';
 import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
+import { getAssociatedTokenAccountOrCreateAsscociatedAccountTx } from 'src/common/utils/get-or-create-associated-token-account';
 
 @Injectable()
 export class TransferNftService {
@@ -130,11 +132,16 @@ export class TransferNftService {
         ASSOCIATED_TOKEN_PROGRAM_ID,
       );
 
-      let tx: Transaction;
+      let tx: Transaction = new Transaction();
+      // create associatedTokenAccount if not exist
+      const associatedAccountTx = await getAssociatedTokenAccountOrCreateAsscociatedAccountTx(connection, fromAddressPubKey, tokenAddressPubKey, toAddressPubKey);
+      if (associatedAccountTx instanceof Transaction) {
+        tx.add(associatedAccountTx);
+      }
 
       if (!transfer_authority) {
         // Create transfer instruction
-        tx = new Transaction().add(
+        tx = tx.add(
           createTransferCheckedInstruction(
             fromAccount,
             tokenAddressPubKey,
@@ -149,7 +156,7 @@ export class TransferNftService {
         const nft = await metaplex.nfts().findByMint(tokenAddressPubKey);
         const pda = await Metadata.getPDA(tokenAddressPubKey);
 
-        tx = new Transaction().add(
+        tx = tx.add(
           createTransferCheckedInstruction(
             fromAccount,
             tokenAddressPubKey,
