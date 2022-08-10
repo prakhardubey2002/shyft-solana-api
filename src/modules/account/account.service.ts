@@ -7,7 +7,7 @@ import {
   PublicKey,
   sendAndConfirmTransaction,
 } from '@solana/web3.js';
-import { BalanceCheckDto, ResolveAddressDto, } from './dto/balance-check.dto';
+import { BalanceCheckDto, ResolveAddressDto, TransactionHistoryDto, } from './dto/balance-check.dto';
 import { SendSolDto } from './dto/send-sol.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
@@ -33,6 +33,24 @@ export class WalletService {
       );
       const balance = await connection.getBalance(new PublicKey(wallet));
       return balance / LAMPORTS_PER_SOL;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async getTransactionHistory(transactionHistoryDto: TransactionHistoryDto): Promise<any> {
+    try {
+      const { wallet, network, tx_num } = transactionHistoryDto;
+      const connection = new Connection(
+        Utility.clusterUrl(network),
+        'confirmed',
+      );
+
+      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), { limit: tx_num || 10 } );
+      const signature = transactionList.map((tx) => tx.signature);
+      // if not required detailed info simply return 'signature'
+      const transactionDetails = await connection.getParsedTransactions(signature);
+      return transactionDetails;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

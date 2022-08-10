@@ -8,7 +8,7 @@ import {
   Version,
 } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { BalanceCheckDto, ResolveAddressDto } from './dto/balance-check.dto';
+import { BalanceCheckDto, ResolveAddressDto, TransactionHistoryDto } from './dto/balance-check.dto';
 import { WalletService } from './account.service';
 import { SendSolDto } from './dto/send-sol.dto';
 import {
@@ -17,6 +17,7 @@ import {
   PortfoliOpenApi,
   SendBalanceOpenApi,
   TokenBalanceOpenApi,
+  TransactionHistoryOpenApi,
 } from './open-api';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
 
@@ -113,6 +114,19 @@ export class AccountController {
       success: true,
       message: 'Address resolved successfully',
       result: allTokens,
+    };
+  }
+
+  @TransactionHistoryOpenApi()
+  @Get('transaction_history')
+  @Version('1')
+  async transactionHistory(@Query() transactionHistoryDto: TransactionHistoryDto): Promise<any> {
+    const { tx_num } = transactionHistoryDto;
+    const transactions = await this.walletService.getTransactionHistory(transactionHistoryDto);
+    return {
+      success: true,
+      message: `Last ${tx_num || 10} transaction fetched successfully`,
+      result: transactions,
     };
   }
 }
