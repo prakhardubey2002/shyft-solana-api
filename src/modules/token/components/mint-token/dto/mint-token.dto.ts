@@ -64,14 +64,14 @@ export class MintTokenDetachDto {
   readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
-    title: 'address',
+    title: 'wallet',
     type: String,
     description: 'YOUR_WALLET_ADDRESS',
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
   @IsString()
-  readonly address: string;
+  readonly wallet: string;
 
   @ApiProperty({
     title: 'mint_token',

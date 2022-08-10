@@ -56,10 +56,10 @@ export class BurnTokenService {
 
   async burnTokenDetach(burnTokenDetachDto: BurnTokenDetachDto): Promise<any> {
     try {
-      const { network, address, token_address, amount } = burnTokenDetachDto;
+      const { network, wallet, token_address, amount } = burnTokenDetachDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      const addressPubkey = new PublicKey(address);
+      const addressPubkey = new PublicKey(wallet);
 
       const tokenAddressPubkey = new PublicKey(token_address);
 

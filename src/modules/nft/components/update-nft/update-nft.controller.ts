@@ -109,7 +109,7 @@ export class UpdateNftController {
 
     const createParams = {
       network: updateNftDetachDto.network,
-      creator: updateNftDetachDto.address,
+      creator: updateNftDetachDto.wallet,
       image,
       name: updateNftDetachDto.name ?? nftInfo.name,
       description: updateNftDetachDto.description ?? nftInfo.description,

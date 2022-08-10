@@ -25,7 +25,7 @@ interface UpdateParams {
 interface UpdateDetachParams {
   update_authority: string,
   royalty: number,
-  address: string,
+  wallet: string,
   is_mutable: boolean,
   primary_sale_happened: boolean,
   network: WalletAdapterNetwork,
@@ -119,14 +119,14 @@ export class UpdateNftService {
         symbol,
         update_authority,
         royalty,
-        address,
+        wallet,
         is_mutable,
         primary_sale_happened,
       } = updateParams;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
-      const addressPubKey = new PublicKey(address);
+      const addressPubKey = new PublicKey(wallet);
 
       //get token's PDA (metadata address)
       const pda = await Metadata.getPDA(token_address);

@@ -56,3 +56,57 @@ export class PrintNftEditionDto {
   })
   readonly transfer_authority: boolean;
 }
+
+export class PrintNftEditionDetachDto {
+  @ApiProperty({
+    title: 'network',
+    type: String,
+    enum: WalletAdapterNetwork,
+    description: 'Select solana blockchain environment',
+  })
+  @IsNotEmpty()
+  readonly network: WalletAdapterNetwork;
+
+  @ApiProperty({
+    title: 'Address of wallet containing the NFT',
+    type: String,
+    description: 'Address of the wallet containing the Master Edition NFT',
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly wallet: string;
+
+  @ApiProperty({
+    title: 'Master edition Address',
+    type: String,
+    description: 'Address of the Master Edition NFT',
+    example: '37CGrKHKhCj42xSMeJ5HH2TfidjPWHVR994L8msVRzoC',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly master_nft_address: string;
+
+  @ApiPropertyOptional({
+    title: 'New Owner',
+    type: String,
+    description: 'Wallet address of the receiver, by default will be minted into whoever holds master edition',
+    example: 'BFefyp7jNF5Xq2A4JDLLFFGpxLq5oPEFKBAQ46KJHW2R',
+  })
+  @IsString()
+  @IsOptional()
+  readonly receiver: string;
+
+  @ApiPropertyOptional({
+    title: 'Transfer Update Authority',
+    type: Boolean,
+    description: "If you want to keep 'update authority' yours, don't pass on any wallet address.",
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    return value ?? false;
+  })
+  readonly transfer_authority: boolean;
+}

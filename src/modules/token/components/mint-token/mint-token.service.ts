@@ -59,7 +59,7 @@ export class MintTokenService {
     try {
       const {
         network,
-        address,
+        wallet,
         token_address: token_address,
         amount,
       } = mintTokenDetachDto;
@@ -67,10 +67,10 @@ export class MintTokenService {
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
       const tokenAddressPubkey = new PublicKey(token_address);
       const tokenInfo = await getMint(connection, tokenAddressPubkey);
-      const addressPubkey = new PublicKey(address);
+      const addressPubkey = new PublicKey(wallet);
 
       if (tokenInfo.isInitialized) {
-        if (tokenInfo.mintAuthority.toBase58() !== address) {
+        if (tokenInfo.mintAuthority.toBase58() !== wallet) {
           throw Error('You dont have the authority to mint these tokens');
         }
         const associatedTokenAddress = await getAssociatedTokenAddress(

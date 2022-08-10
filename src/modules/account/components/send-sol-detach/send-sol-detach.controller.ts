@@ -16,11 +16,11 @@ export class SendSolDetachController {
   @HttpCode(200)
   async sendSol(@Body() sendSolDto: SendSolDetachDto): Promise<any> {
     const { amount } = sendSolDto;
-    const transactionBuffer = await this.sendSolDetachService.sendSol(sendSolDto);
+    const encoded_transaction = await this.sendSolDetachService.sendSol(sendSolDto);
     return {
       success: true,
-      message: `${amount} SOL transferred successfully`,
-      result: { transactionBuffer },
+      message: `${amount} SOL transfer request generated successfully`,
+      result: { encoded_transaction },
     };
   }
 }

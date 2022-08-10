@@ -20,17 +20,23 @@ import { TransferNftService } from './components/transfer-nft/transfer-nft.servi
 import { TransferNftController } from './components/transfer-nft/transfer-nft.controller';
 import { MintNftController } from './components/mint-nft/mint-nft.controller';
 import { MintNftService } from './components/mint-nft/mint-nft.service';
+import { CreateNftDetachController } from './components/create-nft-detach/create-nft-detach.controller';
+import { CreateNftDetachService } from './components/create-nft-detach/create-nft-detach.service';
+import { BurnNftDetachController } from './components/burn-nft-detach/burn-nft-detach.controller';
+import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-detach.service';
 
 @Module({
   controllers: [
     CreateNftController,
+    CreateNftDetachController,
     ReadNftController,
     BurnNftController,
+    BurnNftDetachController,
     UpdateNftController,
     StorageMetadataController,
     SearchNftcontroller,
     TransferNftController,
-    MintNftController
+    MintNftController,
   ],
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
@@ -39,9 +45,11 @@ import { MintNftService } from './components/mint-nft/mint-nft.service';
   ],
   providers: [
     CreateNftService,
+    CreateNftDetachService,
     WalletService,
     ReadNftService,
     BurnNftService,
+    BurnNftDetachService,
     UpdateNftService,
     StorageMetadataService,
     SearchNftService,

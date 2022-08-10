@@ -130,10 +130,10 @@ export class CreateNftDetachService {
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
-      const serializedTransaction = tx.serialize({ requireAllSignatures: false });
+      const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
       const transactionBase64 = serializedTransaction.toString('base64');
 
-      return transactionBase64;
+      return { encoded_transaction: transactionBase64, mint: mintKeypair.publicKey.toBase58() };
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);

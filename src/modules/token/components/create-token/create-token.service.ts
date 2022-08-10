@@ -105,11 +105,11 @@ export class CreateTokenService {
 
   async createTokenDetach(createTokenDetachDto: CreateTokenDetachDto, uri: string): Promise<any> {
     try {
-      const { network, address, name, symbol, decimals } = createTokenDetachDto;
+      const { network, wallet, name, symbol, decimals } = createTokenDetachDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
-      const addressPubKey = new PublicKey(address);
+      const addressPubKey = new PublicKey(wallet);
       const lamports = await getMinimumBalanceForRentExemptMint(connection);
       const mintKeypair = Keypair.generate();
 

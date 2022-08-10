@@ -8,9 +8,9 @@ import { BurnNftDetachDto } from './dto/burn-nft-detach.dto';
 export class BurnNftDetachService {
   async burnNft(burnNftDetachDto: BurnNftDetachDto): Promise<any> {
     try {
-      const { network, address, token_address, close } = burnNftDetachDto;
+      const { network, wallet, token_address, close } = burnNftDetachDto;
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-      const addressPubKey = new PublicKey(address);
+      const addressPubKey = new PublicKey(wallet);
       const associatedTokenAddress = await getAssociatedTokenAddress(
         new PublicKey(token_address),
         addressPubKey,

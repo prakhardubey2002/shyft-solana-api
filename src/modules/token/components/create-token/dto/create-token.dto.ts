@@ -111,14 +111,14 @@ export class CreateTokenDetachDto {
   readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
-    title: 'address',
+    title: 'wallet',
     type: String,
     description: 'YOUR_WALLET_ADDRESS',
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
   @IsString()
-  address: string;
+  wallet: string;
 
   @ApiProperty({
     title: 'name',

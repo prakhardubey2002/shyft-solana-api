@@ -23,7 +23,7 @@ export class CreateNftDetachController {
 
     const { uri } = await this.storageService.prepareNFTMetadata({
       network: createNftDetachDto.network,
-      creator: createNftDetachDto.address,
+      creator: createNftDetachDto.wallet,
       image,
       name: createNftDetachDto.name,
       description: createNftDetachDto.description,
@@ -38,19 +38,19 @@ export class CreateNftDetachController {
       network: createNftDetachDto.network,
       name: createNftDetachDto.name,
       symbol: createNftDetachDto.symbol,
-      address: createNftDetachDto.address,
+      address: createNftDetachDto.wallet,
       metadataUri: uri,
       maxSupply: createNftDetachDto.max_supply,
       royalty: createNftDetachDto.royalty ?? 0,
       userId: request.id,
     };
 
-    const encoded_transaction = await this.createNftDetachService.mintNft(mintNftRequest);
+    const result = await this.createNftDetachService.mintNft(mintNftRequest);
 
     return {
       success: true,
       message: 'NFT mint request generated successfully',
-      result: { encoded_transaction },
+      result,
     };
   }
 }

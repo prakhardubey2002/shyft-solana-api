@@ -10,9 +10,9 @@ export function SendBalanceDetachOpenApi() {
       schema: {
         example: {
           success: true,
-          message: 'Transaction created',
+          message: '1.2 SOL transfer request generated successfully',
           result: {
-            tx: '5S7tJbjKwSn1iUkibeHgL4DepG5TysAqJ8WTAFBT3b4mTekRbeoGd13hkbw5zRi9knZGwn6xmtx6JHnpqXocYybe',
+            encoded_transaction: 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEDmFWYteRvJYw2HIfGgUAbGCrz00zOc1fx/ASNo7oRmvYYyp9RxUce7b6XJTmDH3BTasbGTY2hJe2h0xJ16/4PFQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiXMePKuHbfGvuCNhdcnwlC6az6BIpyvK+1yTRL9XhyABAgIAAQwCAAAAAIyGRwAAAAA=',
           },
         },
       },
