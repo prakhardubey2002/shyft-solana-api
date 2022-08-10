@@ -1,18 +1,21 @@
-import { walletAdapterIdentity } from '@metaplex-foundation/js';
 import { NodeWallet } from '@metaplex/js';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   getOrCreateAssociatedTokenAccount,
   getMint,
   createTransferCheckedInstruction,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
-import { TransferTokenDto } from './dto/transfer-token.dto';
+import { Utility } from 'src/common/utils/utils';
+import { TransferTokenDto, TransferTokenDetachDto } from './dto/transfer-token.dto';
 
 @Injectable()
 export class TransferTokenService {
-  async transferToken(mintTokenDto: TransferTokenDto): Promise<any> {
+  async transferToken(transferTokenDto: TransferTokenDto): Promise<any> {
     try {
       const {
         network,
@@ -20,7 +23,7 @@ export class TransferTokenService {
         token_address: token_address,
         amount,
         to_address,
-      } = mintTokenDto;
+      } = transferTokenDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
       const fromKeypair = AccountUtils.getKeypair(from_address);
@@ -63,6 +66,81 @@ export class TransferTokenService {
         const txId = await connection.sendRawTransaction((await signedTx).serialize());
 
         return { txId };
+      } else {
+        throw Error('Token not initialized');
+      }
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async transferTokenDetach(transferTokenDetachDto: TransferTokenDetachDto): Promise<any> {
+    try {
+      const {
+        network,
+        from_address,
+        token_address: token_address,
+        amount,
+        to_address,
+      } = transferTokenDetachDto;
+
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const fromAddressPubKey = new PublicKey(from_address);
+      const toAddressPubKey = new PublicKey(to_address);
+
+      const tokenAddressPubKey = new PublicKey(token_address);
+      const tokenInfo = await getMint(connection, tokenAddressPubKey);
+
+      if (tokenInfo.isInitialized) {
+        // Get an associated token address for receiver.
+        const fromAccount = await getAssociatedTokenAddress(
+          tokenAddressPubKey,
+          fromAddressPubKey,
+          false,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+        );
+
+        const toAccount = await getAssociatedTokenAddress(
+          tokenAddressPubKey,
+          toAddressPubKey,
+          false,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+        );
+
+        const amtToTransfer = Math.pow(10, tokenInfo.decimals) * amount;
+
+        let tx: Transaction = new Transaction();
+        // create associatedTokenAccount if not exist
+        const associatedAccountTx =
+          await Utility.token.getAssociatedTokenAccountOrCreateAsscociatedAccountTx(
+            connection,
+            fromAddressPubKey,
+            tokenAddressPubKey,
+            toAddressPubKey,
+          );
+        if (associatedAccountTx instanceof Transaction) {
+          tx.add(associatedAccountTx);
+        }
+
+        tx = tx.add(
+          createTransferCheckedInstruction(
+            fromAccount,
+            tokenAddressPubKey,
+            toAccount,
+            fromAddressPubKey,
+            amtToTransfer,
+            tokenInfo.decimals,
+          ),
+        );
+        tx.feePayer = fromAddressPubKey;
+        tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+        const transactionBase64 = serializedTransaction.toString('base64');
+
+        return { encoded_transaction: transactionBase64 };
       } else {
         throw Error('Token not initialized');
       }

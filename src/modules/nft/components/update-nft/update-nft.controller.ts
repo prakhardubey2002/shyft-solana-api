@@ -7,12 +7,12 @@ import {
   Version,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UpdateNftDto } from './dto/update.dto';
+import { UpdateNftDetachDto, UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
 import { Blob } from 'nft.storage';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { UpdateOpenApi } from './open-api';
+import { UpdateDetachOpenApi, UpdateOpenApi } from './open-api';
 import { RemoteDataFetcherService } from 'src/modules/db/remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto } from 'src/modules/db/remote-data-fetcher/dto/data-fetcher.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
@@ -34,7 +34,6 @@ function transformAttributes(attributes) {
       attr.push({ trait_type: trait, value: attributes[trait] });
     });
   }
-
   return attr;
 }
 
@@ -90,6 +89,54 @@ export class UpdateNftController {
       success: true,
       message: 'NFT updated',
       result: res,
+    };
+  }
+
+  @UpdateDetachOpenApi()
+  @Post('update_detach')
+  @Version('1')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateDetach(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updateNftDetachDto: UpdateNftDetachDto,
+  ): Promise<any> {
+    const nftInfo = (await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDetachDto.network, updateNftDetachDto.token_address))).getNftInfoDto();
+    let image = nftInfo.image_uri;
+    if (file) {
+      const uploadImage = await this.storageService.uploadToIPFS(new Blob([file.buffer], { type: file.mimetype }));
+      image = uploadImage.uri;
+    }
+
+    const createParams = {
+      network: updateNftDetachDto.network,
+      creator: updateNftDetachDto.address,
+      image,
+      name: updateNftDetachDto.name ?? nftInfo.name,
+      description: updateNftDetachDto.description ?? nftInfo.description,
+      symbol: updateNftDetachDto.symbol ?? nftInfo.symbol,
+      attributes: updateNftDetachDto.attributes ? transformAttributes(updateNftDetachDto.attributes) : transformAttributes(nftInfo.attributes),
+      royalty: updateNftDetachDto.royalty ?? nftInfo.royalty,
+      share: 100,
+      external_url: nftInfo.external_url,
+    };
+
+    const { uri } = await this.storageService.prepareNFTMetadata(createParams);
+
+    const encoded_transaction = await this.updateNftService.updateNftDetach(
+      uri,
+      {
+        ...updateNftDetachDto,
+        ...createParams,
+        update_authority: nftInfo.update_authority,
+        is_mutable: nftInfo.is_mutable,
+        primary_sale_happened: nftInfo.primary_sale_happened,
+      },
+    );
+
+    return {
+      success: true,
+      message: 'NFT update request generated successfully',
+      result: { encoded_transaction },
     };
   }
 }

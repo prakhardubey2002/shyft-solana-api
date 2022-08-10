@@ -1,7 +1,7 @@
 import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 //update attributes value type to hold objects also
 export interface NftDbResponse {
@@ -17,14 +17,14 @@ export interface NftDbResponse {
 }
 
 export class FetchAllNftDto {
-  constructor(network: Network, address: string, updateAuthority?: string) {
+  constructor(network: WalletAdapterNetwork, address: string, updateAuthority?: string) {
     this.network = network;
     this.walletAddress = address;
     this.updateAuthority = updateAuthority;
   }
 
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
   @IsNotEmpty()
   @IsString()
   readonly walletAddress: string;
@@ -35,13 +35,13 @@ export class FetchAllNftDto {
 }
 
 export class FetchNftDto {
-  constructor(network: Network, address: string) {
+  constructor(network: WalletAdapterNetwork, address: string) {
     this.network = network;
     this.tokenAddress = address;
   }
 
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
   @IsNotEmpty()
   @IsString()
   readonly tokenAddress: string;

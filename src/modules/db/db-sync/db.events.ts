@@ -1,20 +1,20 @@
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ObjectId } from 'mongoose';
 
 export class NftCreationEvent {
-  constructor(tokenAddress: string, network: Network, apiKeyId: ObjectId) {
+  constructor(tokenAddress: string, network: WalletAdapterNetwork, apiKeyId: ObjectId) {
     this.tokenAddress = tokenAddress;
     this.network = network;
     this.apiKeyId = apiKeyId;
   }
 
   tokenAddress: string;
-  network: Network;
+  network: WalletAdapterNetwork;
   apiKeyId: ObjectId;
 }
 
 export class NftReadInWalletEvent {
-  constructor(walletAddress: string, network: Network, updateAuthority: string) {
+  constructor(walletAddress: string, network: WalletAdapterNetwork, updateAuthority: string) {
     this.walletAddress = walletAddress;
     this.network = network;
     this.updateAuthority = updateAuthority;
@@ -22,17 +22,17 @@ export class NftReadInWalletEvent {
 
   updateAuthority: string;
   walletAddress: string;
-  network: Network;
+  network: WalletAdapterNetwork;
 }
 
 export class NftUpdateEvent {
-  constructor(tokenAddress: string, network: Network) {
+  constructor(tokenAddress: string, network: WalletAdapterNetwork) {
     this.tokenAddress = tokenAddress;
     this.network = network;
   }
 
   tokenAddress: string;
-  network: Network;
+  network: WalletAdapterNetwork;
 }
 
 export class NftDeleteEvent {
@@ -43,11 +43,11 @@ export class NftDeleteEvent {
 }
 
 export class NftReadEvent {
-  constructor(tokenAddress: string, network: Network) {
+  constructor(tokenAddress: string, network: WalletAdapterNetwork) {
     this.tokenAddress = tokenAddress;
     this.network = network;
   }
 
   tokenAddress: string;
-  network: Network;
+  network: WalletAdapterNetwork;
 }

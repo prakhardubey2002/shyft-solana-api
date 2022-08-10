@@ -1,9 +1,23 @@
 import { findMetadataPda } from '@metaplex-foundation/js';
 import { Mint } from '@solana/spl-token';
-import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import axios from 'axios';
-import { Connection } from '@solana/web3.js';
-import { Network } from 'src/dto/netwotk.dto';
+import {
+  clusterApiUrl,
+  Connection,
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import {
+  Account,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  getAccount,
+  getAssociatedTokenAddress,
+  TokenAccountNotFoundError,
+  TokenInvalidAccountOwnerError,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 import { configuration } from '../configs/config';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenListProvider } from '@solana/spl-token-registry';
@@ -12,13 +26,13 @@ const endpoint = {
   http: {
     devnet: 'http://api.devnet.solana.com',
     testnet: 'http://api.testnet.solana.com',
-    'mainnet-beta': 'http://api.mainnet-beta.solana.com/'
+    'mainnet-beta': 'http://api.mainnet-beta.solana.com/',
   },
   https: {
     devnet: configuration().solDevnet,
     testnet: 'https://api.testnet.solana.com',
     'mainnet-beta': configuration().solMainnetBeta,
-  }
+  },
 };
 
 interface TokenResponse {
@@ -39,7 +53,7 @@ async function fetchInfoFromMeta(connection: Connection, mintAddress: string) {
     let uriData, meta;
     try {
       //Get metadata
-      const pda = findMetadataPda (new PublicKey (mintAddress));
+      const pda = findMetadataPda(new PublicKey(mintAddress));
       meta = await Metadata.load(connection, pda);
       if (meta?.data?.data?.uri) {
         uriData = await Utility.request(meta?.data?.data?.uri);
@@ -57,10 +71,15 @@ async function fetchInfoFromMeta(connection: Connection, mintAddress: string) {
   }
 }
 
-async function fetchInfoFromSplRegistry(network: Network, mintAddress: string) {
+async function fetchInfoFromSplRegistry(
+  network: WalletAdapterNetwork,
+  mintAddress: string,
+) {
   const tokens = await new TokenListProvider().resolve();
   const tokenInfoList = tokens.filterByClusterSlug(network).getList();
-  const tokenData = tokenInfoList.find((token) => token.address === mintAddress);
+  const tokenData = tokenInfoList.find(
+    (token) => token.address === mintAddress,
+  );
 
   return {
     name: tokenData?.name,
@@ -80,12 +99,12 @@ export const Utility = {
     }
   },
 
-  clusterUrl: function (network: Network): string {
+  clusterUrl: function (network: WalletAdapterNetwork): string {
     try {
       switch (network) {
-        case Network.devnet:
+        case WalletAdapterNetwork.Devnet:
           return endpoint.https.devnet;
-        case Network.mainnet:
+        case WalletAdapterNetwork.Mainnet:
           return endpoint.https['mainnet-beta'];
         default:
           return clusterApiUrl(network);
@@ -98,7 +117,7 @@ export const Utility = {
   token: {
     getTokenInfo: async function (
       connection: Connection,
-      network: Network,
+      network: WalletAdapterNetwork,
       mint: Mint,
     ): Promise<TokenResponse> {
       if (mint) {
@@ -114,7 +133,8 @@ export const Utility = {
           return {
             name: metaInfo?.name ?? registryInfo?.name ?? '',
             symbol: metaInfo?.symbol ?? registryInfo?.symbol ?? '',
-            description: metaInfo?.description ?? registryInfo?.description ?? '',
+            description:
+              metaInfo?.description ?? registryInfo?.description ?? '',
             image: metaInfo?.image ?? registryInfo?.image ?? '',
             address: mint.address?.toBase58(),
             mint_authority: mint?.mintAuthority?.toBase58(),
@@ -124,6 +144,68 @@ export const Utility = {
           };
         }
       }
+    },
+    getAssociatedTokenAccountOrCreateAsscociatedAccountTx: async function (
+      connection: Connection,
+      payer: PublicKey,
+      mint: PublicKey,
+      owner: PublicKey,
+      allowOwnerOffCurve = false,
+      programId = TOKEN_PROGRAM_ID,
+      associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID,
+    ): Promise<Account | Transaction> {
+      const associatedToken = await getAssociatedTokenAddress(
+        mint,
+        owner,
+        allowOwnerOffCurve,
+        programId,
+        associatedTokenProgramId,
+      );
+
+      // This is the optimal logic, considering TX fee, client-side computation, RPC roundtrips and guaranteed idempotent.
+      // Sadly we can't do this atomically.
+      let account: Account;
+      let transaction: Transaction;
+      let isAccountExist: boolean;
+      try {
+        account = await getAccount(connection, associatedToken);
+        isAccountExist = true;
+      } catch (error: unknown) {
+        isAccountExist = false;
+        // TokenAccountNotFoundError can be possible if the associated address has already received some lamports,
+        // becoming a system account. Assuming program derived addressing is safe, this is the only case for the
+        // TokenInvalidAccountOwnerError in this code path.
+        if (
+          error instanceof TokenAccountNotFoundError ||
+          error instanceof TokenInvalidAccountOwnerError
+        ) {
+          // As this isn't atomic, it's possible others can create associated accounts meanwhile.
+          try {
+            transaction = new Transaction().add(
+              createAssociatedTokenAccountInstruction(
+                payer,
+                associatedToken,
+                owner,
+                mint,
+                programId,
+                associatedTokenProgramId,
+              ),
+            );
+            return transaction;
+          } catch (error: unknown) {
+            // Ignore all errors; for now there is no API-compatible way to selectively ignore the expected
+            // instruction error if the associated account exists already.
+          }
+
+          // Now this should always succeed
+          account = await getAccount(connection, associatedToken);
+        } else {
+          throw error;
+        }
+      }
+
+      if (isAccountExist) return account;
+      else return transaction;
     },
   },
 };

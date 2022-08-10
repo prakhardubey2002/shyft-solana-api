@@ -1,17 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class CreateNftDto {
   @ApiProperty({
     title: 'network',
     type: String,
-    enum: Network,
+    enum: WalletAdapterNetwork,
     description: 'Select solana blockchain environment',
   })
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
     title: 'private_key',

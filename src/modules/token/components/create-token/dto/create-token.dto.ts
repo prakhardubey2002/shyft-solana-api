@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Network } from 'src/dto/netwotk.dto';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class CreateTokenDto {
   @ApiProperty({
     title: 'network',
     type: String,
-    enum: Network,
+    enum: WalletAdapterNetwork,
     description: 'Select network',
   })
   @IsNotEmpty()
-  readonly network: Network;
+  readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
     title: 'private_key',
@@ -22,6 +22,103 @@ export class CreateTokenDto {
   @IsNotEmpty()
   @IsString()
   private_key: string;
+
+  @ApiProperty({
+    title: 'name',
+    type: String,
+    description: 'Token name',
+    example: 'Shyft',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly name: string;
+
+  @ApiProperty({
+    title: 'Freeze Authority',
+    type: String,
+    description: 'Who has the authority to freeze this token, no more tokens would be created.',
+    example: 'BvzKvn6nUUAYtKu2pH3h5SbUkUNcRPQawg4bURBiojJx',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  readonly freeze_authority: string;
+
+  @ApiProperty({
+    title: 'mint Authority',
+    type: String,
+    description: 'Who has the authority to mint more of these tokens.',
+    example: 'BvzKvn6nUUAYtKu2pH3h5SbUkUNcRPQawg4bURBiojJx',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  readonly mint_authority: string;
+
+  @ApiProperty({
+    title: 'symbol',
+    type: String,
+    description: 'Token symbol',
+    example: 'SHY',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly symbol: string;
+
+  @ApiProperty({
+    title: 'Decimals',
+    type: Number,
+    description: 'How many decimals in one 1 token (default: 9)',
+    example: '9',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => {
+    value = parseInt(value);
+    value = value ?? 9;
+    return value;
+  })
+  readonly decimals: number;
+
+  @ApiProperty({
+    title: 'description',
+    type: String,
+    description: 'Token description',
+    example: 'This is a test token',
+  })
+  @IsOptional()
+  @IsString()
+  readonly description: string;
+
+  @ApiProperty({
+    name: 'file',
+    description: 'Token image to be uploaded',
+    type: 'string',
+    format: 'binary',
+  })
+  file: string;
+}
+
+export class CreateTokenDetachDto {
+  @ApiProperty({
+    title: 'network',
+    type: String,
+    enum: WalletAdapterNetwork,
+    description: 'Select network',
+  })
+  @IsNotEmpty()
+  readonly network: WalletAdapterNetwork;
+
+  @ApiProperty({
+    title: 'address',
+    type: String,
+    description: 'YOUR_WALLET_ADDRESS',
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+  })
+  @IsNotEmpty()
+  @IsString()
+  address: string;
 
   @ApiProperty({
     title: 'name',
@@ -46,8 +143,8 @@ export class CreateTokenDto {
   @ApiProperty({
     title: 'Decimals',
     type: Number,
-    description: 'How many decimals in one 1 token',
-    example: 'default: 9',
+    description: 'How many decimals in one 1 token (default: 9)',
+    example: '9',
     required: false,
   })
   @IsOptional()
