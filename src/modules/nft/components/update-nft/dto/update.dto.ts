@@ -33,7 +33,7 @@ export class UpdateNftDto {
   @IsString()
   readonly token_address: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'name',
     type: String,
     description: 'Name of the NFT',
@@ -43,7 +43,7 @@ export class UpdateNftDto {
   @IsOptional()
   readonly name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'new_update_authority',
     type: String,
     description: 'New update authority',
@@ -53,7 +53,7 @@ export class UpdateNftDto {
   @IsOptional()
   readonly new_update_authority: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'symbol',
     type: String,
     description: 'NFT symbol',
@@ -63,7 +63,7 @@ export class UpdateNftDto {
   @IsOptional()
   readonly symbol: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'description',
     type: String,
     description: 'NFT description',
@@ -73,7 +73,7 @@ export class UpdateNftDto {
   @IsOptional()
   readonly description: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'attributes',
     type: Object,
     description: 'attributes associated to this NFT ',
@@ -83,7 +83,7 @@ export class UpdateNftDto {
   @IsOptional()
   attributes: object;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'seller_fee_basis_points',
     type: String,
     description: 'NFT royalty on secondary sales, between 0 - 100',
@@ -100,7 +100,7 @@ export class UpdateNftDto {
   @IsOptional()
   readonly royalty: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     name: 'file',
     description: 'digital file that NFT represents',
     type: 'string',
