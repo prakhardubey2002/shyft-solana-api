@@ -10,7 +10,7 @@ import {
 } from '@solana/spl-token';
 import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
-import { getAssociatedTokenAccountOrCreateAsscociatedAccountTx } from 'src/common/utils/get-or-create-associated-token-account';
+import { Utility } from 'src/common/utils/utils';
 import { TransferTokenDto, TransferTokenDetachDto } from './dto/transfer-token.dto';
 
 @Injectable()
@@ -114,7 +114,13 @@ export class TransferTokenService {
 
         let tx: Transaction = new Transaction();
         // create associatedTokenAccount if not exist
-        const associatedAccountTx = await getAssociatedTokenAccountOrCreateAsscociatedAccountTx(connection, fromAddressPubKey, tokenAddressPubKey, toAddressPubKey);
+        const associatedAccountTx =
+          await Utility.getAssociatedTokenAccountOrCreateAsscociatedAccountTx(
+            connection,
+            fromAddressPubKey,
+            tokenAddressPubKey,
+            toAddressPubKey,
+          );
         if (associatedAccountTx instanceof Transaction) {
           tx.add(associatedAccountTx);
         }

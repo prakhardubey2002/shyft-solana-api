@@ -6,7 +6,6 @@ import { TransferNftDto } from './dto/transfer.dto';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferCheckedInstruction,
-  getAccount,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
@@ -15,7 +14,7 @@ import { UpdateNftService } from '../update-nft/update-nft.service';
 import { Metaplex } from '@metaplex-foundation/js';
 import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { getAssociatedTokenAccountOrCreateAsscociatedAccountTx } from 'src/common/utils/get-or-create-associated-token-account';
+import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class TransferNftService {
@@ -134,7 +133,13 @@ export class TransferNftService {
 
       let tx: Transaction = new Transaction();
       // create associatedTokenAccount if not exist
-      const associatedAccountTx = await getAssociatedTokenAccountOrCreateAsscociatedAccountTx(connection, fromAddressPubKey, tokenAddressPubKey, toAddressPubKey);
+      const associatedAccountTx =
+        await Utility.getAssociatedTokenAccountOrCreateAsscociatedAccountTx(
+          connection,
+          fromAddressPubKey,
+          tokenAddressPubKey,
+          toAddressPubKey,
+        );
       if (associatedAccountTx instanceof Transaction) {
         tx.add(associatedAccountTx);
       }
