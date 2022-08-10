@@ -23,15 +23,7 @@ import { AccountUtils } from 'src/common/utils/account-utils';
 export class CreateTokenService {
   async createToken(createTokenDto: CreateTokenDto, uri: string): Promise<any> {
     try {
-      const {
-        network,
-        private_key,
-        name,
-        symbol,
-        mint_authority,
-        freeze_authority,
-        decimals,
-      } = createTokenDto;
+      const { network, private_key, name, symbol, decimals } = createTokenDto;
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
       const feePayer = AccountUtils.getKeypair(private_key);

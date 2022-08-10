@@ -18,7 +18,7 @@ import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class TransferNftService {
-  constructor(private updateNftService: UpdateNftService) {}
+  constructor(private updateNftService: UpdateNftService) { }
 
   async transferNft(transferNftDto: TransferNftDto): Promise<any> {
     try {
@@ -110,11 +110,9 @@ export class TransferNftService {
       const toAddressPubKey = new PublicKey(transferNftDto.to_address);
 
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
-
-      // generate wallet
       const fromAddressPubKey = new PublicKey(fromAdress);
 
-      // Find token accounts
+      // Find user token account
       const fromAccount = await getAssociatedTokenAddress(
         tokenAddressPubKey,
         fromAddressPubKey,
@@ -123,53 +121,37 @@ export class TransferNftService {
         ASSOCIATED_TOKEN_PROGRAM_ID,
       );
 
-      const toAccount = await getAssociatedTokenAddress(
-        tokenAddressPubKey,
-        toAddressPubKey,
-        false,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-      );
-
-      let tx: Transaction = new Transaction();
+      const tx: Transaction = new Transaction();
       // create associatedTokenAccount if not exist
-      const associatedAccountTx =
-        await Utility.token.getAssociatedTokenAccountOrCreateAsscociatedAccountTx(
+      const { associatedAccountAddress: toAccount, createTx } =
+        await Utility.account.getOrCreateAsscociatedAccountTx(
           connection,
           fromAddressPubKey,
           tokenAddressPubKey,
           toAddressPubKey,
         );
-      if (associatedAccountTx instanceof Transaction) {
-        tx.add(associatedAccountTx);
+      if (createTx) {
+        tx.add(createTx);
       }
 
-      if (!transfer_authority) {
-        // Create transfer instruction
-        tx = tx.add(
-          createTransferCheckedInstruction(
-            fromAccount,
-            tokenAddressPubKey,
-            toAccount,
-            fromAddressPubKey,
-            1,
-            0,
-          ),
-        );
-      } else {
+      // Create transfer instruction
+      tx.add(
+        createTransferCheckedInstruction(
+          fromAccount,
+          tokenAddressPubKey,
+          toAccount,
+          fromAddressPubKey,
+          1,
+          0,
+        ),
+      );
+
+      if (transfer_authority) {
         const metaplex = Metaplex.make(connection);
         const nft = await metaplex.nfts().findByMint(tokenAddressPubKey);
         const pda = await Metadata.getPDA(tokenAddressPubKey);
 
-        tx = tx.add(
-          createTransferCheckedInstruction(
-            fromAccount,
-            tokenAddressPubKey,
-            toAccount,
-            fromAddressPubKey,
-            1,
-            0,
-          ),
+        tx.add(
           createUpdateMetadataAccountV2Instruction(
             {
               metadata: pda,

@@ -102,27 +102,19 @@ export class TransferTokenService {
           ASSOCIATED_TOKEN_PROGRAM_ID,
         );
 
-        const toAccount = await getAssociatedTokenAddress(
-          tokenAddressPubKey,
-          toAddressPubKey,
-          false,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-        );
-
         const amtToTransfer = Math.pow(10, tokenInfo.decimals) * amount;
 
         let tx: Transaction = new Transaction();
         // create associatedTokenAccount if not exist
-        const associatedAccountTx =
-          await Utility.token.getAssociatedTokenAccountOrCreateAsscociatedAccountTx(
+        const { associatedAccountAddress: toAccount, createTx } =
+          await Utility.account.getOrCreateAsscociatedAccountTx(
             connection,
             fromAddressPubKey,
             tokenAddressPubKey,
             toAddressPubKey,
           );
-        if (associatedAccountTx instanceof Transaction) {
-          tx.add(associatedAccountTx);
+        if (createTx) {
+          tx.add(createTx);
         }
 
         tx = tx.add(

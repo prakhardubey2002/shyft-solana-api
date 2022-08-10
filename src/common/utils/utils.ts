@@ -4,6 +4,7 @@ import axios from 'axios';
 import {
   clusterApiUrl,
   Connection,
+  Keypair,
   PublicKey,
   Transaction,
 } from '@solana/web3.js';
@@ -21,6 +22,7 @@ import {
 import { configuration } from '../configs/config';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenListProvider } from '@solana/spl-token-registry';
+import bs58 from 'bs58';
 
 const endpoint = {
   http: {
@@ -145,7 +147,15 @@ export const Utility = {
         }
       }
     },
-    getAssociatedTokenAccountOrCreateAsscociatedAccountTx: async function (
+  },
+
+  account: {
+    getKeypair: function (privateKey: string): Keypair {
+      const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+      return keypair;
+    },
+
+    getOrCreateAsscociatedAccountTx: async function (
       connection: Connection,
       payer: PublicKey,
       mint: PublicKey,
@@ -153,7 +163,7 @@ export const Utility = {
       allowOwnerOffCurve = false,
       programId = TOKEN_PROGRAM_ID,
       associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID,
-    ): Promise<Account | Transaction> {
+    ): Promise<{ associatedAccountAddress: PublicKey; createTx: Transaction }> {
       const associatedToken = await getAssociatedTokenAddress(
         mint,
         owner,
@@ -166,12 +176,9 @@ export const Utility = {
       // Sadly we can't do this atomically.
       let account: Account;
       let transaction: Transaction;
-      let isAccountExist: boolean;
       try {
         account = await getAccount(connection, associatedToken);
-        isAccountExist = true;
       } catch (error: unknown) {
-        isAccountExist = false;
         // TokenAccountNotFoundError can be possible if the associated address has already received some lamports,
         // becoming a system account. Assuming program derived addressing is safe, this is the only case for the
         // TokenInvalidAccountOwnerError in this code path.
@@ -191,7 +198,6 @@ export const Utility = {
                 associatedTokenProgramId,
               ),
             );
-            return transaction;
           } catch (error: unknown) {
             // Ignore all errors; for now there is no API-compatible way to selectively ignore the expected
             // instruction error if the associated account exists already.
@@ -204,8 +210,7 @@ export const Utility = {
         }
       }
 
-      if (isAccountExist) return account;
-      else return transaction;
+      return { associatedAccountAddress: associatedToken, createTx: transaction };
     },
   },
 };
