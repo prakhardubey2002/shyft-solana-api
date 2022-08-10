@@ -12,8 +12,8 @@ export class NftInfoAccessor {
     return result;
   }
 
-  public async readNft(data: string): Promise<NftInfoDocument> {
-    const result = await this.NftInfoDataModel.findOne({ mint: data });
+  public async readNft(data: object): Promise<NftInfoDocument> {
+    const result = await this.NftInfoDataModel.findOne(data);
     return result;
   }
 
@@ -25,7 +25,7 @@ export class NftInfoAccessor {
     return result;
   }
 
-  public async find(filter: Object): Promise<NftInfoDocument[]> {
+  public async find(filter: object): Promise<NftInfoDocument[]> {
     try {
       const result = await this.NftInfoDataModel.find(filter);
       return result;

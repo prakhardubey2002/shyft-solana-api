@@ -49,7 +49,7 @@ export class ReadNftService {
     try {
       const { network, token_address } = readNftDto;
       const fetchNft = new FetchNftDto(network, token_address);
-      const dbNftInfo = await this.nftInfoAccessor.readNft(readNftDto.token_address);
+      const dbNftInfo = await this.nftInfoAccessor.readNft({ mint: readNftDto.token_address, network: network });
 
       //Trigger read event, to update DB (to-do:can be skipped)
       const nftReadEvent = new NftReadEvent(token_address, network);
