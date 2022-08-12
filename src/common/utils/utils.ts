@@ -94,7 +94,11 @@ async function fetchInfoFromSplRegistry(
 export const Utility = {
   request: async function (uri: string): Promise<any> {
     try {
-      const res = await axios.get(uri);
+      const abortController = new AbortController();
+      setTimeout(() => {
+        abortController.abort();
+      }, 5000);
+      const res = await axios.get(uri, { signal: abortController.signal });
       return res.status === 200 ? res.data : {};
     } catch (error) {
       throw error;

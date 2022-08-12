@@ -70,10 +70,11 @@ export class NftData {
       mint: this.onChainMetadata?.mint,
       owner: this.owner,
     };
-
-    this.offChainMetadata?.attributes?.map((trait) => {
-      nftDbResponse.attributes[trait?.trait_type] = trait?.value;
-    });
+    if (Array.isArray(this.offChainMetadata?.attributes)) {
+      this.offChainMetadata?.attributes?.map((trait: any) => {
+        nftDbResponse.attributes[trait?.trait_type] = trait?.value;
+      });
+    }
 
     return nftDbResponse;
   }

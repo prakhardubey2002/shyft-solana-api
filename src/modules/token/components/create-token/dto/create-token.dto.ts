@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class CreateTokenDto {
@@ -26,21 +26,25 @@ export class CreateTokenDto {
   @ApiProperty({
     title: 'name',
     type: String,
+    maxLength: 32,
     description: 'Token name',
     example: 'Shyft',
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(32)
   readonly name: string;
 
   @ApiProperty({
     title: 'symbol',
     type: String,
+    maxLength: 10,
     description: 'Token symbol',
     example: 'SHY',
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(10)
   readonly symbol: string;
 
   @ApiProperty({
@@ -101,21 +105,25 @@ export class CreateTokenDetachDto {
   @ApiProperty({
     title: 'name',
     type: String,
+    maxLength: 32,
     description: 'Token name',
     example: 'Shyft',
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(32)
   readonly name: string;
 
   @ApiProperty({
     title: 'symbol',
     type: String,
+    maxLength: 10,
     description: 'Token symbol',
     example: 'SHY',
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(32)
   readonly symbol: string;
 
   @ApiProperty({

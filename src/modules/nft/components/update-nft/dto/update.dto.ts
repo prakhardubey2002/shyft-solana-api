@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class UpdateNftDto {
@@ -36,11 +36,13 @@ export class UpdateNftDto {
   @ApiPropertyOptional({
     title: 'name',
     type: String,
+    maxLength: 32,
     description: 'Name of the NFT',
     example: 'Shyft',
   })
   @IsString()
   @IsOptional()
+  @MaxLength(32)
   readonly name: string;
 
   @ApiPropertyOptional({
@@ -56,11 +58,13 @@ export class UpdateNftDto {
   @ApiPropertyOptional({
     title: 'symbol',
     type: String,
+    maxLength: 10,
     description: 'NFT symbol',
     example: 'SH',
   })
   @IsString()
   @IsOptional()
+  @MaxLength(10)
   readonly symbol: string;
 
   @ApiPropertyOptional({
@@ -110,7 +114,6 @@ export class UpdateNftDto {
   file: string;
 }
 
-
 export class UpdateNftDetachDto {
   @ApiProperty({
     title: 'network',
@@ -144,21 +147,25 @@ export class UpdateNftDetachDto {
   @ApiPropertyOptional({
     title: 'name',
     type: String,
+    maxLength: 32,
     description: 'Name of the NFT',
     example: 'Shyft',
   })
   @IsString()
   @IsOptional()
+  @MaxLength(32)
   readonly name: string;
 
   @ApiPropertyOptional({
     title: 'symbol',
     type: String,
+    maxLength: 10,
     description: 'NFT symbol',
     example: 'SH',
   })
   @IsString()
   @IsOptional()
+  @MaxLength(10)
   readonly symbol: string;
 
   @ApiPropertyOptional({

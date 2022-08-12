@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, MaxLength } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class CreateNftDetachDto {
@@ -26,21 +26,25 @@ export class CreateNftDetachDto {
   @ApiProperty({
     title: 'name',
     type: String,
+    maxLength: 32,
     description: 'NFT name',
     example: 'fish eyes',
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(32)
   readonly name: string;
 
   @ApiProperty({
     title: 'symbol',
     type: String,
+    maxLength: 10,
     description: 'NFT symbol',
     example: 'FYE',
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(10)
   readonly symbol: string;
 
   @ApiProperty({
