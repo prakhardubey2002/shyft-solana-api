@@ -54,7 +54,8 @@ export class ReadNftService {
       const { network, token_address } = readNftDto;
 
       //If refresh is not present in query string, we fetch from DB
-      const fetchFromDB = readNftDto.refresh !== undefined;
+      const fetchFromDB = readNftDto.refresh === undefined;
+
       const fetchNft = new FetchNftDto(network, token_address);
 
       //Fetch from DB, if refresh is false
