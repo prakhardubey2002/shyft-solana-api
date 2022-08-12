@@ -46,8 +46,9 @@ export class PrintNftEditionDto {
   @ApiPropertyOptional({
     title: 'Transfer Update Authority',
     type: Boolean,
-    description: "If you want to keep 'update authority' yours, don't pass on any wallet address.",
+    description: 'Transfers update_authority to the receiver. False by default',
     example: 'BFefyp7jNF5Xq2A4JDLLFFGpxLq5oPEFKBAQ46KJHW2R',
+    required: false,
   })
   @IsOptional()
   @IsBoolean()
@@ -100,8 +101,9 @@ export class PrintNftEditionDetachDto {
   @ApiPropertyOptional({
     title: 'Transfer Update Authority',
     type: Boolean,
-    description: "If you want to keep 'update authority' yours, don't pass on any wallet address.",
+    description: 'Transfers update_authority to the receiver. False by default.',
     example: false,
+    required: false,
   })
   @IsOptional()
   @IsBoolean()

@@ -53,7 +53,7 @@ export class CreateNftDto {
     description: 'NFT description',
     example: 'Shyft makes web3 development so easy.',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   readonly description: string;
 
@@ -63,7 +63,7 @@ export class CreateNftDto {
     description: 'Attributes associated to this NFT',
     example: [{ trait_type: 'edification', value: '100' }],
   })
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => JSON.parse(value), { toClassOnly: true })
   attributes: {
     trait_type: string;
