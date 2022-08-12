@@ -1,4 +1,6 @@
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Module } from '@nestjs/common';
+import { RavenModule, RavenInterceptor } from 'nest-raven';
 import { StorageMetadataService } from '../nft/components/storage-metadata/storage-metadata.service';
 import { CreateTokenController } from './components/create-token/create-token.controller';
 import { CreateTokenService } from './components/create-token/create-token.service';
@@ -12,7 +14,25 @@ import { TransferTokenController } from './components/transfer-token/transfer-to
 import { TransferTokenService } from './components/transfer-token/transfer-token.service';
 
 @Module({
-  controllers: [CreateTokenController, BurnTokenController, MintTokenController, GetTokenController, TransferTokenController],
-  providers: [CreateTokenService, BurnTokenService, MintTokenService, StorageMetadataService, GetTokenService, TransferTokenService],
+  imports: [RavenModule],
+  controllers: [
+    CreateTokenController,
+    BurnTokenController,
+    MintTokenController,
+    GetTokenController,
+    TransferTokenController,
+  ],
+  providers: [
+    CreateTokenService,
+    BurnTokenService,
+    MintTokenService,
+    StorageMetadataService,
+    GetTokenService,
+    TransferTokenService,
+    {
+      provide: APP_INTERCEPTOR,
+      useValue: new RavenInterceptor(),
+    },
+  ],
 })
 export class TokenModule {}

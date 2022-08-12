@@ -47,6 +47,7 @@
     "class-validator": "^0.13.2",
     "handlebars": "^4.7.7",
     "mongoose": "^6.3.6",
+    "nest-raven": "^8.2.0",
     "nft.storage": "^6.3.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",

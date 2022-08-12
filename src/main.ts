@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as Sentry from '@sentry/node';
+import { configuration } from './common/configs/config';
 import { AppModule } from './app.module';
 import { ApiMetricAccessor } from './dal/api-repo/api-metric.accessor';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
@@ -15,6 +17,7 @@ import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthService } from './modules/auth/auth.service';
 
 async function bootstrap() {
+  Sentry.init({ dsn: configuration().sentryDSN });
   const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix('sol'); // To run app at `/sol` prefix
   app.enableVersioning({

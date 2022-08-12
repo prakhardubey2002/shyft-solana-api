@@ -1,4 +1,6 @@
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Module } from '@nestjs/common';
+import { RavenModule, RavenInterceptor } from 'nest-raven';
 import { WalletService } from '../account/account.service';
 import { CreateNftController } from './components/create-nft/create-nft.controller';
 import { CreateNftService } from './components/create-nft/create-nft.service';
@@ -39,6 +41,7 @@ import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-deta
     MintNftController,
   ],
   imports: [
+    RavenModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     EventEmitterModule.forRoot(),
     DbModule,
@@ -55,6 +58,10 @@ import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-deta
     SearchNftService,
     TransferNftService,
     MintNftService,
+    {
+      provide: APP_INTERCEPTOR,
+      useValue: new RavenInterceptor(),
+    },
   ],
 })
 export class NftModule {}

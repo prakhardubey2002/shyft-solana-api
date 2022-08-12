@@ -1,6 +1,7 @@
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import 'dotenv/config';
+import { RavenModule, RavenInterceptor } from 'nest-raven';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,6 +20,7 @@ import { ApiMonitorModule } from './modules/api-monitor/api-monitor.module';
       isGlobal: true,
       load: [configuration],
     }),
+    RavenModule,
     MongooseModule.forRoot(configuration().mongoURI, {
       useNewUrlParser: true,
     }),
@@ -30,6 +32,13 @@ import { ApiMonitorModule } from './modules/api-monitor/api-monitor.module';
     ApiMonitorModule,
   ],
   controllers: [AppController],
-  providers: [AppService, Emailer],
+  providers: [
+    AppService,
+    Emailer,
+    {
+      provide: APP_INTERCEPTOR,
+      useValue: new RavenInterceptor(),
+    },
+  ],
 })
 export class AppModule {}

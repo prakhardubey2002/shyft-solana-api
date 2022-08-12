@@ -50,6 +50,7 @@ jobs:
         ENV_IPFS_GATEWAY: ${{ secrets.IPFS_GATEWAY }}
         ENV_SOL_DEVNET: ${{ secrets.SOL_DEVNET }}
         ENV_SOL_MAINNET_BETA: ${{ secrets.SOL_MAINNET_BETA }}
+        ENV_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
     - name: Build and Test
       run: |
