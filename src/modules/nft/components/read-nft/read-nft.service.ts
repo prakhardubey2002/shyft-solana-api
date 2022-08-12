@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, ParseBoolPipe } from '@nestjs/common';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -19,6 +19,10 @@ export class ReadNftService {
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
       const { network, address, update_authority } = readAllNftDto;
+
+      //If refresh is not present in query string, we fetch from DB
+      const fetchFromDB = readAllNftDto.refresh === undefined;
+
       const fetchAllNft = new FetchAllNftDto(network, address, update_authority);
       const dbFilter = { owner: address, network: network };
 
@@ -26,12 +30,12 @@ export class ReadNftService {
         dbFilter['update_authority'] = update_authority;
       }
 
-      const dbNftInfo = await this.nftInfoAccessor.find(dbFilter);
+      const dbNftInfo = fetchFromDB ? await this.nftInfoAccessor.find(dbFilter) : false;
 
       const nftReadInWalletEvent = new NftReadInWalletEvent(address, network, update_authority);
       this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
 
-      if (dbNftInfo.length) {
+      if (dbNftInfo && dbNftInfo.length) {
         return dbNftInfo.map((nft) => {
           return getNftDbResponseFromNftInfo(nft);
         });
@@ -48,8 +52,14 @@ export class ReadNftService {
   async readNft(readNftDto: ReadNftDto): Promise<NftDbResponse> {
     try {
       const { network, token_address } = readNftDto;
+
+      //If refresh is not present in query string, we fetch from DB
+      const fetchFromDB = readNftDto.refresh === undefined;
+
       const fetchNft = new FetchNftDto(network, token_address);
-      const dbNftInfo = await this.nftInfoAccessor.readNft({ mint: readNftDto.token_address, network: network });
+
+      //Fetch from DB, if refresh is false
+      const dbNftInfo = fetchFromDB ? await this.nftInfoAccessor.readNft({ mint: readNftDto.token_address, network: network }) : false;
 
       //Trigger read event, to update DB (to-do:can be skipped)
       const nftReadEvent = new NftReadEvent(token_address, network);

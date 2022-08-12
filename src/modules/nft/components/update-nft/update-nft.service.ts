@@ -169,7 +169,6 @@ export class UpdateNftService {
 
       return transactionBase64;
     } catch (error) {
-      console.error(error);
       throw new HttpException(error.message, error.status);
     }
   }
