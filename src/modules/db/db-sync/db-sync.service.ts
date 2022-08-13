@@ -6,7 +6,8 @@ import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.se
 import { FetchNftDto, FetchAllNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
 import { NftCreationEvent, NftDeleteEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
 
-const afterNftCreationWaitTime_ms = 5000;
+const afterNftCreationWaitTime_ms = 7000;
+const afterNftUpdateWaitTime_ms = 7000;
 
 @Injectable()
 export class DbSyncService {
@@ -54,7 +55,9 @@ export class DbSyncService {
   @OnEvent('nft.updated', { async: true })
   async handleUpdateNftEvent(event: NftUpdateEvent): Promise<any> {
     try {
-      await this.syncNftData(event);
+      setTimeout(async () => {
+        await this.syncNftData(event);
+      }, afterNftUpdateWaitTime_ms);
     } catch (err) {
       console.error(err);
     }

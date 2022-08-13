@@ -97,7 +97,7 @@ export const Utility = {
       const abortController = new AbortController();
       setTimeout(() => {
         abortController.abort();
-      }, 8000);
+      }, 12000);
       const res = await axios.get(uri, { signal: abortController.signal });
       return res.status === 200 ? res.data : {};
     } catch (error) {

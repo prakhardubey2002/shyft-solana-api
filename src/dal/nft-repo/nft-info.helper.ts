@@ -5,7 +5,7 @@ export function getNftDbResponseFromNftInfo(r: NftInfoDocument): NftDbResponse {
   const response = {
     name: r.name,
     symbol: r.symbol,
-    royalty: r.royalty,
+    royalty: r.royalty / 100,
     image_uri: r.image_uri,
     description: r.description,
     mint: r.mint,

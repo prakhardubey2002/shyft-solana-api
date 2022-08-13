@@ -88,7 +88,7 @@ export class NftData {
     nftDbDto.is_mutable = this.onChainMetadata.isMutable;
     nftDbDto.name = this.onChainMetadata.data.name;
     nftDbDto.symbol = this.onChainMetadata.data.symbol;
-    nftDbDto.royalty = this.onChainMetadata.data.sellerFeeBasisPoints / 100; //Since onchain 500 = 5%
+    nftDbDto.royalty = this.onChainMetadata.data.sellerFeeBasisPoints; //Here we send the actual value back
     nftDbDto.metadata_uri = this.onChainMetadata.data.uri;
     nftDbDto.creators = this.onChainMetadata.data?.creators?.map((cr) => {
       return {
