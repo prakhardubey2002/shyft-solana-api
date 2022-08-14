@@ -49,7 +49,7 @@ export class NftInfo {
 	@Prop({ required: true })
 	description: string;
 
-	@Prop({ required: false, min: 0, max: 100, default: 0 })
+	@Prop({ required: false, min: 0, max: 10000, default: 0 })
 	royalty: number;
 
 	@Prop({ required: false })
