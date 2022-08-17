@@ -36,10 +36,12 @@ export class NftUpdateEvent {
 }
 
 export class NftDeleteEvent {
-  constructor(tokenAddress: string) {
+  constructor(tokenAddress: string, network: WalletAdapterNetwork) {
     this.tokenAddress = tokenAddress;
+    this.network = network;
   }
   tokenAddress: string;
+  network: WalletAdapterNetwork;
 }
 
 export class NftReadEvent {

@@ -32,7 +32,7 @@ export class BurnNftService {
         close: close,
       });
 
-      const nftCreationEvent = new NftDeleteEvent(token_address);
+      const nftCreationEvent = new NftDeleteEvent(token_address, network);
       this.eventEmitter.emit('nft.deleted', nftCreationEvent);
 
       return result;

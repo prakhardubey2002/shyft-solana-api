@@ -66,7 +66,10 @@ export class DbSyncService {
   @OnEvent('nft.deleted', { async: true })
   async handleDeleteNftEvent(event: NftDeleteEvent) {
     try {
-      const result = await this.nftInfoAccessor.deleteNft(event.tokenAddress);
+      const result = await this.nftInfoAccessor.deleteNft({
+        mint: event.tokenAddress,
+        network: event.network,
+      });
       return result;
     } catch (err) {
       throw Error(err);

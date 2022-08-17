@@ -49,8 +49,7 @@ export class NftInfoAccessor {
     return null;
   }
 
-  public async deleteNft(tokenAddress: string): Promise<any> {
-    const filter = { mint: tokenAddress };
+  public async deleteNft(filter: object): Promise<any> {
     const result = await this.NftInfoDataModel.deleteOne(filter);
     return result;
   }

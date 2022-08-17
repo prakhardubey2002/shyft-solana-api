@@ -1,11 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { clusterApiUrl, PublicKey, Transaction } from '@solana/web3.js';
 import { Connection } from '@metaplex/js';
-import { createBurnCheckedInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
+import {
+  createBurnCheckedInstruction,
+  createCloseAccountInstruction,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token';
 import { BurnNftDetachDto } from './dto/burn-nft-detach.dto';
+import { NftDeleteEvent } from '../../../db/db-sync/db.events';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class BurnNftDetachService {
+  constructor(private eventEmitter: EventEmitter2) {}
   async burnNft(burnNftDetachDto: BurnNftDetachDto): Promise<any> {
     try {
       const { network, wallet, token_address, close } = burnNftDetachDto;
@@ -44,6 +51,10 @@ export class BurnNftDetachService {
 
       const serializedTransaction = tx.serialize({ requireAllSignatures: false });
       const transactionBase64 = serializedTransaction.toString('base64');
+
+      //Trigger a delete event, if it isnt actually deleted, it will be added back on the next read.
+      const nftDelEvent = new NftDeleteEvent(token_address, network);
+      this.eventEmitter.emit('nft.deleted', nftDelEvent);
 
       return transactionBase64;
     } catch (error) {

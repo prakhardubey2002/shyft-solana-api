@@ -1,12 +1,15 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey } from '@solana/web3.js';
+import { clusterApiUrl, ParsedAccountData, PublicKey } from '@solana/web3.js';
 import { Connection } from '@metaplex/js';
 import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { FetchNftDto, FetchAllNftDto, NftData } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
+import { NftDeleteEvent } from '../db-sync/db.events';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class RemoteDataFetcherService {
+  constructor(private eventEmitter: EventEmitter2) { }
   async fetchAllNfts(fetchAllNftDto: FetchAllNftDto): Promise<MetadataData[]> {
     try {
       const { network, walletAddress } = fetchAllNftDto;
@@ -63,9 +66,15 @@ export class RemoteDataFetcherService {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
       const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
-      const ownerInfo = <any>await connection.getParsedAccountInfo(largestAcc?.value[0]?.address);
 
-      return ownerInfo.value?.data?.parsed?.info?.owner;
+      if (largestAcc?.value.length) {
+        const ownerInfo = <any>await connection.getParsedAccountInfo(largestAcc?.value[0]?.address);
+        return ownerInfo.value?.data?.parsed?.info?.tokenAmount.uiAmount > 0
+          ? ownerInfo.value?.data?.parsed?.info?.owner
+          : 'None';
+      }
+
+      return 'None';
     } catch (error) {
       console.log(error.message);
       throw new HttpException(error.message, error.status);
@@ -95,22 +104,31 @@ export class RemoteDataFetcherService {
       if (!tokenAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
-      const pda = await Metadata.getPDA(new PublicKey(tokenAddress));
-      const metadata = await Metadata.load(connection, pda);
-      let uriRes = {};
+      const accInfo = <any>await connection.getParsedAccountInfo(new PublicKey(tokenAddress));
+      const supply = parseInt(accInfo?.value?.data?.parsed?.info?.supply);
+      if (supply) {
+        const pda = await Metadata.getPDA(new PublicKey(tokenAddress));
+        const metadata = await Metadata.load(connection, pda);
+        let uriRes = {};
 
-      try {
-        uriRes = await Utility.request(metadata.data.data.uri);
-      } catch (error) {
-        console.log(error);
+        try {
+          uriRes = await Utility.request(metadata.data.data.uri);
+        } catch (error) {
+          console.log(error);
+        }
+
+        if (!metadata) {
+          throw new HttpException("No metadata account found", HttpStatus.NOT_FOUND);
+        }
+
+        return new NftData(metadata.data, uriRes);
+      } else {
+        //0 supply for the NFT, trigger a delete from DB just in case
+        const delEvent = new NftDeleteEvent(fetchNftDto.tokenAddress, fetchNftDto.network);
+        this.eventEmitter.emit('nft.deleted', delEvent);
       }
 
-      if (!metadata) {
-        throw new HttpException("No metadata account found", HttpStatus.NOT_FOUND);
-      }
-
-      const retObj = new NftData(metadata.data, uriRes);
-      return retObj;
+      throw new HttpException('0 supply for the NFT, deleted maybe', HttpStatus.BAD_REQUEST);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
