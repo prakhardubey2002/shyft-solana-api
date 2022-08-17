@@ -7,11 +7,10 @@ import { SignTransactionService } from './sign-transaction.service';
 @ApiTags('Wallet')
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('wallet')
-@Controller('sign-transaction')
 export class SignTransactionController {
   constructor(private readonly signTransactionService: SignTransactionService) {}
   @SignTransactionOpenApi()
-  @Post('sign-transaction')
+  @Post('sign_transaction')
   @Version('1')
   @HttpCode(200)
   async signTransaction(@Body() signTransactionDto: SignTransactionDto): Promise<any> {

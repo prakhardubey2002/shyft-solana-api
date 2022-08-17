@@ -36,9 +36,12 @@ export class CreateNftController {
     });
 
     const mintNftRequest = {
+      name: createNftDto.name,
+      symbol: createNftDto.symbol,
       network: createNftDto.network,
       privateKey: createNftDto.private_key,
       metadataUri: uri,
+      royalty: createNftDto.royalty,
       maxSupply: createNftDto.max_supply,
       userId: request.id,
     };
