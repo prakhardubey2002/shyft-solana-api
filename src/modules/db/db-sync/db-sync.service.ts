@@ -23,7 +23,7 @@ export class DbSyncService {
         await this.nftInfoAccessor.insert(nftDbDto);
       }, afterNftCreationWaitTime_ms);
     } catch (err) {
-      throw new Error(err);
+      console.error(err);
     }
   }
 
@@ -31,8 +31,8 @@ export class DbSyncService {
   async handleNftReadEvent(event: NftReadEvent): Promise<any> {
     try {
       await this.syncNftData(event);
-    } catch (error) {
-      throw error;
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -72,7 +72,7 @@ export class DbSyncService {
       });
       return result;
     } catch (err) {
-      throw Error(err);
+      console.error(err);
     }
   }
 
@@ -93,7 +93,7 @@ export class DbSyncService {
       nftDbDto.network = event.network;
       return nftDbDto;
     } catch (error) {
-      throw Error(error);
+      console.error(error);
     }
   }
 }

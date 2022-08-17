@@ -88,8 +88,8 @@ export class NftData {
     nftDbDto.is_mutable = this.onChainMetadata.isMutable;
     nftDbDto.name = this.onChainMetadata.data.name;
     nftDbDto.symbol = this.onChainMetadata.data.symbol;
-    nftDbDto.royalty = this.onChainMetadata.data.sellerFeeBasisPoints; //Here we send the actual value back
-    nftDbDto.metadata_uri = this.onChainMetadata.data.uri;
+    nftDbDto.royalty = this.onChainMetadata.data.sellerFeeBasisPoints ?? 0; //Here we send the actual value back
+    nftDbDto.metadata_uri = this.onChainMetadata.data.uri ?? '';
     nftDbDto.creators = this.onChainMetadata.data?.creators?.map((cr) => {
       return {
         address: cr.address,
@@ -97,9 +97,9 @@ export class NftData {
         verified: cr.verified,
       };
     });
-    nftDbDto.image_uri = this.offChainMetadata?.image;
-    nftDbDto.description = this.offChainMetadata?.description;
-    nftDbDto.external_url = this.offChainMetadata?.external_url;
+    nftDbDto.image_uri = this.offChainMetadata?.image ?? '';
+    nftDbDto.description = this.offChainMetadata?.description ?? '';
+    nftDbDto.external_url = this.offChainMetadata?.external_url ?? '';
     nftDbDto.attributes = {};
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait) => {
