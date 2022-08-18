@@ -7,12 +7,12 @@ import {
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
 import { BurnNftDetachDto } from './dto/burn-nft-detach.dto';
-import { NftDeleteEvent } from '../../../db/db-sync/db.events';
+import { NftDeleteEvent } from '../../../helper/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class BurnNftDetachService {
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(private eventEmitter: EventEmitter2) { }
   async burnNft(burnNftDetachDto: BurnNftDetachDto): Promise<any> {
     try {
       const { network, wallet, token_address, close } = burnNftDetachDto;

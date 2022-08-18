@@ -2,13 +2,14 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { clusterApiUrl, Keypair, SystemProgram, Transaction } from '@solana/web3.js';
 import { Connection, NodeWallet } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NftCreationEvent } from '../../../db/db-sync/db.events';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { NftCreationEvent } from 'src/modules/helper/db-sync/db.events';
 import { ObjectId } from 'mongoose';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda } from '@metaplex-foundation/js';
+
 export interface CreateParams {
   network: WalletAdapterNetwork;
   name: string;

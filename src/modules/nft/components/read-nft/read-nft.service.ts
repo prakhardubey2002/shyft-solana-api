@@ -2,19 +2,15 @@ import { HttpException, Injectable, ParseBoolPipe } from '@nestjs/common';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftDto } from './dto/read-all-nft.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NftReadEvent, NftReadInWalletEvent } from '../../../db/db-sync/db.events';
-import { RemoteDataFetcherService } from '../../../db/remote-data-fetcher/data-fetcher.service';
+import { NftReadEvent, NftReadInWalletEvent } from '../../../helper/db-sync/db.events';
+import { RemoteDataFetcherService } from '../../../helper/remote-data-fetcher/data-fetcher.service';
 import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
-import { FetchAllNftDto, FetchNftDto, NftDbResponse } from '../../../db/remote-data-fetcher/dto/data-fetcher.dto';
+import { FetchAllNftDto, FetchNftDto, NftDbResponse } from '../../../helper/remote-data-fetcher/dto/data-fetcher.dto';
 import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
 
 @Injectable()
 export class ReadNftService {
-  constructor(
-    private remoteDataFetcher: RemoteDataFetcherService,
-    private nftInfoAccessor: NftInfoAccessor,
-    private eventEmitter: EventEmitter2,
-  ) {}
+  constructor(private remoteDataFetcher: RemoteDataFetcherService, private nftInfoAccessor: NftInfoAccessor, private eventEmitter: EventEmitter2) { }
 
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
