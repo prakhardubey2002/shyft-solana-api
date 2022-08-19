@@ -51,18 +51,14 @@ export class ReadNftService {
 
   async readAllNftsByCreator(readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
     try {
-      const { network, creator_wallet_address } = readAllNftByCreatorDto;
+      const { network, creator_address, refresh } = readAllNftByCreatorDto;
 
-      //If refresh is not present in query string, we fetch from DB
-      const fetchFromDB = readAllNftByCreatorDto.refresh === undefined;
+      const dbFilter = { creators: { $elemMatch: { address: creator_address } }, network: network };
 
-      const fetchAllNft = new FetchAllNftByCreatorDto(network, creator_wallet_address);
-      const dbFilter = { creators: { $elemMatch: { address: creator_wallet_address } }, network: network };
-
-      const dbNftInfo = fetchFromDB ? await this.nftInfoAccessor.find(dbFilter) : false;
+      const dbNftInfo = !refresh ? await this.nftInfoAccessor.find(dbFilter) : false;
 
       if (dbNftInfo && dbNftInfo.length) {
-        const nftReadInWalletEvent = new NftReadInWalletEvent(creator_wallet_address, network, creator_wallet_address);
+        const nftReadInWalletEvent = new NftReadInWalletEvent(creator_address, network, creator_address);
         this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
 
         return dbNftInfo.map((nft) => {
@@ -70,9 +66,10 @@ export class ReadNftService {
         });
       } else {
         //not available in DB, fetch from blockchain
+        const fetchAllNft = new FetchAllNftByCreatorDto(network, creator_address);
         const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(fetchAllNft);
         const nftInfo = chainNfts.map((nft) => nft.getNftInfoDto());
-        const nftReadByCreatorEvent = new NftReadByCreatorEvent(creator_wallet_address, network, nftInfo);
+        const nftReadByCreatorEvent = new NftReadByCreatorEvent(creator_address, network, nftInfo);
         this.eventEmitter.emit('all.nfts.read.by.creator', nftReadByCreatorEvent);
 
         const nfts = chainNfts.map((nft) => nft.getNftDbResponse());

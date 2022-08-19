@@ -67,7 +67,6 @@ export class RemoteDataFetcherService {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
       const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
-      console.log('l', largestAcc);
 
       if (largestAcc?.value.length) {
         const ownerInfo = <any>(
@@ -181,9 +180,9 @@ export class RemoteDataFetcherService {
       const promises: Promise<NftData>[] = [];
       for (const oncd of nfts) {
         try {
-          promises.push(Utility.request(oncd.data.uri));
           const owner = await this.fetchOwner({ network, tokenAddress: oncd.mint });
           if (owner) {
+            promises.push(Utility.request(oncd.data.uri));
             result.push(new NftData(oncd, null, owner));
           }
         } catch (error) {
@@ -198,8 +197,6 @@ export class RemoteDataFetcherService {
         result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
       });
       return result;
-      // console.log(nfts);
-      // return nfts;
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

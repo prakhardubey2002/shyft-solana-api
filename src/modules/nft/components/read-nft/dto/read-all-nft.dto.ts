@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { Transform } from 'class-transformer';
 
 export class ReadAllNftDto {
   @ApiProperty({
@@ -57,23 +58,28 @@ export class ReadAllNftByCreatorDto {
   readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
-    title: 'creator_wallet_address',
+    title: 'creator_address',
     type: String,
-    description: 'Your wallet address',
+    description: "Creator's wallet address",
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
   @IsString()
-  readonly creator_wallet_address: string;
+  readonly creator_address: string;
 
   @ApiProperty({
     title: 'Refresh',
-    type: String,
+    type: Boolean,
     description: 'Skip DB and fetch directly from blockchain. Only need to mention in query params, no value needed.',
     example: '',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  readonly refresh: string;
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  readonly refresh: boolean;
 }

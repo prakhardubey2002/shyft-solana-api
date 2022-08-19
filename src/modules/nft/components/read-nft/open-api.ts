@@ -15,7 +15,8 @@ const ReadAllResponse = {
             name: 'Shyft',
             symbol: 'SH',
             royalty: 0,
-            image_uri: 'https://ipfs.io/ipfs/bafkreibivcky2t2bycsycp5d57ubtqaznqtqdnnw7grbvrrc4zdfrnspfu',
+            image_uri:
+              'https://ipfs.io/ipfs/bafkreibivcky2t2bycsycp5d57ubtqaznqtqdnnw7grbvrrc4zdfrnspfu',
             description: 'Shyft, not accenture',
             attributes: {},
             mint: '3PCt2frS9X5RwuH2KnebpUpHXcAqszvrWHnZg2m1wqDr',
@@ -25,7 +26,8 @@ const ReadAllResponse = {
             name: 'SHYFT',
             symbol: 'SHF',
             royalty: 5,
-            image_uri: 'https://ipfs.io/ipfs/bafkreig7amamflgtsovczf2el7jt7kuwf274jeaeofjy7iaa34r7exydzm',
+            image_uri:
+              'https://ipfs.io/ipfs/bafkreig7amamflgtsovczf2el7jt7kuwf274jeaeofjy7iaa34r7exydzm',
             description: 'some description',
             attributes: {
               health: 100,
@@ -37,7 +39,8 @@ const ReadAllResponse = {
             name: 'Nightweaver',
             symbol: 'NW',
             royalty: 0,
-            image_uri: 'ipfs://bafkreibivcky2t2bycsycp5d57ubtqaznqtqdnnw7grbvrrc4zdfrnspfu',
+            image_uri:
+              'ipfs://bafkreibivcky2t2bycsycp5d57ubtqaznqtqdnnw7grbvrrc4zdfrnspfu',
             description:
               'Night is considered to be a synonym for black in many cultures, a color which can absorb every other color. The Noki tribe, creators of this sword is believed by many to dwell in the darkness. Forged using the dark energy of the night, this sword can even slice through darkness itself.',
             attributes: {
@@ -56,7 +59,42 @@ const ReadAllResponse = {
 };
 
 export function ReadAllOpenApi() {
-  return applyDecorators(ApiOperation({ summary: 'Read all NFT from a wallet' }), ApiOkResponse(ReadAllResponse));
+  return applyDecorators(
+    ApiOperation({ summary: 'Read all NFT from a wallet' }),
+    ApiOkResponse(ReadAllResponse),
+  );
+}
+
+export function ReadAllByCreatorOpenApi() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Read all NFT from creator address' }),
+    ApiOkResponse({
+      description: "Creator's all NFTs",
+      schema: {
+        example: {
+          success: true,
+          message: "Creator's all NFTs",
+          result: [
+            {
+              name: 'HEDGIE#001',
+              symbol: 'HDG',
+              royalty: 5,
+              image_uri:
+                'https://nftstorage.link/ipfs/bafkreiff7tzd2n3dskowfvp3bcua4zc33ohumqwn7v764nuyhd3rw5qgom',
+              description: 'Shyft makes it easy.',
+              update_authority: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
+              attributes: {
+                edification: '100',
+                energy: '50',
+              },
+              mint: '4VEj63tATjBSfd22Mxbe6n7ainckFU9ewRVTvfrthGDU',
+              owner: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
+            },
+          ],
+        },
+      },
+    }),
+  );
 }
 
 export function ReadOpenApi() {
@@ -72,7 +110,8 @@ export function ReadOpenApi() {
             name: 'SHYFT',
             description: 'some description',
             symbol: 'SHF',
-            image_uri: 'https://ipfs.io/ipfs/bafkreig7amamflgtsovczf2el7jt7kuwf274jeaeofjy7iaa34r7exydzm',
+            image_uri:
+              'https://ipfs.io/ipfs/bafkreig7amamflgtsovczf2el7jt7kuwf274jeaeofjy7iaa34r7exydzm',
             attributes: {
               health: 100,
             },

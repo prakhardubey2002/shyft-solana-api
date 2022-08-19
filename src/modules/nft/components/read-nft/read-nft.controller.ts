@@ -3,7 +3,7 @@ import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { ReadAllNftDto, ReadAllNftByCreatorDto } from './dto/read-all-nft.dto';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadNftService } from './read-nft.service';
-import { ReadAllOpenApi, ReadOpenApi } from './open-api';
+import { ReadAllByCreatorOpenApi, ReadAllOpenApi, ReadOpenApi } from './open-api';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -24,6 +24,7 @@ export class ReadNftController {
     };
   }
 
+  @ReadAllByCreatorOpenApi()
   @Get('read_all_by_creator')
   @Version('1')
   async readAllNftsByCreator(@Query() readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
@@ -31,7 +32,7 @@ export class ReadNftController {
 
     return {
       success: true,
-      message: 'All NFTS in your wallet',
+      message: "Creator's all NFTs",
       result,
     };
   }

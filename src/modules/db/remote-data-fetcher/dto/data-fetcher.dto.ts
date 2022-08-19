@@ -35,9 +35,9 @@ export class FetchAllNftDto {
 }
 
 export class FetchAllNftByCreatorDto {
-  constructor(network: WalletAdapterNetwork, creator_wallet_address: string) {
+  constructor(network: WalletAdapterNetwork, creator_address: string) {
     this.network = network;
-    this.creator = creator_wallet_address;
+    this.creator = creator_address;
   }
 
   @IsNotEmpty()
