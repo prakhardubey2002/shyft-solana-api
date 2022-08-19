@@ -34,6 +34,19 @@ export class FetchAllNftDto {
   readonly updateAuthority: string;
 }
 
+export class FetchAllNftByCreatorDto {
+  constructor(network: WalletAdapterNetwork, creator_wallet_address: string) {
+    this.network = network;
+    this.creator = creator_wallet_address;
+  }
+
+  @IsNotEmpty()
+  readonly network: WalletAdapterNetwork;
+  @IsNotEmpty()
+  @IsString()
+  readonly creator: string;
+}
+
 export class FetchNftDto {
   constructor(network: WalletAdapterNetwork, address: string) {
     this.network = network;

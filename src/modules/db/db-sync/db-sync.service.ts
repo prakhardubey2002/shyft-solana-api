@@ -4,7 +4,7 @@ import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto, FetchAllNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
-import { NftCreationEvent, NftDeleteEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
+import { NftCreationEvent, NftDeleteEvent, NftReadByCreatorEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
 
 const afterNftCreationWaitTime_ms = 7000;
 const afterNftUpdateWaitTime_ms = 7000;
@@ -47,6 +47,15 @@ export class DbSyncService {
         return info;
       });
       await this.nftInfoAccessor.updateManyNft(nftInfos);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  @OnEvent('all.nfts.read.by.creator', { async: true })
+  async handleAllNftReadByCreatorEvent(event: NftReadByCreatorEvent): Promise<any> {
+    try {
+      await this.nftInfoAccessor.updateManyNft(event.nfts);
     } catch (err) {
       console.error(err);
     }

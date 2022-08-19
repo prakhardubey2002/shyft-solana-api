@@ -1,8 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { clusterApiUrl, ParsedAccountData, PublicKey } from '@solana/web3.js';
+import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection } from '@metaplex/js';
-import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { FetchNftDto, FetchAllNftDto, NftData } from './dto/data-fetcher.dto';
+import { Metaplex } from '@metaplex-foundation/js';
+import { Metadata, MetadataData, MetadataDataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
+import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { NftDeleteEvent } from '../db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -66,9 +67,12 @@ export class RemoteDataFetcherService {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
       const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
+      console.log('l', largestAcc);
 
       if (largestAcc?.value.length) {
-        const ownerInfo = <any>await connection.getParsedAccountInfo(largestAcc?.value[0]?.address);
+        const ownerInfo = <any>(
+          await connection.getParsedAccountInfo(largestAcc?.value[0]?.address)
+        );
         return ownerInfo.value?.data?.parsed?.info?.tokenAmount.uiAmount > 0
           ? ownerInfo.value?.data?.parsed?.info?.owner
           : 'None';
@@ -104,7 +108,9 @@ export class RemoteDataFetcherService {
       if (!tokenAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
-      const accInfo = <any>await connection.getParsedAccountInfo(new PublicKey(tokenAddress));
+      const accInfo = <any>(
+        await connection.getParsedAccountInfo(new PublicKey(tokenAddress))
+      );
       const supply = parseInt(accInfo?.value?.data?.parsed?.info?.supply);
       if (supply) {
         const pda = await Metadata.getPDA(new PublicKey(tokenAddress));
@@ -118,7 +124,7 @@ export class RemoteDataFetcherService {
         }
 
         if (!metadata) {
-          throw new HttpException("No metadata account found", HttpStatus.NOT_FOUND);
+          throw new HttpException('No metadata account found', HttpStatus.NOT_FOUND);
         }
 
         return new NftData(metadata.data, uriRes);
@@ -129,6 +135,71 @@ export class RemoteDataFetcherService {
       }
 
       throw new HttpException('0 supply for the NFT, deleted maybe', HttpStatus.BAD_REQUEST);
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
+    }
+  }
+
+  async fetchAllNftsByCreator(fetchAllNftByCreatorDto: FetchAllNftByCreatorDto): Promise<NftData[]> {
+    try {
+      const { network, creator } = fetchAllNftByCreatorDto;
+      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const metaplex = Metaplex.make(connection);
+
+      if (!creator) {
+        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
+      }
+
+      const nftsByCreator = await metaplex.nfts().findAllByCreator(new PublicKey(creator));
+      const nfts: MetadataData[] = nftsByCreator.map((nft) => {
+        const creators = nft.creators.map((creator) => {
+          return {
+            address: creator.address.toBase58(),
+            share: creator.share,
+            verified: creator.verified,
+          };
+        });
+
+        return new MetadataData({
+          updateAuthority: nft.updateAuthority.toBase58(),
+          mint: nft.mint.toBase58(),
+          data: new MetadataDataData({
+            name: nft.name,
+            symbol: nft.symbol,
+            uri: nft.uri,
+            sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
+            creators,
+          }),
+          primarySaleHappened: nft.primarySaleHappened,
+          isMutable: nft.isMutable,
+          editionNonce: nft.editionNonce,
+        });
+      });
+
+      const result: NftData[] = [];
+      // Run all offchain requests parallely instead of one by one
+      const promises: Promise<NftData>[] = [];
+      for (const oncd of nfts) {
+        try {
+          promises.push(Utility.request(oncd.data.uri));
+          const owner = await this.fetchOwner({ network, tokenAddress: oncd.mint });
+          if (owner) {
+            result.push(new NftData(oncd, null, owner));
+          }
+        } catch (error) {
+          //Ignore off chain data that cant be fetched or is taking too long.
+          console.log('ignoring');
+        }
+      }
+
+      const res = await Promise.allSettled(promises);
+
+      res?.forEach((data, i) => {
+        result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
+      });
+      return result;
+      // console.log(nfts);
+      // return nfts;
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Req, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { ReadAllNftDto } from './dto/read-all-nft.dto';
+import { ReadAllNftDto, ReadAllNftByCreatorDto } from './dto/read-all-nft.dto';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadNftService } from './read-nft.service';
 import { ReadAllOpenApi, ReadOpenApi } from './open-api';
@@ -23,6 +23,19 @@ export class ReadNftController {
       result,
     };
   }
+
+  @Get('read_all_by_creator')
+  @Version('1')
+  async readAllNftsByCreator(@Query() readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
+    const result = await this.readNftService.readAllNftsByCreator(readAllNftByCreatorDto);
+
+    return {
+      success: true,
+      message: 'All NFTS in your wallet',
+      result,
+    };
+  }
+
 
   @ReadOpenApi()
   @Get('read')
