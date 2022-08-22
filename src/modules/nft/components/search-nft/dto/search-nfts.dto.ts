@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Transform } from 'class-transformer';
 
@@ -27,15 +27,15 @@ export class SearchNftsDto {
   })
   readonly creators?: string[];
 
-  @ApiPropertyOptional({
-    title: 'owner',
+  @ApiProperty({
+    title: 'wallet',
     type: String,
     description: "Owner of NFT's",
     example: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
   })
+  @IsNotEmpty()
   @IsString()
-  @IsOptional()
-  readonly owner?: string;
+  readonly wallet: string;
 
   @ApiPropertyOptional({
     title: 'attributes',

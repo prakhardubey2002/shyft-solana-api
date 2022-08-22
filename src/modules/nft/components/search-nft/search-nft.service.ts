@@ -34,7 +34,7 @@ export class SearchNftService {
   }
 
   async searchNfts(searchNftDto: SearchNftsDto): Promise<any> {
-    const { network, owner, creators, attributes } = searchNftDto;
+    const { network, wallet, creators, attributes } = searchNftDto;
     let { page, size } = searchNftDto;
     if (!page) page = 1;
     if (!size) size = 10;
@@ -68,7 +68,7 @@ export class SearchNftService {
     }
 
     if (network) filter['network'] = network;
-    if (owner) filter['owner'] = owner;
+    if (wallet) filter['owner'] = wallet;
     if (isArray(creators)) {
       filter['creators'] = { $elemMatch: { address: { $in: creators } } };
     }
