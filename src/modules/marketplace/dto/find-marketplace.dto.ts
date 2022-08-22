@@ -1,15 +1,15 @@
-import { IsNotEmpty, IsString } from "class-validator";
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class GetListingDetailsDto {
+export class FindMarketplaceDto {
 	@IsNotEmpty()
 	readonly network: WalletAdapterNetwork;
 
 	@IsNotEmpty()
 	@IsString()
-	readonly marketplace_address: string;
+	readonly creator_address: string;
 
 	@IsNotEmpty()
 	@IsString()
-	readonly list_state: string;
+	readonly currency_address: string;
 }

@@ -4,6 +4,7 @@ import { Model } from "mongoose";
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 import { Listing, ListingDocument } from "./listing.schema";
+import { DateTime } from "@metaplex-foundation/js";
 
 @Injectable()
 export class ListingRepo {
@@ -18,10 +19,11 @@ export class ListingRepo {
 		}
 	}
 
-	public async markSold(network: WalletAdapterNetwork, tradeState: string, buyer: string, purchasedAt: Date): Promise<any> {
+	public async markSold(network: WalletAdapterNetwork, listState: string, buyer: string, purchasedAt: DateTime, purchaseReceipt: string): Promise<any> {
 		try {
-			const filter = { network: network, trade_state: tradeState };
-			const update = { buyer_address: buyer, purchased_at: purchasedAt }
+			const filter = { network: network, list_state: listState };
+			const purchasedTime = new Date(purchasedAt.toNumber() * 1000);
+			const update = { buyer_address: buyer, purchased_at: purchasedTime, purchase_receipt_address: purchaseReceipt }
 			const result = await this.ListingModel.updateOne(filter, update);
 			return result;
 		} catch (err) {
@@ -29,9 +31,9 @@ export class ListingRepo {
 		}
 	}
 
-	async updateCancelledAt(network: WalletAdapterNetwork, tradeState: string, cancelTime: Date): Promise<any> {
+	async updateCancelledAt(network: WalletAdapterNetwork, listState: string, cancelTime: Date): Promise<any> {
 		try {
-			const filter = { network: network, trade_state: tradeState, cancelled_at: { $exists: false } };
+			const filter = { network: network, list_state: listState, cancelled_at: { $exists: false } };
 			const update = { cancelled_at: cancelTime };
 			const result = await this.ListingModel.updateOne(filter, update);
 			return result
@@ -52,7 +54,7 @@ export class ListingRepo {
 
 	async getSellerListings(network: WalletAdapterNetwork, marketPlaceAddress: string, seller: string): Promise<ListingDocument[]> {
 		try {
-			const filter = { network: network, marketplace_address: marketPlaceAddress, cancelled_at: { $exists: false }, seller_address: seller };
+			const filter = { network: network, marketplace_address: marketPlaceAddress, seller_address: seller };
 			const result = await this.ListingModel.find(filter);
 			return result;
 		} catch (err) {

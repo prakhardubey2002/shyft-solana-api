@@ -1,5 +1,7 @@
+import { DateTime } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ObjectId } from 'mongoose';
+import { MarketPlace } from 'src/dal/marketplace-repo/marketplace.schema';
 
 export class NftCreationEvent {
   constructor(tokenAddress: string, network: WalletAdapterNetwork, apiKeyId: ObjectId) {
@@ -55,20 +57,74 @@ export class NftReadEvent {
 }
 
 export class MarketplaceCreationEvent {
-  constructor(network: WalletAdapterNetwork, address: string, currency: string, apiKeyId: ObjectId) {
+  constructor(network: WalletAdapterNetwork, address: string, authority: string, currencyAddress: string, feePayer: string, feeRecipient: string, feeHolderAccount: string, creator: string, transactionFee: number, currencySymbol: string, apiKeyId: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
     this.network = network;
     this.address = address;
-    this.currency = currency;
+    this.authority = authority;
+    this.currencyAddress = currencyAddress;
+    this.feePayer = feePayer;
+    this.feeHolderAccount = feeHolderAccount;
+    this.feeRecipient = feeRecipient;
+    this.creator = creator;
+    this.transactionFee = transactionFee;
     this.apiKeyId = apiKeyId;
+    this.currencySymbol = currencySymbol;
+    this.canChangeSalePrice = canChangePrice ? canChangePrice : false;
+    this.requiresSignOff = requireSignOff ? requireSignOff : false;
   }
   network: WalletAdapterNetwork;
   address: string;
-  currency: string;
+  authority: string;
+  currencyAddress: string;
+  currencySymbol: string;
   apiKeyId: ObjectId;
+  feePayer: string;
+  feeRecipient: string;
+  feeHolderAccount: string;
+  creator: string;
+  transactionFee: number;
+  canChangeSalePrice: boolean;
+  requiresSignOff: boolean;
+}
+
+export class UpdateMarketplaceEvent {
+  constructor(address: string, currencyAddress: string, currencySymbol: string, feePayer: string, feeRecipient: string, transactionFee: number, authority: string, creator?: string, apiKeyId?: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
+    this.address = address;
+    this.currencyAddress = currencyAddress;
+    this.currencySymbol = currencySymbol;
+    this.feePayer = feePayer;
+    this.feeRecipient = feeRecipient;
+    this.transactionFee = transactionFee;
+    this.authority = authority;
+    if (canChangePrice !== undefined) {
+      this.canChangeSalePrice = canChangePrice
+    }
+    if (requireSignOff !== undefined) {
+      this.requiresSignOff = requireSignOff
+    }
+    if (apiKeyId !== undefined) {
+      this.apiKeyId = apiKeyId;
+    }
+    if (creator !== undefined) {
+      this.creator = creator;
+    }
+  }
+
+  address: string;
+  currencyAddress: string;
+  currencySymbol: string;
+  authority: string;
+  feePayer: string;
+  feeRecipient: string;
+  transactionFee: number;
+  canChangeSalePrice: boolean;
+  requiresSignOff: boolean;
+  apiKeyId?: ObjectId;
+  creator?: string;
 }
 
 export class ListingCreatedEvent {
-  constructor(ts: string, mp: string, price: number, nft: string, seller: string, apiKeyId: ObjectId, network: WalletAdapterNetwork) {
+  constructor(ts: string, mp: string, price: number, nft: string, seller: string, apiKeyId: ObjectId, network: WalletAdapterNetwork, receipt: string, createdAt: DateTime, symbol: string) {
     this.listState = ts;
     this.apiKeyId = apiKeyId;
     this.marketplaceAddress = mp;
@@ -76,6 +132,9 @@ export class ListingCreatedEvent {
     this.nftAddress = nft;
     this.sellerAddress = seller;
     this.network = network;
+    this.receipt = receipt;
+    this.createdAt = createdAt;
+    this.currency_symbol = symbol;
   }
 
   network: WalletAdapterNetwork;
@@ -85,20 +144,27 @@ export class ListingCreatedEvent {
   nftAddress: string;
   sellerAddress: string;
   apiKeyId: ObjectId;
+  receipt: string;
+  createdAt: DateTime;
+  currency_symbol: string;
 }
 
 export class ListingSoldEvent {
-  constructor(ts: string, ba: string, network: WalletAdapterNetwork) {
+  constructor(ts: string, ba: string, network: WalletAdapterNetwork, purchasedAt: DateTime, purchaseReceipt?: string) {
     this.listState = ts;
     this.buyerAddress = ba;
     this.network = network;
-    this.purchasedAt = new Date();
+    this.purchasedAt = purchasedAt;
+    if (purchaseReceipt !== undefined) {
+      this.purchaseReceipt = purchaseReceipt;
+    }
   }
 
   network: WalletAdapterNetwork;
   listState: string;
   buyerAddress: string;
-  purchasedAt: Date;
+  purchasedAt: DateTime;
+  purchaseReceipt?: string;
 }
 
 export class ListingCancelledEvent {

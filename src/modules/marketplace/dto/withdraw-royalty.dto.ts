@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString } from "class-validator";
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class GetListingDetailsDto {
+export class WithdrawFeeDto {
 	@IsNotEmpty()
 	readonly network: WalletAdapterNetwork;
 
@@ -10,6 +10,10 @@ export class GetListingDetailsDto {
 	readonly marketplace_address: string;
 
 	@IsNotEmpty()
+	@IsNumber()
+	readonly amount: number;
+
+	@IsNotEmpty()
 	@IsString()
-	readonly list_state: string;
+	readonly private_key: string;
 }

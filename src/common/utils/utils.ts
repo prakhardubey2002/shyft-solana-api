@@ -1,5 +1,5 @@
-import { findMetadataPda } from '@metaplex-foundation/js';
-import { Mint } from '@solana/spl-token';
+import { findMetadataPda, token, toPublicKey } from '@metaplex-foundation/js';
+import { getMint, Mint } from '@solana/spl-token';
 import axios from 'axios';
 import {
   clusterApiUrl,
@@ -23,6 +23,7 @@ import { configuration } from '../configs/config';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenListProvider } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
+import { newProgramErrorFrom } from 'src/core/program-error';
 
 const endpoint = {
   http: {
@@ -151,6 +152,23 @@ export const Utility = {
         }
       }
     },
+
+    getTokenSymbol: async function (
+      network: WalletAdapterNetwork,
+      tokenAddress: string,
+    ): Promise<string> {
+      let symbol: string = "";
+      try {
+        const connection = new Connection(clusterApiUrl(network), 'confirmed');
+        const tokenInfo = await getMint(connection, toPublicKey(tokenAddress));
+        const tokenResp = await Utility.token.getTokenInfo(connection, network, tokenInfo);
+        symbol = tokenResp.symbol;
+      } catch (err) {
+        newProgramErrorFrom(err, "get_token_symbol_error").log();
+      } finally {
+        return symbol != "" ? symbol : "Token";
+      }
+    }
   },
 
   account: {

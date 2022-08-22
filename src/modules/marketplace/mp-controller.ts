@@ -4,13 +4,16 @@ import { BuyDto as BuyDto } from './dto/buy-listed.dto';
 import { CancelListingDto } from './dto/cancel-listing.dto';
 import { CreateListingDto } from './dto/create-list.dto';
 import { CreateMarketPlaceDto } from './dto/create-mp.dto';
+import { FindMarketplaceDto } from './dto/find-marketplace.dto';
 import { GetListingDetailsDto } from './dto/get-listing-details.dto';
 import { GetListingsDto } from './dto/get-listings.dto';
 import { GetMarketplacesDto } from './dto/get-mp.dto';
 import { GetPurchasesDto } from './dto/get-purchases.dto';
 import { GetSellerListingsDto } from './dto/get-seller-listings.dto';
+import { UpdateMarketplaceDto } from './dto/update-marketplace.dto';
+import { WithdrawFeeDto } from './dto/withdraw-royalty.dto';
 import { ListingService } from './listing-service';
-import { MarketplaceService } from './mp-service';
+import { MarketplaceService, UpdateMpSerivceDto } from './mp-service';
 
 @ApiTags('MarketPlace')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -35,7 +38,7 @@ export class CreateMarketplaceController {
 		};
 	}
 
-	@Get('fetch')
+	@Get('my_markets')
 	@Version('1')
 	async getMarketplace(@Query() getMpDto: GetMarketplacesDto, @Req() request: any): Promise<any> {
 		console.log('market places fetch request received.');
@@ -49,6 +52,46 @@ export class CreateMarketplaceController {
 			message: 'Marketplaces fetched successfully',
 			result: result,
 		};
+	}
+
+	@Post('withdraw_fee')
+	@Version('1')
+	async withdrawFees(@Body() withdrawFeeDto: WithdrawFeeDto, @Req() request: any): Promise<any> {
+		console.log("withdraw fee request received");
+		const result = await this.marketplaceService.withdrawFee(withdrawFeeDto);
+		return {
+			success: true,
+			message: 'fee withdrawn successfully',
+			result: result,
+		}
+	}
+
+	@Post('update')
+	@Version('1')
+	async update(@Body() updateMpDto: UpdateMarketplaceDto, @Req() request: any): Promise<any> {
+		console.log("update marketplace request received");
+		const serviceDto: UpdateMpSerivceDto = {
+			apiKeyId: request.id,
+			update: updateMpDto
+		}
+		const result = await this.marketplaceService.updateAuctionHouse(serviceDto);
+		return {
+			success: true,
+			message: 'marketplace updated successfully',
+			result: result,
+		}
+	}
+
+	@Get('find')
+	@Version('1')
+	async findMarketplace(@Query() findMarketplaceDto: FindMarketplaceDto, @Req() request: any) {
+		console.log("find marketplace request received");
+		const result = await this.marketplaceService.findMarketplace(findMarketplaceDto)
+		return {
+			success: true,
+			message: "marketplace found",
+			result: result
+		}
 	}
 
 	@Post('list')
@@ -93,9 +136,9 @@ export class CreateMarketplaceController {
 
 	@Get('list_details')
 	@Version('1')
-	async getListingDetails(@Query() getListingDetailsDto: GetListingDetailsDto, @Req() request: any): Promise<any> {
+	async findListing(@Query() getListingDetailsDto: GetListingDetailsDto, @Req() request: any): Promise<any> {
 		console.log("getListingDetails request received");
-		const result = await this.listingService.getListDetails(getListingDetailsDto);
+		const result = await this.listingService.findListing(getListingDetailsDto);
 		return {
 			success: true,
 			message: 'listing details fetched successfully',
@@ -134,7 +177,7 @@ export class CreateMarketplaceController {
 		const result = await this.listingService.getSellerListings(getListingDto);
 		return {
 			success: true,
-			message: 'active listing fetched successfully',
+			message: 'all seller listings fetched successfully',
 			result: result,
 		}
 	}

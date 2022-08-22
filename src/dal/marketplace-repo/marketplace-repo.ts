@@ -26,4 +26,16 @@ export class MarketplaceRepo {
 			throw new Error(err)
 		}
 	}
+
+	public async updateMarketplace(market: MarketPlace): Promise<any> {
+		try {
+			const filter = { address: market.address }
+			const result = await this.MarketplaceModel.updateOne(filter, market, {
+				upsert: true,
+			})
+			return result
+		} catch (err) {
+			throw new Error(err);
+		}
+	}
 }

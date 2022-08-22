@@ -1,4 +1,4 @@
-import { amount, findAuctionHouseTradeStatePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey, token, findAssociatedTokenAccountPda, Pda } from "@metaplex-foundation/js";
+import { amount, findAuctionHouseTradeStatePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey, token, findAssociatedTokenAccountPda, Pda, toDateTime, formatDateTime } from "@metaplex-foundation/js";
 import { NodeWallet } from "@metaplex/js";
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { clusterApiUrl, Connection, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
@@ -19,30 +19,13 @@ import { ListingRepo } from "src/dal/listing-repo/listing-repo";
 import { GetSellerListingsDto } from "./dto/get-seller-listings.dto";
 import { GetPurchasesDto } from "./dto/get-purchases.dto";
 import { ObjectId } from "mongoose";
+import { PurchasesDto, SellerListingsDto, ActiveListingsResultDto, BuyResponseDto, ListingCreationResponseDto, ListingInfoResponseDto } from "./response-dto/responses.dto";
+import { newProgramErrorFrom } from "src/core/program-error";
 import { Utility } from "src/common/utils/utils";
 
 class CreateListingServiceDto {
 	apiKeyId: ObjectId;
 	createListingParams: CreateListingDto;
-}
-
-class ActiveListingsResultDto {
-	network: string;
-	marketplace_address: string;
-	seller_address: string;
-	price: number;
-	nft_address: string;
-	created_at: Date;
-	list_state: string;
-}
-
-type PurchasesDto = Omit<ActiveListingsResultDto, 'list_state'> & {
-	purchased_at: Date;
-};
-
-type SellerListingsDto = ActiveListingsResultDto & {
-	purchased_at?: Date;
-	buyer_address?: string;
 }
 
 @Injectable()
@@ -58,7 +41,8 @@ export class ListingService {
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(createListDto.createListingParams.marketplace_address)).run();
 
 			const auctionCurrency = auctionHouse.treasuryMint;
-			const { listing, sellerTradeState: listState } = await auctionsClient.for(auctionHouse).list({
+			const currencySymbol = await Utility.token.getTokenSymbol(createListDto.createListingParams.network, auctionHouse.treasuryMint.address.toBase58());
+			const { listing } = await auctionsClient.for(auctionHouse).list({
 				seller: wallet.publicKey,
 				mintAccount: new PublicKey(createListDto.createListingParams.nft_address),
 				price: {
@@ -70,24 +54,34 @@ export class ListingService {
 			}).run();
 
 			const listingCreatedEvent = new ListingCreatedEvent(
-				listState.toBase58(),
+				listing.tradeStateAddress.toBase58(),
 				listing.auctionHouse.address.toBase58(),
 				createListDto.createListingParams.price,
 				listing.asset.address.toBase58(),
 				listing.sellerAddress.toBase58(),
 				createListDto.apiKeyId,
-				createListDto.createListingParams.network
+				createListDto.createListingParams.network,
+				listing.receiptAddress.toBase58(),
+				listing.createdAt,
+				currencySymbol,
 			);
 			this.eventEmitter.emit('listing.created', listingCreatedEvent);
 
-			const result = {
-				listing,
-				listState,
+			const result: ListingCreationResponseDto = {
+				network: createListDto.createListingParams.network,
+				marketplace_address: listing.auctionHouse.address.toBase58(),
+				seller_address: listing.sellerAddress.toBase58(),
+				price: createListDto.createListingParams.price,
+				nft_address: listing.asset.address.toBase58(),
+				list_state: listing.tradeStateAddress.toBase58(),
+				currency_symbol: currencySymbol,
+				receipt: listing.receiptAddress.toBase58(),
+				created_at: new Date(listing.createdAt.toNumber() * 1000)
 			};
+
 			return result;
 		} catch (err) {
-			console.log(err.message)
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(err, "listing_creation_error");
 		}
 	}
 
@@ -131,20 +125,36 @@ export class ListingService {
 			}).run()
 
 			const listingSoldEvent = new ListingSoldEvent(
-				sellerTradeState.toBase58(), wallet.publicKey.toBase58(), buyDto.network
+				sellerTradeState.toBase58(),
+				bid.buyerAddress.toBase58(),
+				buyDto.network,
+				purchase.createdAt,
+				purchase.receiptAddress.toBase58(),
 			);
 			this.eventEmitter.emit('listing.sold', listingSoldEvent);
 
+			const currencySymbol = await Utility.token.getTokenSymbol(buyDto.network, auctionHouse.treasuryMint.address.toBase58());
+			const result: BuyResponseDto = {
+				network: buyDto.network,
+				marketplace_address: listing.auctionHouse.address.toBase58(),
+				seller_address: listing.sellerAddress.toBase58(),
+				price: buyDto.price,
+				nft_address: listing.asset.address.toBase58(),
+				currency_symbol: currencySymbol,
+				purchase_receipt: purchase.receiptAddress.toBase58(),
+				buyer_address: purchase.buyerAddress.toBase58(),
+				purchased_at: new Date(purchase.createdAt.toNumber() * 1000)
+			}
 			return {
-				purchase: purchase,
+				purchase: result,
 			}
 		} catch (err) {
-			console.log(err.message)
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			console.log(err);
+			throw newProgramErrorFrom(err, "listing_buy_error");
 		}
 	}
 
-	async getListDetails(getListingDetailsDto: GetListingDetailsDto): Promise<any> {
+	async findListing(getListingDetailsDto: GetListingDetailsDto): Promise<any> {
 		try {
 			const connection = new Connection(clusterApiUrl(getListingDetailsDto.network), 'confirmed');
 			const metaplex = Metaplex.make(connection, { cluster: getListingDetailsDto.network })
@@ -153,13 +163,31 @@ export class ListingService {
 
 			const auctionHouseClient = auctionsClient.for(auctionHouse);
 			const listing = await auctionHouseClient.findListingByAddress(toPublicKey(getListingDetailsDto.list_state)).run();
-			const result = {
-				listing
+
+			const price = listing.price.basisPoints.toNumber() / Math.pow(10, listing.price.currency.decimals);
+			const currencySymbol = await Utility.token.getTokenSymbol(getListingDetailsDto.network, auctionHouse.treasuryMint.address.toBase58());
+			const result: ListingInfoResponseDto = {
+				network: getListingDetailsDto.network,
+				marketplace_address: listing.auctionHouse.address.toBase58(),
+				seller_address: listing.sellerAddress.toBase58(),
+				price: price,
+				nft_address: listing.asset.address.toBase58(),
+				list_state: listing.tradeStateAddress.toBase58(),
+				currency_symbol: currencySymbol,
+				created_at: new Date(listing.createdAt.toNumber() * 1000),
+			}
+			if (listing.receiptAddress != null) {
+				result.receipt = listing.receiptAddress.toBase58();
+			}
+			if (listing.purchaseReceiptAddress != null) {
+				result.purchase_receipt = listing.purchaseReceiptAddress.toBase58();
+			}
+			if (listing.canceledAt != null) {
+				result.cancelled_at = new Date(listing.canceledAt.toNumber() * 1000)
 			}
 			return result;
 		} catch (error) {
-			console.log(error)
-			throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(error, "get_listing_error");
 		}
 	}
 
@@ -212,11 +240,10 @@ export class ListingService {
 			this.eventEmitter.emit('listing.cancelled', listingCancelledEvnet);
 
 			return {
-				txId
+				transaction_id: txId
 			};
 		} catch (err) {
-			console.log(err);
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(err, "cancel_listing_error");
 		}
 	}
 
@@ -229,16 +256,19 @@ export class ListingService {
 					marketplace_address: listing.marketplace_address,
 					seller_address: listing.seller_address,
 					price: listing.price,
+					currency_symbol: listing.currency_symbol,
 					nft_address: listing.nft_address,
-					created_at: listing.created_at,
 					list_state: listing.list_state,
+					created_at: listing.created_at,
+				}
+				if (listing.receipt_address != null) {
+					acl.receipt = listing.receipt_address
 				}
 				return acl;
 			});
 			return result;
 		} catch (err) {
-			console.log(err);
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(err, "get_active_listings_error");
 		}
 	}
 
@@ -255,8 +285,7 @@ export class ListingService {
 			})
 			return result;
 		} catch (err) {
-			console.log(err);
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(err, "get_active_sellers_error");
 		}
 	}
 
@@ -270,17 +299,20 @@ export class ListingService {
 					seller_address: listing.seller_address,
 					price: listing.price,
 					nft_address: listing.nft_address,
+					currency_symbol: listing.currency_symbol,
 					buyer_address: listing.buyer_address,
 					created_at: listing.created_at,
 					list_state: listing.list_state,
 					purchased_at: listing.purchased_at,
+					purchase_receipt: listing.purchase_receipt_address,
+					receipt: listing.receipt_address,
+					cancelled_at: listing.cancelled_at,
 				}
 				return acl;
 			});
 			return result;
 		} catch (err) {
-			console.log(err);
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(err, "get_seller_listings_error");
 		}
 	}
 
@@ -294,6 +326,8 @@ export class ListingService {
 					seller_address: listing.seller_address,
 					price: listing.price,
 					nft_address: listing.nft_address,
+					buyer_address: listing.buyer_address,
+					purchase_receipt: listing.purchase_receipt_address,
 					created_at: listing.created_at,
 					purchased_at: listing.purchased_at,
 				}
@@ -301,8 +335,7 @@ export class ListingService {
 			});
 			return result;
 		} catch (err) {
-			console.log(err);
-			throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw newProgramErrorFrom(err, "get_purchases_error");
 		}
 	}
 }
