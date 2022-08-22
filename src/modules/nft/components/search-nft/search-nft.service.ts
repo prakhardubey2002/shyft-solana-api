@@ -1,4 +1,4 @@
-import { Injectable, Req } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isArray } from 'class-validator';
 import { ObjectId } from 'mongoose';
@@ -40,22 +40,40 @@ export class SearchNftService {
     if (!size) size = 10;
 
     const filter = {};
+    const searchExp = [];
     for (const key in attributes) {
       const k = 'attributes.' + key;
       const n = attributes[key];
       if (!isNaN(n)) {
         filter[k] = n;
       } else {
-        filter[k] = attributes[key];
+        if (typeof attributes[key] === 'object') {
+          // handle 'gt'/'lt'/'gte'/'lte' operation and mold as mongoose operation
+          const searchValue = Object.values(attributes[key])[0] as string;
+          const searchMethod = `$${Object.keys(attributes[key])[0]}`;
+          // push 'gt'/'lt'/'gte'/'lte' operation
+          searchExp.push({
+            $expr: {
+              [searchMethod]: [{ $toDouble: `$${k}` }, parseInt(searchValue)],
+            },
+          });
+        } else {
+          filter[k] = attributes[key];
+        }
       }
     }
+    if (searchExp.length > 0) {
+      // include extra ops if included
+      Object.assign(filter, { $and: searchExp });
+    }
+
     if (network) filter['network'] = network;
     if (owner) filter['owner'] = owner;
     if (isArray(creators)) {
       filter['creators'] = { $elemMatch: { address: { $in: creators } } };
     }
+    // console.log(filter);
     const totalData = await this.nftInfoAccessor.count(filter);
-
     const totalPage = Math.ceil(totalData / size);
     const filteredResult = await this.nftInfoAccessor.find(filter, page, size);
 

@@ -41,7 +41,7 @@ export class SearchNftsDto {
     title: 'attributes',
     type: String,
     description: 'Attributes associated',
-    example: { edification: '100', energy: '50' },
+    example: { edification: { gte: '100' }, energy: '50' },
   })
   @IsOptional()
   @Transform(({ value }) => {
@@ -58,6 +58,9 @@ export class SearchNftsDto {
   })
   @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => {
+    return parseInt(value);
+  })
   readonly page?: number;
 
   @ApiPropertyOptional({
@@ -69,5 +72,8 @@ export class SearchNftsDto {
   })
   @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => {
+    return parseInt(value);
+  })
   readonly size?: number;
 }
