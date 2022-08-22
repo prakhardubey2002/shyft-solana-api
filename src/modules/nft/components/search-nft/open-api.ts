@@ -71,7 +71,7 @@ export function SearchOpenApi() {
       schema: {
         example: {
           success: true,
-          message: 'filtered NFTs',
+          message: "Creator's all NFTs",
           result: {
             nfts: [
               {
@@ -81,20 +81,20 @@ export function SearchOpenApi() {
                 image_uri:
                   'https://nftstorage.link/ipfs/bafkreiff7tzd2n3dskowfvp3bcua4zc33ohumqwn7v764nuyhd3rw5qgom',
                 description: 'Shyft makes it easy.',
-                mint: '4VEj63tATjBSfd22Mxbe6n7ainckFU9ewRVTvfrthGDU',
-                owner: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
+                update_authority:
+                  '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
                 attributes: {
                   edification: '100',
                   energy: '50',
                 },
-                update_authority:
-                  '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
+                mint: '4VEj63tATjBSfd22Mxbe6n7ainckFU9ewRVTvfrthGDU',
+                owner: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
               },
             ],
             page: 1,
-            size: 10,
-            totalData: 1,
-            totalPage: 1,
+            size: 3,
+            total_data: 1,
+            total_page: 1,
           },
         },
       },

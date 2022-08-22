@@ -74,23 +74,29 @@ export function ReadAllByCreatorOpenApi() {
         example: {
           success: true,
           message: "Creator's all NFTs",
-          result: [
-            {
-              name: 'HEDGIE#001',
-              symbol: 'HDG',
-              royalty: 5,
-              image_uri:
-                'https://nftstorage.link/ipfs/bafkreiff7tzd2n3dskowfvp3bcua4zc33ohumqwn7v764nuyhd3rw5qgom',
-              description: 'Shyft makes it easy.',
-              update_authority: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
-              attributes: {
-                edification: '100',
-                energy: '50',
+          result: {
+            nfts: [
+              {
+                name: 'Cool Monkry',
+                symbol: 'CMY',
+                royalty: 5,
+                image_uri:
+                  'https://nftstorage.link/ipfs/bafkreie2ef3z2cixfnxby5zfprv2xa7lydy5biky34v2p2fgsb5b4mcfaa',
+                description: 'Shyft makes web3 development so easy.',
+                update_authority:
+                  'BFefyp7jNF5Xq2A4JDLLFFGpxLq5oPEFKBAQ46KJHW2R',
+                attributes: {
+                  edification: '100',
+                },
+                mint: '8bw5T3QxCEU7ZkSH2moydoioefJn8LYoCGUpccjLxkyR',
+                owner: 'BFefyp7jNF5Xq2A4JDLLFFGpxLq5oPEFKBAQ46KJHW2R',
               },
-              mint: '4VEj63tATjBSfd22Mxbe6n7ainckFU9ewRVTvfrthGDU',
-              owner: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
-            },
-          ],
+            ],
+            page: 1,
+            size: 2,
+            total_data: 9,
+            total_page: 5,
+          },
         },
       },
     }),

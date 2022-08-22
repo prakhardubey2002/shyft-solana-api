@@ -52,28 +52,35 @@ export class ReadNftService {
   async readAllNftsByCreator(readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
     try {
       const { network, creator_address, refresh } = readAllNftByCreatorDto;
+      let { page, size } = readAllNftByCreatorDto;
+      if (!page) page = 1;
+      if (!size) size = 10;
 
       const dbFilter = { creators: { $elemMatch: { address: creator_address } }, network: network };
 
-      const dbNftInfo = !refresh ? await this.nftInfoAccessor.find(dbFilter) : false;
+      const dbNftInfo = !refresh ? await this.nftInfoAccessor.find(dbFilter, page, size) : false;
+      const totalData = !refresh ? await this.nftInfoAccessor.count(dbFilter): 0;
+      const totalPage = Math.ceil(totalData / size);
 
       if (dbNftInfo && dbNftInfo.length) {
         const nftReadInWalletEvent = new NftReadInWalletEvent(creator_address, network, creator_address);
         this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
 
         return dbNftInfo.map((nft) => {
-          return getNftDbResponseFromNftInfo(nft);
+          return { nfts: getNftDbResponseFromNftInfo(nft), page, size, total_data: totalData, total_page: totalPage };
         });
       } else {
         //not available in DB, fetch from blockchain
-        const fetchAllNft = new FetchAllNftByCreatorDto(network, creator_address);
+        const fetchAllNft = new FetchAllNftByCreatorDto(network, creator_address, page, size);
         const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(fetchAllNft);
-        const nftInfo = chainNfts.map((nft) => nft.getNftInfoDto());
+        const { total } = chainNfts;
+        const totalPage = Math.ceil(total / size);
+        const nftInfo = chainNfts.nfts.map((nft) => nft.getNftInfoDto());
         const nftReadByCreatorEvent = new NftReadByCreatorEvent(creator_address, network, nftInfo);
         this.eventEmitter.emit('all.nfts.read.by.creator', nftReadByCreatorEvent);
 
-        const nfts = chainNfts.map((nft) => nft.getNftDbResponse());
-        return nfts;
+        const nfts = chainNfts.nfts.map((nft) => nft.getNftDbResponse());
+        return { nfts, page, size, total_data: total, total_page: totalPage };
       }
     } catch (error) {
       console.log(error);

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Transform } from 'class-transformer';
 
@@ -71,6 +71,7 @@ export class SearchNftsDto {
     default: 10,
   })
   @IsNumber()
+  @Max(50)
   @IsOptional()
   @Transform(({ value }) => {
     return parseInt(value);

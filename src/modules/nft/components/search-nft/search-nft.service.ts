@@ -81,6 +81,6 @@ export class SearchNftService {
       return getNftDbResponseFromNftInfo(r);
     });
 
-    return { nfts, page, size, totalData, totalPage };
+    return { nfts, page, size, total_data: totalData, total_page: totalPage };
   }
 }

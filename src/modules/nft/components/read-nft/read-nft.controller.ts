@@ -37,7 +37,6 @@ export class ReadNftController {
     };
   }
 
-
   @ReadOpenApi()
   @Get('read')
   @Version('1')

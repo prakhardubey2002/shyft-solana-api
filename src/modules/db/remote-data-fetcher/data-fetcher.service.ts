@@ -1,16 +1,99 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey } from '@solana/web3.js';
-import { Connection } from '@metaplex/js';
+import { AccountInfo, clusterApiUrl, PublicKey } from '@solana/web3.js';
+import { Connection, programs } from '@metaplex/js';
 import { Metaplex } from '@metaplex-foundation/js';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import * as bs58 from 'bs58';
+import { Key } from '@metaplex-foundation/mpl-token-metadata';
 import { Metadata, MetadataData, MetadataDataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { NftDeleteEvent } from '../db-sync/db.events';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Account } from '@metaplex-foundation/mpl-token-metadata-depricated/node_modules/@metaplex-foundation/mpl-core';
+
+export interface RawMetaData {
+  pubkey: PublicKey;
+  account: AccountInfo<Buffer>;
+}
+
+export interface MetadatasToTokens {
+  mint: PublicKey;
+  address: PublicKey;
+  metadataPDA: PublicKey;
+  metadataOnchain: MetadataData;
+}
+
+export interface PaginatedNftsResponse {
+  nfts: NftData[];
+  total: number;
+}
 
 @Injectable()
 export class RemoteDataFetcherService {
   constructor(private eventEmitter: EventEmitter2) { }
+
+  baseFilters = [
+    // Filter for MetadataV1 by key
+    {
+      memcmp: {
+        offset: 0,
+        bytes: bs58.encode(Buffer.from([Key.MetadataV1])),
+      },
+    },
+  ].filter(Boolean);
+
+  deserializeMetadata(rawMetadata: RawMetaData): Metadata {
+    const acc = new Account(rawMetadata.pubkey, rawMetadata.account);
+    return Metadata.from(acc);
+  }
+
+  async getHolderByMint(connection: Connection, mint: PublicKey): Promise<PublicKey> {
+    const tokens = await connection.getTokenLargestAccounts(mint);
+    return tokens.value[0].address; // since it's an NFT, we just grab the 1st account
+  }
+
+  async metadatasToTokens(connection: Connection, rawMetadatas: RawMetaData[]): Promise<MetadatasToTokens[]> {
+    const promises = await Promise.all(
+      rawMetadatas.map(async (m) => {
+        try {
+          const metadata = this.deserializeMetadata(m);
+          const mint = new PublicKey(metadata.data.mint);
+          const address = await this.getHolderByMint(connection, mint);
+          return {
+            mint,
+            address,
+            metadataPDA: metadata.pubkey,
+            metadataOnchain: metadata.data,
+          };
+        } catch (e) {
+          console.log(e);
+          console.log('failed to deserialize one of the fetched metadatas');
+        }
+      }),
+    );
+    return promises.filter((t) => !!t);
+  }
+
+  async getPage(connection: Connection, accountPublicKeys: PublicKey[], page: number, size: number): Promise<RawMetaData[]> {
+    const paginatedPublicKeys = accountPublicKeys.slice(
+      (page - 1) * size,
+      page * size,
+    );
+
+    if (paginatedPublicKeys.length === 0) {
+      return [];
+    }
+
+    const accountsWithData = await connection.getMultipleAccountsInfo(paginatedPublicKeys);
+    // console.log(accountsWithData);
+    const accountsWithRawData: RawMetaData[] = [];
+    accountsWithData.forEach((key, i) => {
+      accountsWithRawData.push({ pubkey: accountPublicKeys[i], account: key });
+    });
+    // console.log(accountsWithRawData);
+    return accountsWithRawData;
+  }
+
   async fetchAllNfts(fetchAllNftDto: FetchAllNftDto): Promise<MetadataData[]> {
     try {
       const { network, walletAddress } = fetchAllNftDto;
@@ -139,41 +222,29 @@ export class RemoteDataFetcherService {
     }
   }
 
-  async fetchAllNftsByCreator(fetchAllNftByCreatorDto: FetchAllNftByCreatorDto): Promise<NftData[]> {
+  async fetchAllNftsByCreator(fetchAllNftByCreatorDto: FetchAllNftByCreatorDto): Promise<PaginatedNftsResponse> {
     try {
-      const { network, creator } = fetchAllNftByCreatorDto;
+      const { network, creator, page, size } = fetchAllNftByCreatorDto;
       const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
-      const metaplex = Metaplex.make(connection);
-
-      if (!creator) {
-        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
-      }
-
-      const nftsByCreator = await metaplex.nfts().findAllByCreator(new PublicKey(creator));
-      const nfts: MetadataData[] = nftsByCreator.map((nft) => {
-        const creators = nft.creators.map((creator) => {
-          return {
-            address: creator.address.toBase58(),
-            share: creator.share,
-            verified: creator.verified,
-          };
-        });
-
-        return new MetadataData({
-          updateAuthority: nft.updateAuthority.toBase58(),
-          mint: nft.mint.toBase58(),
-          data: new MetadataDataData({
-            name: nft.name,
-            symbol: nft.symbol,
-            uri: nft.uri,
-            sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
-            creators,
-          }),
-          primarySaleHappened: nft.primarySaleHappened,
-          isMutable: nft.isMutable,
-          editionNonce: nft.editionNonce,
-        });
-      });
+      const rawMetadatas = await connection.getProgramAccounts(
+        new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+        {
+          dataSlice: { offset: 0, length: 0 }, // Fetch without any data.
+          filters: [
+            ...this.baseFilters,
+            {
+              memcmp: {
+                offset: programs.metadata.computeCreatorOffset(0),
+                bytes: creator,
+              },
+            },
+          ],
+        },
+      );
+      const accountPublicKeys = rawMetadatas.map(account => account.pubkey);
+      const pageResults = await this.getPage(connection, accountPublicKeys, page, size);
+      const resultsWithMetaData = await this.metadatasToTokens(connection, pageResults);
+      const nfts = resultsWithMetaData.map((x) => x.metadataOnchain)
 
       const result: NftData[] = [];
       // Run all offchain requests parallely instead of one by one
@@ -196,7 +267,7 @@ export class RemoteDataFetcherService {
       res?.forEach((data, i) => {
         result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
       });
-      return result;
+      return { nfts: result, total: accountPublicKeys.length };
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
