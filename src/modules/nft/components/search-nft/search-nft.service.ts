@@ -34,7 +34,7 @@ export class SearchNftService {
   }
 
   async searchNfts(searchNftDto: SearchNftsDto): Promise<any> {
-    const { network, wallet, creators, attributes } = searchNftDto;
+    const { network, wallet, creators, attributes, royalty } = searchNftDto;
     let { page, size } = searchNftDto;
     if (!page) page = 1;
     if (!size) size = 10;
@@ -65,6 +65,16 @@ export class SearchNftService {
     if (searchExp.length > 0) {
       // include extra ops if included
       Object.assign(filter, { $and: searchExp });
+    }
+
+    if (royalty) {
+      if (typeof royalty === 'object') {
+        const searchMethod = `$${Object.keys(royalty)[0]}`;
+        const searchValue = Object.values(royalty)[0] * 100; // royalty to sellerFeeBasisPoint
+        filter['royalty'] = { [searchMethod]: searchValue };
+      } else {
+        filter['royalty'] = royalty * 100;
+      }
     }
 
     if (network) filter['network'] = network;

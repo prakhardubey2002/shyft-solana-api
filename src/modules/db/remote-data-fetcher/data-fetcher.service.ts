@@ -1,15 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AccountInfo, clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { Connection, programs } from '@metaplex/js';
-import { Metaplex } from '@metaplex-foundation/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
-import { Metadata, MetadataData, MetadataDataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
+import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
+import { Account } from 'src/common/utils/account';
 import { NftDeleteEvent } from '../db-sync/db.events';
-import { Account } from '@metaplex-foundation/mpl-token-metadata-depricated/node_modules/@metaplex-foundation/mpl-core';
 
 export interface RawMetaData {
   pubkey: PublicKey;
@@ -43,7 +42,7 @@ export class RemoteDataFetcherService {
   ].filter(Boolean);
 
   deserializeMetadata(rawMetadata: RawMetaData): Metadata {
-    const acc = new Account(rawMetadata.pubkey, rawMetadata.account);
+    const acc = new Account(rawMetadata.pubkey, rawMetadata.account ?? rawMetadata.account);
     return Metadata.from(acc);
   }
 

@@ -63,8 +63,8 @@ export class ReadNftService {
       const totalPage = Math.ceil(totalData / size);
 
       if (dbNftInfo && dbNftInfo.length) {
-        const nftReadInWalletEvent = new NftReadInWalletEvent(creator_address, network, creator_address);
-        this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
+        const nftReadByCreatorEvent = new NftReadByCreatorEvent(creator_address, network);
+        this.eventEmitter.emit('all.nfts.read.by.creator', nftReadByCreatorEvent);
 
         return dbNftInfo.map((nft) => {
           return { nfts: getNftDbResponseFromNftInfo(nft), page, size, total_data: totalData, total_page: totalPage };

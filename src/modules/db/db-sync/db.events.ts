@@ -27,7 +27,7 @@ export class NftReadInWalletEvent {
 }
 
 export class NftReadByCreatorEvent {
-  constructor(creator_wallet_address: string, network: WalletAdapterNetwork, nfts: NftInfo[]) {
+  constructor(creator_wallet_address: string, network: WalletAdapterNetwork, nfts?: NftInfo[]) {
     this.creator = creator_wallet_address;
     this.network = network;
     this.nfts = nfts;
@@ -35,7 +35,7 @@ export class NftReadByCreatorEvent {
 
   creator: string;
   network: WalletAdapterNetwork;
-  nfts: NftInfo[];
+  nfts?: NftInfo[];
 }
 
 export class NftUpdateEvent {
