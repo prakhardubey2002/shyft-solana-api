@@ -42,7 +42,7 @@ export class RemoteDataFetcherService {
   ].filter(Boolean);
 
   deserializeMetadata(rawMetadata: RawMetaData): Metadata {
-    const acc = new Account(rawMetadata.pubkey, rawMetadata.account ?? rawMetadata.account);
+    const acc = new Account(rawMetadata.pubkey, rawMetadata.account);
     return Metadata.from(acc);
   }
 

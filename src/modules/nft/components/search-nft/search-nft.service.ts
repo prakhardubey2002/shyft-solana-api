@@ -82,7 +82,7 @@ export class SearchNftService {
     if (isArray(creators)) {
       filter['creators'] = { $elemMatch: { address: { $in: creators } } };
     }
-    // console.log(filter);
+
     const totalData = await this.nftInfoAccessor.count(filter);
     const totalPage = Math.ceil(totalData / size);
     const filteredResult = await this.nftInfoAccessor.find(filter, page, size);
