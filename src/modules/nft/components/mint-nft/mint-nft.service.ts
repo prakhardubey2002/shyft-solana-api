@@ -23,14 +23,18 @@ export class MintNftService {
       const master_address = new PublicKey(master_nft_address);
       const newOwner = receiver ? new PublicKey(receiver) : feePayer.publicKey;
       const newUpdateAuthority = transfer_authority ? newOwner : feePayer.publicKey;
-      const { nft: printedNft, transactionId: txId } = await metaplex
+      const printOutput = await metaplex
         .nfts()
         .printNewEdition(master_address, {
           newUpdateAuthority,
           newOwner,
         })
         .run();
-      return { mint: printedNft.mint?.toBase58(), txId: txId };
+
+      return {
+        mint: printOutput?.nft?.address?.toBase58(),
+        txId: printOutput?.response?.signature,
+      };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
