@@ -25,14 +25,32 @@ export class NftInfoAccessor {
     return result;
   }
 
-  public async find(filter: object): Promise<NftInfoDocument[]> {
+  public async find(filter: object, page?: number, size?: number): Promise<NftInfoDocument[]> {
     try {
-      const result = await this.NftInfoDataModel.find(filter);
+      let result: NftInfoDocument[];
+      if (page && size) {
+        result = await this.NftInfoDataModel.find(filter)
+          .sort({ updated_at: 'desc' })
+          .limit(size)
+          .skip((page - 1) * size);
+      } else {
+        result = await this.NftInfoDataModel.find(filter).sort({ updated_at: 'desc' });
+      }
       return result;
     } catch (err) {
       console.log(err);
     }
     return [];
+  }
+
+  public async count(filter: object): Promise<number> {
+    try {
+      const result = await this.NftInfoDataModel.count(filter);
+      return result;
+    } catch (err) {
+      console.log(err);
+    }
+    return null;
   }
 
   public async updateManyNft(nfts: NftInfo[]): Promise<any> {

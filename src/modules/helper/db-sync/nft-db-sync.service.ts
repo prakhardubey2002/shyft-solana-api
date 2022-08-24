@@ -3,8 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
-import { FetchNftDto, FetchAllNftDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
-import { NftCreationEvent, NftDeleteEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
+import { FetchNftDto, FetchAllNftDto, FetchAllNftByCreatorDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
+import { NftCreationEvent, NftDeleteEvent, NftReadByCreatorEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
 
 const afterNftCreationWaitTime_ms = 7000;
 const afterNftUpdateWaitTime_ms = 7000;
@@ -47,6 +47,25 @@ export class NFtDbSyncService {
         return info;
       });
       await this.nftInfoAccessor.updateManyNft(nftInfos);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  @OnEvent('all.nfts.read.by.creator', { async: true })
+  async handleAllNftReadByCreatorEvent(event: NftReadByCreatorEvent): Promise<any> {
+    try {
+      let nfts: NftInfo[];
+      if (event.nfts) {
+        nfts = event.nfts;
+      } else {
+        const defaultPage = 1;
+        const defaultSize = 20;
+        const fetchAllNftDto = new FetchAllNftByCreatorDto(event.network, event.creator, defaultPage, defaultSize);
+        const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(fetchAllNftDto);
+        nfts = chainNfts.nfts.map((nft) => nft.getNftInfoDto());
+      }
+      await this.nftInfoAccessor.updateManyNft(nfts);
     } catch (err) {
       console.error(err);
     }

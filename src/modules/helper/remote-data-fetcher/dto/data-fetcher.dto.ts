@@ -1,7 +1,9 @@
 import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 //update attributes value type to hold objects also
 export interface NftDbResponse {
@@ -32,6 +34,50 @@ export class FetchAllNftDto {
   @IsOptional()
   @IsString()
   readonly updateAuthority: string;
+}
+
+export class FetchAllNftByCreatorDto {
+  constructor(network: WalletAdapterNetwork, creator_address: string, page?: number, size?: number) {
+    this.network = network;
+    this.creator = creator_address;
+    this.page = page;
+    this.size = size;
+  }
+
+  @IsNotEmpty()
+  readonly network: WalletAdapterNetwork;
+  @IsNotEmpty()
+  @IsString()
+  readonly creator: string;
+
+  @ApiPropertyOptional({
+    title: 'page',
+    type: Number,
+    description: 'Page',
+    example: 1,
+    default: 1,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => {
+    return parseInt(value);
+  })
+  readonly page?: number;
+
+  @ApiPropertyOptional({
+    title: 'size',
+    type: Number,
+    description: 'How many content on a page',
+    example: 10,
+    default: 10,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Max(50)
+  @Transform(({ value }) => {
+    return parseInt(value);
+  })
+  readonly size?: number;
 }
 
 export class FetchNftDto {
