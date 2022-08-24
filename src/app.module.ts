@@ -14,6 +14,7 @@ import { User, UserSchema } from './dal/user.schema';
 import { Emailer } from './common/utils/emailer';
 import { TokenModule } from './modules/token/token.module';
 import { ApiMonitorModule } from './modules/api-monitor/api-monitor.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ApiMonitorModule } from './modules/api-monitor/api-monitor.module';
     AuthModule,
     TokenModule,
     ApiMonitorModule,
+    MarketplaceModule
   ],
   controllers: [AppController],
   providers: [
@@ -42,4 +44,4 @@ import { ApiMonitorModule } from './modules/api-monitor/api-monitor.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -63,7 +63,7 @@ export class TransferTokenService {
         tx.feePayer = fromKeypair.publicKey;
         tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
         const signedTx = await wallet.signTransaction(tx);
-        const txId = await connection.sendRawTransaction((await signedTx).serialize());
+        const txId = await connection.sendRawTransaction(signedTx.serialize());
 
         return { txId };
       } else {

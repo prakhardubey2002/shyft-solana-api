@@ -11,7 +11,7 @@ import * as Sentry from '@sentry/node';
 import { configuration } from './common/configs/config';
 import { AppModule } from './app.module';
 import { ApiMetricAccessor } from './dal/api-repo/api-metric.accessor';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { HttpExceptionFilter, ProgramErrorFilter } from './filters/http-exception.filter';
 import { ApiMonitorService } from './modules/api-monitor/api.event-handeler';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthService } from './modules/auth/auth.service';
@@ -43,6 +43,7 @@ async function bootstrap() {
   const authService = app.get(AuthService);
   app.useGlobalGuards(new AuthGuard(reflector, authService));
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new ProgramErrorFilter());
   app.useGlobalInterceptors(new ApiMonitorService(app.get(ApiMetricAccessor)));
   app.useGlobalPipes(
     new ValidationPipe({

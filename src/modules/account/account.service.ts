@@ -12,8 +12,8 @@ import { SendSolDto } from './dto/send-sol.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { RemoteDataFetcherService } from '../db/remote-data-fetcher/data-fetcher.service';
-import { FetchAllNftDto } from '../db/remote-data-fetcher/dto/data-fetcher.dto';
+import { RemoteDataFetcherService } from '../helper/remote-data-fetcher/data-fetcher.service';
+import { FetchAllNftDto } from '../helper/remote-data-fetcher/dto/data-fetcher.dto';
 import {
   getAllDomains,
   performReverseLookup,
@@ -80,7 +80,7 @@ export class WalletService {
   async getAllTokensBalance(balanceCheckDto: BalanceCheckDto): Promise<Record<string, number>[]> {
     try {
       const { wallet, network } = balanceCheckDto;
-      const connection = new Connection( Utility.clusterUrl(network), 'confirmed');
+      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
       const allTokenInfo = [];
       try {
         const parsedSplAccts = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), { programId: TOKEN_PROGRAM_ID });

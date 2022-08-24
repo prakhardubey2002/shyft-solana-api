@@ -10,8 +10,8 @@ const afterNftCreationWaitTime_ms = 7000;
 const afterNftUpdateWaitTime_ms = 7000;
 
 @Injectable()
-export class DbSyncService {
-  constructor(private remoteDataFetcher: RemoteDataFetcherService, private nftInfoAccessor: NftInfoAccessor) {}
+export class NFtDbSyncService {
+  constructor(private remoteDataFetcher: RemoteDataFetcherService, private nftInfoAccessor: NftInfoAccessor) { }
 
   @OnEvent('nft.created', { async: true })
   async handleNftCreatedEvent(event: NftCreationEvent): Promise<any> {
@@ -105,7 +105,7 @@ export class DbSyncService {
     }
   }
 
-  private async prepareNftDbDto(event: NftReadEvent) {
+  private async prepareNftDbDto(event: NftReadEvent): Promise<NftInfo> {
     try {
       const nftData = await this.remoteDataFetcher.fetchNftDetails(new FetchNftDto(event.network, event.tokenAddress));
       const nftDbDto = nftData.getNftInfoDto();

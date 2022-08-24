@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Metaplex, keypairIdentity, findAssociatedTokenAccountPda, findMetadataPda, findMasterEditionV2Pda, parseOriginalEditionAccount, findEditionPda, findEditionMarkerPda, AccountNotFoundError } from '@metaplex-foundation/js';
+import { Metaplex, keypairIdentity, findAssociatedTokenAccountPda, findMetadataPda, findMasterEditionV2Pda, parseOriginalEditionAccount, findEditionPda, findEditionMarkerPda, AccountNotFoundError, toBigNumber } from '@metaplex-foundation/js';
 import { PrintNftEditionDto, PrintNftEditionDetachDto } from './dto/mint-nft.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { clusterApiUrl, Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
@@ -60,8 +60,9 @@ export class MintNftService {
         throw new AccountNotFoundError(
           originalEdition,
           'OriginalEdition',
-          `Ensure the provided mint address for the original NFT [${originalMint.toBase58()}] ` +
-            `is correct and that it has an associated OriginalEdition PDA.`
+          {
+            solution: `Ensure the provided mint address for the original NFT [${originalMint.toBase58()}] ` + `is correct and that it has an associated OriginalEdition PDA.`
+          }
         );
       }
 
@@ -70,7 +71,7 @@ export class MintNftService {
         'le',
       ).add(new BN(1));
 
-      const originalEditionMarkPda = findEditionMarkerPda(originalMint, edition);
+      const originalEditionMarkPda = findEditionMarkerPda(originalMint, toBigNumber(edition));
       // New NFT
       const newMintKeypair = Keypair.generate();
 

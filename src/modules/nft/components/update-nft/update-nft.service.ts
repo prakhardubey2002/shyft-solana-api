@@ -3,7 +3,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { clusterApiUrl, PublicKey, Transaction } from '@solana/web3.js';
 import { Connection, NodeWallet, programs } from '@metaplex/js';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { NftUpdateEvent } from '../../../db/db-sync/db.events';
+import { NftUpdateEvent } from '../../../helper/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
