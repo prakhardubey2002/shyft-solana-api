@@ -24,19 +24,6 @@ export class ReadNftController {
     };
   }
 
-  // @ReadAllByCreatorOpenApi()
-  // @Get('read_all_by_creator')
-  // @Version('1')
-  // async readAllNftsByCreator(@Query() readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
-  //   const result = await this.readNftService.readAllNftsByCreator(readAllNftByCreatorDto);
-
-  //   return {
-  //     success: true,
-  //     message: "Creator's all NFTs",
-  //     result,
-  //   };
-  // }
-
   @ReadOpenApi()
   @Get('read')
   @Version('1')
