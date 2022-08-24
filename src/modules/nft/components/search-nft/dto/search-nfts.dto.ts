@@ -37,13 +37,13 @@ export class SearchNftsDto {
   @IsString()
   readonly wallet: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     title: 'royalty',
     type: String,
     description: 'Royalty of NFT',
     example: 5,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => {
     if (isNaN(value)) {
       return JSON.parse(value);
@@ -51,7 +51,7 @@ export class SearchNftsDto {
       return parseInt(value);
     }
   })
-  readonly royalty: number | object;
+  readonly royalty?: number | object;
 
   @ApiPropertyOptional({
     title: 'attributes',
