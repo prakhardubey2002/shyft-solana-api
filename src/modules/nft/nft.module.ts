@@ -26,6 +26,7 @@ import { CreateNftDetachController } from './components/create-nft-detach/create
 import { CreateNftDetachService } from './components/create-nft-detach/create-nft-detach.service';
 import { BurnNftDetachController } from './components/burn-nft-detach/burn-nft-detach.controller';
 import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-detach.service';
+import { AccountModule } from '../account/account.module';
 
 @Module({
   controllers: [
@@ -45,6 +46,7 @@ import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-deta
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     EventEmitterModule.forRoot(),
     DbModule,
+    AccountModule,
   ],
   providers: [
     CreateNftService,

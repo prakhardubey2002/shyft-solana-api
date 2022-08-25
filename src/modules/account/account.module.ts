@@ -11,6 +11,8 @@ import { SendSolDetachController } from './components/send-sol-detach/send-sol-d
 import { SignTransactionController } from './components/sign-transaction/sign-transaction.controller';
 import { SendSolDetachService } from './components/send-sol-detach/send-sol-detach.service';
 import { SignTransactionService } from './components/sign-transaction/sign-transaction.service';
+import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
+import { SemiWalletSchema, SemiCustodialWallet } from 'src/dal/semi-wallet-repo/semi-wallet.schema';
 
 @Module({
   controllers: [
@@ -21,13 +23,18 @@ import { SignTransactionService } from './components/sign-transaction/sign-trans
   imports: [
     RavenModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: SemiCustodialWallet.name, schema: SemiWalletSchema },
+    ]),
     DbModule,
   ],
+  exports: [SemiWalletAccessor],
   providers: [
     WalletService,
     RemoteDataFetcherService,
     SendSolDetachService,
     SignTransactionService,
+    SemiWalletAccessor,
     {
       provide: APP_INTERCEPTOR,
       useValue: new RavenInterceptor(),

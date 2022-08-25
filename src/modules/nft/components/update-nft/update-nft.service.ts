@@ -79,7 +79,7 @@ export class UpdateNftService {
       }, {
         metadata: pda,
         updateAuthority: new PublicKey(update_authority),
-        newUpdateAuthority: new PublicKey(newAuthority),
+        newUpdateAuthority: new_update_authority ? new PublicKey(new_update_authority): undefined,
         metadataData: new programs.metadata.DataV2({
           name: name,
           symbol: symbol,

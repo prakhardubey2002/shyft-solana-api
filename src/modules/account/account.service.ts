@@ -20,10 +20,13 @@ import {
   performReverseLookupBatch,
 } from '@bonfida/spl-name-service';
 import { Utility } from 'src/common/utils/utils';
+import { Wallet } from 'src/common/utils/semi-wallet';
+import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
+import { ObjectId } from 'mongoose';
 
 @Injectable()
 export class WalletService {
-  constructor(private dataFetcher: RemoteDataFetcherService) { }
+  constructor(private dataFetcher: RemoteDataFetcherService, private walletAccessor: SemiWalletAccessor ) { }
   async getBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
       const { wallet, network } = balanceCheckDto;
@@ -134,7 +137,6 @@ export class WalletService {
   async getDomains(walletDto: BalanceCheckDto) {
     const connection = new Connection(Utility.clusterUrl(walletDto.network), 'confirmed');
     const domains = await getAllDomains(connection, new PublicKey(walletDto.wallet));
-
     const names = await performReverseLookupBatch(connection, domains);
     const resp = [];
     names.forEach((element, i) => {
@@ -154,10 +156,61 @@ export class WalletService {
     }
   }
 
+  async createSemiWallet(password: string, apiKey: ObjectId) {
+    try {
+      const walletInfo = await Wallet.create(password);
+      const res = await this.walletAccessor.insert({
+        api_key_id: apiKey,
+        public_key: walletInfo.wallet.publicKey.toBase58(),
+        encrytped_private_key: walletInfo.wallet.keys.encryptedPrivateKey,
+        params: JSON.stringify(walletInfo.params),
+      });
+
+      return {
+        wallet_address: walletInfo.wallet.publicKey,
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getDecryptionKey(publicKey: string, id: ObjectId) {
+    const walletInfo = await this.walletAccessor.fetch({
+      public_key: publicKey,
+      api_key_id: id,
+    });
+
+    if (!walletInfo) {
+      return {msg: `No semi custodial wallet found with address: ${publicKey}`};
+    }
+
+    return {
+      encryptedPrivateKey: walletInfo?.encrytped_private_key,
+      decryptionKey: walletInfo?.params,
+    };
+  }
+
+  async verify(publicKey: string, pwd: string) {
+    const walletInfo = await this.walletAccessor.fetch({
+      public_key: publicKey,
+    });
+    console.log(walletInfo);
+    const wallet = new Wallet(
+      new PublicKey(publicKey),
+      walletInfo.encrytped_private_key,
+    );
+    const keypair = wallet.getSigningKey(pwd, JSON.parse(walletInfo.params));
+
+    return keypair;
+  }
+
   async sendSol(sendSolDto: SendSolDto): Promise<string> {
     try {
       const { network, from_private_key, to_address, amount } = sendSolDto;
-      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const connection = new Connection(
+        Utility.clusterUrl(network),
+        'confirmed',
+      );
 
       const from = AccountUtils.getKeypair(from_private_key);
       // Add transfer instruction to transaction
@@ -170,7 +223,11 @@ export class WalletService {
       );
 
       // Sign transaction, broadcast, and confirm
-      const signature = await sendAndConfirmTransaction(connection, transaction, [from]);
+      const signature = await sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [from],
+      );
       return signature;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);

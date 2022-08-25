@@ -598,3 +598,40 @@ export function TransactionHistoryOpenApi() {
     }),
   );
 }
+
+export function CreateSemiWalletOpenApi() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Create semi custodial wallet' }),
+    ApiOkResponse({
+      description: 'Semi custodial wallet created successfully',
+      schema: {
+        example: {
+          success: true,
+          message: 'Semi custodial wallet created successfully',
+          result: {
+            wallet_address: 'VtkQHQt6GFggoNiWT7Tvafce6cJvCZbzEU8gBTez5rz',
+          },
+        },
+      },
+    }),
+  );
+}
+
+export function DecryptSemiWalletOpenApi() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Decrypt semi custodial wallet' }),
+    ApiOkResponse({
+      description: 'Decryption Data',
+      schema: {
+        example: {
+          success: true,
+          message: 'Decryption Data',
+          result: {
+              encryptedPrivateKey: 'A9tP2aDsBNwSUojMc2eFF8qakkRRrfrYeUkGvFmZBHtrLPU7s9BNYupRazdMcbGuXtHpAbfW32MZgmGxdM5Z5U8wZrEZ5cNUcnjCSptRE2Hv3jB1zUP8JHKg8U44LM238ZUtHGUvZJcS1',
+              decryptionKey: '{\"salt\":\"8YBdmxT3aoSCAAMBKwYw6V\",\"kdf\":\"pbkdf2\",\"digest\":\"sha256\",\"iterations\":100000,\"nonce\":\"GevsymPUrngEKXxBPWQvTyufrY9XKnsM9\"}'
+          },
+        },
+      },
+    }),
+  );
+}

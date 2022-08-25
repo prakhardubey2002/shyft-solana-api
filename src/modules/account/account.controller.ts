@@ -5,6 +5,7 @@ import {
   HttpCode,
   Post,
   Query,
+  Req,
   Version,
 } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
@@ -14,12 +15,15 @@ import { SendSolDto } from './dto/send-sol.dto';
 import {
   AllTokensOpenApi,
   BalanceCheckOpenApi,
+  CreateSemiWalletOpenApi,
+  DecryptSemiWalletOpenApi,
   PortfoliOpenApi,
   SendBalanceOpenApi,
   TokenBalanceOpenApi,
   TransactionHistoryOpenApi,
 } from './open-api';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
+import { GetKeypairDto, Password, VerifyDto } from './dto/semi-wallet-dto';    
 
 @ApiTags('Wallet')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -127,6 +131,44 @@ export class AccountController {
       success: true,
       message: `Last ${tx_num || 10} transaction fetched successfully`,
       result: transactions,
+    };
+  }
+
+  @CreateSemiWalletOpenApi()
+  @Post('create_semi_wallet')
+  @Version('1')
+  async createSemiWallet(
+    @Body() password: Password,
+    @Req() request: any,
+  ): Promise<any> {
+    const semiWallet = await this.walletService.createSemiWallet(password?.password, request.id);
+    return {
+      success: true,
+      message: `Semi custodial wallet created successfully`,
+      result: semiWallet,
+    };
+  }
+
+  @DecryptSemiWalletOpenApi()
+  @Get('decrypt_semi_wallet')
+  @Version('1')
+  async decryptSemiWallet(@Body() verifyDto: VerifyDto, @Req() request: any): Promise<any> {
+    const res = await this.walletService.getDecryptionKey(verifyDto.wallet, request.id);
+    return {
+      success: true,
+      message: `Decryption Data`,
+      result: res,
+    };
+  }
+
+  @Get('get_keypair')
+  @Version('1')
+  async getKeypair(@Body() getKeypairDto: GetKeypairDto): Promise<any> {
+    const res = await this.walletService.verify(getKeypairDto.wallet, getKeypairDto.password);
+    return {
+      success: true,
+      message: `Decryption Data`,
+      result: res,
     };
   }
 }
