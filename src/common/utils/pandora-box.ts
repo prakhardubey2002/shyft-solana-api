@@ -16,10 +16,6 @@ export async function generateMnemonicAndSeed() {
   const seed = await bip39.mnemonicToSeed(mnemonic);
   const hexSeed = Buffer.from(seed).toString('hex');
 
-  console.log('mnemonic: ', mnemonic);
-  console.log('seed: ', seed);
-  console.log('hex Seed: ', hexSeed);
-
   return { mnemonic, hexSeed };
 }
 
@@ -47,7 +43,6 @@ export async function encryptPBKDF2(
   const iterations = 100000;
   const key = await deriveEncryptionKey(password, salt, iterations, digest);
   if (key) {
-    console.log('encryption key: ', key);
     //Encrypt the data with the key and a random nonce
     const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
     const encryptedData = nacl.secretbox(
@@ -55,8 +50,6 @@ export async function encryptPBKDF2(
       nonce,
       <Uint8Array>key,
     );
-
-    console.log('encrypted data: ', encryptedData);
 
     return {
       encryptedData: encryptedData,
@@ -78,14 +71,12 @@ export async function decryptPBKDF2(
   password: string,
   encryptionParams: EncryptParams,
 ) {
-  console.log('trying to decrypt');
   const key = await deriveEncryptionKey(
     password,
     base58.decode(encryptionParams.salt),
     encryptionParams.iterations,
     encryptionParams.digest,
   );
-  console.log('decryption key: ', key);
   const decryptedData = nacl.secretbox.open(
     data,
     base58.decode(encryptionParams.nonce),

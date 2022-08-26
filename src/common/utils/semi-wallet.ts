@@ -22,9 +22,6 @@ export class KeyData {
       //Verify the secret, just to be sure
       const regeratedKeypair = Keypair.fromSecretKey(base58.decode(secret));
 
-      console.log('regenerated: ', regeratedKeypair.publicKey.toBase58());
-      console.log('old: ', this.publicKey.toBase58());
-
       return regeratedKeypair;
     } catch (error) {
       console.log(error);
@@ -73,11 +70,11 @@ export class Wallet {
     return null;
   }
 
-  async getSigningKey(password: string, params: pandoraBox.EncryptParams) {
+  async getKeypair(password: string, params: pandoraBox.EncryptParams) {
     //Try to decrypt data with the password
     try {
-      const secret = this.keys.unlock(password, params);
-      return secret;
+      const keypair = this.keys.unlock(password, params);
+      return keypair;
     } catch (error) {
       console.log(error);
       throw error;

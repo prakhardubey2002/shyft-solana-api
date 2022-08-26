@@ -23,6 +23,8 @@ import { Utility } from 'src/common/utils/utils';
 import { Wallet } from 'src/common/utils/semi-wallet';
 import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
 import { ObjectId } from 'mongoose';
+import * as base58 from 'bs58';
+import { VerifyDto } from './dto/semi-wallet-dto';
 
 @Injectable()
 export class WalletService {
@@ -174,34 +176,63 @@ export class WalletService {
     }
   }
 
-  async getDecryptionKey(publicKey: string, id: ObjectId) {
-    const walletInfo = await this.walletAccessor.fetch({
-      public_key: publicKey,
-      api_key_id: id,
-    });
+  //User id is required, because the organisation who created only they can fetch their users wallet info
+  async getDecryptionKey(dto: VerifyDto, id: ObjectId) {
+    try {
+      //Fetch encryption params from DB
+      const walletInfo = await this.walletAccessor.fetch({
+        public_key: dto.wallet,
+        api_key_id: id,
+      });
 
-    if (!walletInfo) {
-      return {msg: `No semi custodial wallet found with address: ${publicKey}`};
+      if (!walletInfo) {
+        return { msg: `No semi custodial wallet found with address: ${dto.wallet}` };
+      }
+
+      //Create wallet and verify the password
+      const wallet = new Wallet(
+        new PublicKey(dto.wallet),
+        walletInfo.encrytped_private_key,
+      );
+      await wallet.getKeypair(dto.password, JSON.parse(walletInfo.params));
+
+      //If we are here, everything is good
+      return {
+        encryptedPrivateKey: walletInfo?.encrytped_private_key,
+        decryptionKey: walletInfo?.params,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
-
-    return {
-      encryptedPrivateKey: walletInfo?.encrytped_private_key,
-      decryptionKey: walletInfo?.params,
-    };
   }
 
-  async verify(publicKey: string, pwd: string) {
-    const walletInfo = await this.walletAccessor.fetch({
-      public_key: publicKey,
-    });
-    console.log(walletInfo);
-    const wallet = new Wallet(
-      new PublicKey(publicKey),
-      walletInfo.encrytped_private_key,
-    );
-    const keypair = wallet.getSigningKey(pwd, JSON.parse(walletInfo.params));
+  //User id is required, because the organisation who created only they can fetch their users wallet info
+  async getKeypair(publicKey: string, pwd: string, id: ObjectId) {
+    try {
+      const walletInfo = await this.walletAccessor.fetch({
+        public_key: publicKey,
+        api_key_id: id,
+      });
 
-    return keypair;
+      if (!walletInfo) {
+        return { msg: `No semi custodial wallet found with address: ${publicKey}` };
+      }
+
+      const wallet = new Wallet(
+        new PublicKey(publicKey),
+        walletInfo.encrytped_private_key,
+      );
+      const keypair = await wallet.getKeypair(
+        pwd,
+        JSON.parse(walletInfo.params),
+      );
+      return {
+        publicKey: keypair.publicKey.toBase58(),
+        secretKey: base58.encode(keypair.secretKey),
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async sendSol(sendSolDto: SendSolDto): Promise<string> {

@@ -16,7 +16,6 @@ export class SignTransactionService {
       const wallet = new NodeWallet(feePayer);
       const recoveredTransaction = Transaction.from(Buffer.from(encoded_transaction, 'base64'));
       const signedTx = await wallet.signTransaction(recoveredTransaction);
-      signedTx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const confirmTransaction = await connection.sendRawTransaction(
         signedTx.serialize(),
       );

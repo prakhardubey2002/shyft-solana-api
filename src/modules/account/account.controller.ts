@@ -153,7 +153,7 @@ export class AccountController {
   @Get('decrypt_semi_wallet')
   @Version('1')
   async decryptSemiWallet(@Body() verifyDto: VerifyDto, @Req() request: any): Promise<any> {
-    const res = await this.walletService.getDecryptionKey(verifyDto.wallet, request.id);
+    const res = await this.walletService.getDecryptionKey(verifyDto, request.id);
     return {
       success: true,
       message: `Decryption Data`,
@@ -163,8 +163,8 @@ export class AccountController {
 
   @Get('get_keypair')
   @Version('1')
-  async getKeypair(@Body() getKeypairDto: GetKeypairDto): Promise<any> {
-    const res = await this.walletService.verify(getKeypairDto.wallet, getKeypairDto.password);
+  async getKeypair(@Body() getKeypairDto: GetKeypairDto, @Req() request: any): Promise<any> {
+    const res = await this.walletService.getKeypair(getKeypairDto.wallet, getKeypairDto.password, request.id);
     return {
       success: true,
       message: `Decryption Data`,
