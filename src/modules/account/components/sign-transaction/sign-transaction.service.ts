@@ -5,6 +5,7 @@ import { decode } from 'bs58';
 import { Connection } from '@solana/web3.js';
 
 import { SignTransactionDto } from './dto/sign-transaction.dto';
+import { newProgramErrorFrom } from 'src/core/program-error';
 
 @Injectable()
 export class SignTransactionService {
@@ -19,11 +20,10 @@ export class SignTransactionService {
       const confirmTransaction = await connection.sendRawTransaction(
         signedTx.serialize(),
       );
-
       return confirmTransaction;
-
     } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+      console.log(error);
+      throw newProgramErrorFrom(error, "sign_transaction_error");
     }
   }
 }

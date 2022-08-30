@@ -13,11 +13,11 @@ import { Listing, ListingSchema } from 'src/dal/listing-repo/listing.schema';
 import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
 import { MarketplaceDbSyncService } from './db-sync/marketplace-db-sync';
 import { MarketplaceRepo } from 'src/dal/marketplace-repo/marketplace-repo';
-import { MarketPlace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketplace.schema';
+import { Marketplace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketplace.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: NftInfo.name, schema: NftInfoSchema }, { name: Listing.name, schema: ListingSchema }, { name: MarketPlace.name, schema: MarketPlaceSchema }]),
+    MongooseModule.forFeature([{ name: NftInfo.name, schema: NftInfoSchema }, { name: Listing.name, schema: ListingSchema }, { name: Marketplace.name, schema: MarketPlaceSchema }]),
     HttpModule,
     EventEmitterModule.forRoot(),
     RavenModule,

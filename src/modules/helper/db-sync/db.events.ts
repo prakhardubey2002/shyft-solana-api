@@ -1,5 +1,6 @@
 import { DateTime } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { PublicKey } from '@solana/web3.js';
 import { ObjectId } from 'mongoose';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 
@@ -69,14 +70,14 @@ export class NftReadEvent {
 }
 
 export class MarketplaceCreationEvent {
-  constructor(network: WalletAdapterNetwork, address: string, authority: string, currencyAddress: string, feePayer: string, feeRecipient: string, feeHolderAccount: string, creator: string, transactionFee: number, currencySymbol: string, apiKeyId: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
+  constructor(network: WalletAdapterNetwork, address: string, authority: string, currencyAddress: string, feePayer: string, feeReceipient: string, treasuryAddress: string, creator: string, transactionFee: number, currencySymbol: string, apiKeyId: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
     this.network = network;
     this.address = address;
     this.authority = authority;
     this.currencyAddress = currencyAddress;
     this.feePayer = feePayer;
-    this.feeHolderAccount = feeHolderAccount;
-    this.feeRecipient = feeRecipient;
+    this.treasuryAddress = treasuryAddress;
+    this.feeReceipient = feeReceipient;
     this.creator = creator;
     this.transactionFee = transactionFee;
     this.apiKeyId = apiKeyId;
@@ -91,8 +92,8 @@ export class MarketplaceCreationEvent {
   currencySymbol: string;
   apiKeyId: ObjectId;
   feePayer: string;
-  feeRecipient: string;
-  feeHolderAccount: string;
+  feeReceipient: string;
+  treasuryAddress: string;
   creator: string;
   transactionFee: number;
   canChangeSalePrice: boolean;
@@ -189,4 +190,50 @@ export class ListingCancelledEvent {
   network: WalletAdapterNetwork;
   listState: string;
   cancelledAt: Date;
+}
+
+export class MarketplaceInitiationEvent {
+  constructor(network: WalletAdapterNetwork, address: string, apiKeyId: ObjectId) {
+    this.network = network;
+    this.address = address;
+    this.apiKeyId = apiKeyId;
+  }
+  network: WalletAdapterNetwork;
+  address: string;
+  apiKeyId: ObjectId;
+}
+
+export type MarketplaceUpdateInitiationEvent = MarketplaceInitiationEvent;
+
+export class ListingInitiationEvent {
+  constructor(network: WalletAdapterNetwork, listState: PublicKey, auctionHouse: PublicKey, apiKeyId: ObjectId) {
+    this.network = network;
+    this.listState = listState;
+    this.apiKeyId = apiKeyId;
+    this.auctionHouseAddress = auctionHouse;
+  }
+  network: WalletAdapterNetwork;
+  listState: PublicKey;
+  apiKeyId: ObjectId;
+  auctionHouseAddress: PublicKey;
+}
+
+export class SaleInitiationEvent {
+  constructor(network: WalletAdapterNetwork, listState: PublicKey, purchaseReceipt: PublicKey) {
+    this.network = network;
+    this.listState = listState;
+    this.bidState = purchaseReceipt;
+  }
+  network: WalletAdapterNetwork;
+  bidState: PublicKey;
+  listState: PublicKey;
+}
+
+export class UnlistInitiationEvent {
+  constructor(network: WalletAdapterNetwork, listState: PublicKey) {
+    this.network = network;
+    this.listState = listState;
+  }
+  network: WalletAdapterNetwork;
+  listState: PublicKey;
 }

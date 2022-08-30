@@ -18,7 +18,7 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda } from '@metaplex-foundation/js';
+import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda, toPublicKey } from '@metaplex-foundation/js';
 import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 export interface CreateParams {
   network: WalletAdapterNetwork;
@@ -125,8 +125,7 @@ export class CreateNftDetachService {
         ),
       );
 
-      const blockHash = (await connection.getLatestBlockhash('finalized'))
-        .blockhash;
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);

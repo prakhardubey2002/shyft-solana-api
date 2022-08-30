@@ -1,5 +1,6 @@
 import { MetaplexError } from "@metaplex-foundation/js";
 import { HttpStatus } from "@nestjs/common";
+import { SendTransactionError } from "@solana/web3.js";
 
 export class ProgramError extends Error {
 	constructor(name: string, errorCode: HttpStatus, message: string, detail?: string, where?: string, params?: {}, stack?: string) {
@@ -50,12 +51,17 @@ export const newProgramError = (name: string, errorCode: HttpStatus, message: st
 	return obj
 }
 
-export const newProgramErrorFrom = (error: Error | any, errorName?: string): ProgramError => {
+export const newProgramErrorFrom = (error: Error, errorName?: string): ProgramError => {
 	if (error instanceof MetaplexError) {
 		const errMsg = error.message;
-		const errDetails = error.problem + " " + error.solution;
-		const obj = new ProgramError(error.name, HttpStatus.BAD_REQUEST, errMsg, errDetails, error.source, error.sourceDetails);
+		const errDetails = error.title + " " + error.problem + " " + error.solution;
+		const errName = error.key
+		const obj = new ProgramError(errName, HttpStatus.BAD_REQUEST, errMsg, errDetails, error.source, { logs: error.logs });
 		return obj;
+	} else if (error instanceof SendTransactionError) {
+		return new ProgramError(error.name, HttpStatus.EXPECTATION_FAILED, error.message, "", "", {
+			logs: error.logs
+		}, error.stack);
 	} else {
 		let errName: string = "unknown";
 		if (errorName !== undefined) {

@@ -1,4 +1,4 @@
-import { findMetadataPda, token, toPublicKey } from '@metaplex-foundation/js';
+import { AuctionHouse, findAuctionHousePda, findMetadataPda, Metaplex, token, toPublicKey } from '@metaplex-foundation/js';
 import { getMint, Mint } from '@solana/spl-token';
 import axios from 'axios';
 import {
@@ -168,6 +168,19 @@ export const Utility = {
       } finally {
         return symbol != "" ? symbol : "Token";
       }
+    }
+  },
+
+  auctionHouse: {
+    findAuctionHouse: async function (
+      network: WalletAdapterNetwork,
+      auctionHouseAddress: PublicKey,
+    ): Promise<AuctionHouse> {
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const metaplex = Metaplex.make(connection, { cluster: network });
+      const auctionsClient = metaplex.auctions();
+      const auctionHouse = await auctionsClient.findAuctionHouseByAddress(auctionHouseAddress).run();
+      return auctionHouse;
     }
   },
 

@@ -1,11 +1,11 @@
-import { amount, findAuctionHouseTradeStatePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey, token, findAssociatedTokenAccountPda, Pda, toDateTime, formatDateTime } from "@metaplex-foundation/js";
+import { amount, findAuctionHouseTradeStatePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey, token, findAssociatedTokenAccountPda, Pda } from "@metaplex-foundation/js";
 import { NodeWallet } from "@metaplex/js";
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { clusterApiUrl, Connection, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
 import { AccountUtils } from "src/common/utils/account-utils";
-import { BuyDto } from "./dto/buy-listed.dto";
-import { CancelListingDto } from "./dto/cancel-listing.dto";
-import { CreateListingDto } from "./dto/create-list.dto";
+import { BuyAttachedDto } from "./dto/buy-listed.dto";
+import { UnlistAttachedDto } from "./dto/cancel-listing.dto";
+import { ListAttachedDto } from "./dto/create-list.dto";
 import {
 	CancelInstructionAccounts,
 	createCancelListingReceiptInstruction,
@@ -25,7 +25,7 @@ import { Utility } from "src/common/utils/utils";
 
 class CreateListingServiceDto {
 	apiKeyId: ObjectId;
-	createListingParams: CreateListingDto;
+	createListingParams: ListAttachedDto;
 }
 
 @Injectable()
@@ -76,7 +76,6 @@ export class ListingService {
 				list_state: listing.tradeStateAddress.toBase58(),
 				currency_symbol: currencySymbol,
 				receipt: listing.receiptAddress.toBase58(),
-				created_at: new Date(listing.createdAt.toNumber() * 1000)
 			};
 
 			return result;
@@ -85,7 +84,7 @@ export class ListingService {
 		}
 	}
 
-	async buy(buyDto: BuyDto): Promise<any> {
+	async buy(buyDto: BuyAttachedDto): Promise<any> {
 		try {
 			const buyerKp = AccountUtils.getKeypair(buyDto.private_key);
 			const wallet = new NodeWallet(buyerKp);
@@ -95,7 +94,7 @@ export class ListingService {
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(buyDto.marketplace_address)).run();
 
 			const auctionCurrency = auctionHouse.treasuryMint;
-			const offer_price = amount(toBigNumber(buyDto.price * Math.pow(10, auctionCurrency.decimals)), auctionCurrency.currency)
+			const offerPrice = amount(toBigNumber(buyDto.price * Math.pow(10, auctionCurrency.decimals)), auctionCurrency.currency)
 
 			const tokenAccount = findAssociatedTokenAccountPda(toPublicKey(buyDto.nft_address), toPublicKey(buyDto.seller_address));
 
@@ -104,7 +103,7 @@ export class ListingService {
 				toPublicKey(buyDto.seller_address),
 				auctionHouse.treasuryMint.address,
 				toPublicKey(buyDto.nft_address),
-				offer_price.basisPoints,
+				offerPrice.basisPoints,
 				token(1).basisPoints,
 				tokenAccount
 			);
@@ -116,7 +115,7 @@ export class ListingService {
 				buyer: wallet.payer,
 				mintAccount: toPublicKey(buyDto.nft_address),
 				seller: toPublicKey(buyDto.seller_address),
-				price: offer_price
+				price: offerPrice
 			}).run();
 
 			const { purchase } = await auctionHouseClient.executeSale({
@@ -191,7 +190,7 @@ export class ListingService {
 		}
 	}
 
-	async cancelListing(cancelListingDto: CancelListingDto): Promise<any> {
+	async cancelListing(cancelListingDto: UnlistAttachedDto): Promise<any> {
 		try {
 			const sellerKp = AccountUtils.getKeypair(cancelListingDto.private_key);
 			const wallet = new NodeWallet(sellerKp);

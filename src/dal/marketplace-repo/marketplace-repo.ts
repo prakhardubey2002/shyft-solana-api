@@ -1,23 +1,24 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, ObjectId } from "mongoose";
-import { MarketPlace, MarketPlaceDocument } from "./marketplace.schema";
+import { Marketplace, MarketplaceDocument } from "./marketplace.schema";
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 @Injectable()
 export class MarketplaceRepo {
-	constructor(@InjectModel(MarketPlace.name) public MarketplaceModel: Model<MarketPlaceDocument>) { }
+	constructor(@InjectModel(Marketplace.name) public MarketplaceModel: Model<MarketplaceDocument>) { }
 
-	public async insert(data: MarketPlace): Promise<any> {
+	public async insert(data: Marketplace): Promise<any> {
 		try {
-			const result = await this.MarketplaceModel.create(data);
+			const filter = { network: data.network, address: data.address }
+			const result = await this.MarketplaceModel.updateOne(filter, data, { upsert: true });
 			return result;
 		} catch (err) {
 			throw new Error(err);
 		}
 	}
 
-	public async getMarketplaces(network: WalletAdapterNetwork, apiKeyId: ObjectId): Promise<MarketPlaceDocument[]> {
+	public async getMarketplacesByApiKeyId(network: WalletAdapterNetwork, apiKeyId: ObjectId): Promise<MarketplaceDocument[]> {
 		try {
 			const filter = { network: network, api_key_id: apiKeyId }
 			const result = await this.MarketplaceModel.find(filter);
@@ -27,7 +28,17 @@ export class MarketplaceRepo {
 		}
 	}
 
-	public async updateMarketplace(market: MarketPlace): Promise<any> {
+	public async getMarketplacesByAddress(network: WalletAdapterNetwork, address: string): Promise<MarketplaceDocument> {
+		try {
+			const filter = { network: network, address: address }
+			const result = await this.MarketplaceModel.findOne(filter);
+			return result;
+		} catch (err) {
+			throw new Error(err)
+		}
+	}
+
+	public async updateMarketplace(market: Marketplace): Promise<any> {
 		try {
 			const filter = { address: market.address }
 			const result = await this.MarketplaceModel.updateOne(filter, market, {

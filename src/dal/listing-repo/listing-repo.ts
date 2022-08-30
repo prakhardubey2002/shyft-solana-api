@@ -12,7 +12,8 @@ export class ListingRepo {
 
 	public async insert(data: Listing): Promise<any> {
 		try {
-			const result = await this.ListingModel.create(data);
+			const filter = { network: data.network, list_state: data.list_state };
+			const result = await this.ListingModel.updateOne(filter, data, { upsert: true });
 			return result;
 		} catch (err) {
 			throw new Error(err);
@@ -33,7 +34,7 @@ export class ListingRepo {
 
 	async updateCancelledAt(network: WalletAdapterNetwork, listState: string, cancelTime: Date): Promise<any> {
 		try {
-			const filter = { network: network, list_state: listState, cancelled_at: { $exists: false } };
+			const filter = { network: network, list_state: listState };
 			const update = { cancelled_at: cancelTime };
 			const result = await this.ListingModel.updateOne(filter, update);
 			return result

@@ -1,8 +1,8 @@
-import { findAssociatedTokenAccountPda, findAuctionHousePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey } from "@metaplex-foundation/js";
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { findAuctionHousePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey } from "@metaplex-foundation/js";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { clusterApiUrl, Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { AccountUtils } from 'src/common/utils/account-utils';
-import { CreateMarketPlaceDto } from "./dto/create-mp.dto";
+import { CreateMarketPlaceAttachedDto } from "./dto/create-mp.dto";
 import { NodeWallet } from "@metaplex/js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { MarketplaceCreationEvent, UpdateMarketplaceEvent } from "../helper/db-sync/db.events";
@@ -11,8 +11,8 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { MarketplaceRepo } from "src/dal/marketplace-repo/marketplace-repo";
 import { GetMarketplacesDto } from "./dto/get-mp.dto";
 import { createWithdrawFromTreasuryInstruction, WithdrawFromTreasuryInstructionAccounts } from "@metaplex-foundation/mpl-auction-house";
-import { WithdrawFeeDto } from "./dto/withdraw-royalty.dto";
-import { UpdateMarketplaceDto } from "./dto/update-marketplace.dto";
+import { WithdrawFeeAttachedDto } from "./dto/withdraw-royalty.dto";
+import { UpdateMarketplaceAttachedDto } from "./dto/update-marketplace.dto";
 import { newProgramError, newProgramErrorFrom, ProgramError } from "src/core/program-error";
 import { MarketPlaceResponseDto, MarketplaceInfoResponseDto } from "./response-dto/responses.dto";
 import { FindMarketplaceDto } from "./dto/find-marketplace.dto";
@@ -20,7 +20,7 @@ import { Utility } from "src/common/utils/utils";
 
 class CreateMarketplaceServiceDto {
 	apiKeyId: ObjectId;
-	createMarketplaceParams: CreateMarketPlaceDto
+	createMarketplaceParams: CreateMarketPlaceAttachedDto
 }
 
 type GetMpServiceDto = GetMarketplacesDto & {
@@ -29,7 +29,7 @@ type GetMpServiceDto = GetMarketplacesDto & {
 
 export type UpdateMpSerivceDto = {
 	apiKeyId: ObjectId;
-	update: UpdateMarketplaceDto;
+	update: UpdateMarketplaceAttachedDto;
 }
 
 @Injectable()
@@ -43,18 +43,19 @@ export class MarketplaceService {
 			const metaplex = Metaplex.make(connection, { cluster: createMarketPlaceDto.createMarketplaceParams.network });
 			const auctionsClient = metaplex.auctions();
 
+			const transactionFee = createMarketPlaceDto.createMarketplaceParams.transaction_fee ?? 2
+
 			const auctionHouse = await auctionsClient.createAuctionHouse({
-				sellerFeeBasisPoints: createMarketPlaceDto.createMarketplaceParams.transaction_fee ? createMarketPlaceDto.createMarketplaceParams.transaction_fee * 100 : 0,
+				sellerFeeBasisPoints: transactionFee * 100,
 				requiresSignOff: false,
 				canChangeSalePrice: false,
 				payer: wallet.payer,
 				treasuryMint: createMarketPlaceDto.createMarketplaceParams.currency_address ? new PublicKey(createMarketPlaceDto.createMarketplaceParams.currency_address) : NATIVE_MINT,
-				authority: createMarketPlaceDto.createMarketplaceParams.update_authority ? new PublicKey(createMarketPlaceDto.createMarketplaceParams.update_authority) : wallet.publicKey,
+				authority: wallet.publicKey,
 				feeWithdrawalDestination: createMarketPlaceDto.createMarketplaceParams.fee_payer ? new PublicKey(createMarketPlaceDto.createMarketplaceParams.fee_payer) : wallet.publicKey,
-				treasuryWithdrawalDestinationOwner: createMarketPlaceDto.createMarketplaceParams.fee_receipient ? new PublicKey(createMarketPlaceDto.createMarketplaceParams.fee_receipient) : wallet.publicKey
+				treasuryWithdrawalDestinationOwner: createMarketPlaceDto.createMarketplaceParams.fee_recipient ? new PublicKey(createMarketPlaceDto.createMarketplaceParams.fee_recipient) : wallet.publicKey
 			}).run();
 
-			const transactionFee = auctionHouse.auctionHouse.sellerFeeBasisPoints / 100;
 			const currencySymbol = await Utility.token.getTokenSymbol(createMarketPlaceDto.createMarketplaceParams.network, auctionHouse.auctionHouse.treasuryMint.address.toBase58());
 			const marketplaceCreationEvent = new MarketplaceCreationEvent(
 				createMarketPlaceDto.createMarketplaceParams.network,
@@ -73,9 +74,9 @@ export class MarketplaceService {
 			const resp: MarketPlaceResponseDto = {
 				network: createMarketPlaceDto.createMarketplaceParams.network,
 				address: auctionHouse.auctionHouseAddress.toBase58(),
-				fee_holder_account: auctionHouse.auctionHouse.treasuryAccountAddress.toBase58(),
+				treasury_address: auctionHouse.auctionHouse.treasuryAccountAddress.toBase58(),
 				fee_payer: auctionHouse.auctionHouseFeeAccountAddress.toBase58(),
-				fee_receipient: auctionHouse.treasuryWithdrawalDestinationAddress.toBase58(),
+				fee_recipient_account: auctionHouse.treasuryWithdrawalDestinationAddress.toBase58(),
 				currency_address: auctionHouse.auctionHouse.treasuryMint.address.toBase58(),
 				currency_symbol: currencySymbol,
 				creator: auctionHouse.auctionHouse.creatorAddress.toBase58(),
@@ -90,7 +91,7 @@ export class MarketplaceService {
 
 	async getMarketplaces(getMpDto: GetMpServiceDto): Promise<MarketplaceInfoResponseDto[]> {
 		try {
-			const data = await this.marketplaceRepo.getMarketplaces(getMpDto.network, getMpDto.apiKeyId);
+			const data = await this.marketplaceRepo.getMarketplacesByApiKeyId(getMpDto.network, getMpDto.apiKeyId);
 			const result = data.map(d => {
 				const resp: MarketplaceInfoResponseDto = {
 					network: d.network,
@@ -99,8 +100,8 @@ export class MarketplaceService {
 					currency_address: d.currency_address,
 					currency_symbol: d.currency_symbol,
 					fee_payer: d.fee_payer,
-					fee_receipient: d.fee_receipeint,
-					fee_holder_account: d.fee_holder_account,
+					fee_recipient_account: d.fee_receipient,
+					treasury_address: d.treasury_address,
 					creator: d.creator,
 					transaction_fee: d.transaction_fee,
 					created_at: d.created_at,
@@ -119,12 +120,7 @@ export class MarketplaceService {
 			const auctionHousePda = findAuctionHousePda(
 				toPublicKey(findMarketplaceDto.creator_address),
 				toPublicKey(findMarketplaceDto.currency_address));
-
-			const connection = new Connection(clusterApiUrl(findMarketplaceDto.network), 'confirmed');
-			const metaplex = Metaplex.make(connection, { cluster: findMarketplaceDto.network });
-			const auctionsClient = metaplex.auctions();
-			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(auctionHousePda).run();
-
+			const auctionHouse = await Utility.auctionHouse.findAuctionHouse(findMarketplaceDto.network, auctionHousePda);
 			const currencySymbol = await Utility.token.getTokenSymbol(findMarketplaceDto.network, findMarketplaceDto.currency_address);
 			const resp: MarketPlaceResponseDto = {
 				network: findMarketplaceDto.network,
@@ -133,8 +129,8 @@ export class MarketplaceService {
 				currency_symbol: currencySymbol,
 				authority: auctionHouse.authorityAddress.toBase58(),
 				fee_payer: auctionHouse.feeWithdrawalDestinationAddress.toBase58(),
-				fee_receipient: auctionHouse.treasuryWithdrawalDestinationAddress.toBase58(),
-				fee_holder_account: auctionHouse.treasuryAccountAddress.toBase58(),
+				fee_recipient_account: auctionHouse.treasuryWithdrawalDestinationAddress.toBase58(),
+				treasury_address: auctionHouse.treasuryAccountAddress.toBase58(),
 				creator: auctionHouse.creatorAddress.toBase58(),
 				transaction_fee: auctionHouse.sellerFeeBasisPoints / 100
 			}
@@ -159,10 +155,10 @@ export class MarketplaceService {
 
 			metaplex.use(keypairIdentity(callerKp));
 			const { auctionHouse: updatedAuctionHouse } = await metaplex.auctions().updateAuctionHouse(originalAuctionHouse, {
-				sellerFeeBasisPoints: updateMarketplaceDto.update.new_marketplace_fee ? updateMarketplaceDto.update.new_marketplace_fee * 100 : originalAuctionHouse.sellerFeeBasisPoints,
+				sellerFeeBasisPoints: updateMarketplaceDto.update.new_transaction_fee ? updateMarketplaceDto.update.new_transaction_fee * 100 : originalAuctionHouse.sellerFeeBasisPoints,
 				newAuthority: updateMarketplaceDto.update.new_authority_address ? toPublicKey(updateMarketplaceDto.update.new_authority_address) : originalAuctionHouse.authorityAddress,
 				feeWithdrawalDestination: updateMarketplaceDto.update.new_fee_payer ? toPublicKey(updateMarketplaceDto.update.new_fee_payer) : originalAuctionHouse.feeWithdrawalDestinationAddress,
-				treasuryWithdrawalDestinationOwner: updateMarketplaceDto.update.new_fee_receipient ? toPublicKey(updateMarketplaceDto.update.new_fee_receipient) : originalAuctionHouse.treasuryWithdrawalDestinationAddress,
+				treasuryWithdrawalDestinationOwner: updateMarketplaceDto.update.fee_recipient ? toPublicKey(updateMarketplaceDto.update.fee_recipient) : originalAuctionHouse.treasuryWithdrawalDestinationAddress,
 			}).run();
 
 			const updatedTransactionFee = updatedAuctionHouse.sellerFeeBasisPoints / 100;
@@ -190,8 +186,8 @@ export class MarketplaceService {
 				currency_symbol: currencySymbol,
 				authority: updatedAuctionHouse.authorityAddress.toBase58(),
 				fee_payer: updatedAuctionHouse.feeWithdrawalDestinationAddress.toBase58(),
-				fee_receipient: updatedAuctionHouse.treasuryWithdrawalDestinationAddress.toBase58(),
-				fee_holder_account: updatedAuctionHouse.treasuryAccountAddress.toBase58(),
+				fee_recipient_account: updatedAuctionHouse.treasuryWithdrawalDestinationAddress.toBase58(),
+				treasury_address: updatedAuctionHouse.treasuryAccountAddress.toBase58(),
 				creator: updatedAuctionHouse.creatorAddress.toBase58(),
 				transaction_fee: updatedTransactionFee,
 			}
@@ -205,7 +201,7 @@ export class MarketplaceService {
 		}
 	}
 
-	async withdrawFee(withdrawRoyaltyDto: WithdrawFeeDto) {
+	async withdrawFee(withdrawRoyaltyDto: WithdrawFeeAttachedDto) {
 		try {
 			const callerKp = AccountUtils.getKeypair(withdrawRoyaltyDto.private_key);
 			const wallet = new NodeWallet(callerKp);

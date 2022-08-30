@@ -2,11 +2,11 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { ObjectId } from "mongoose";
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
-export type MarketPlaceDocument = MarketPlace & Document;
+export type MarketplaceDocument = Marketplace & Document;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
-export class MarketPlace {
-	constructor(apiKeyId?: ObjectId, network?: WalletAdapterNetwork, marketplaceAddress?: string, currencyAddress?: string, feePayer?: string, feeReceipient?: string, feeHolderAccount?: string, transactionFee?: number, creator?: string, symbol?: string, authority?: string, canChangePrice?: boolean, requireSignOff?: boolean) {
+export class Marketplace {
+	constructor(apiKeyId?: ObjectId, network?: WalletAdapterNetwork, marketplaceAddress?: string, currencyAddress?: string, feePayer?: string, feeReceipient?: string, treasuryAddress?: string, transactionFee?: number, creator?: string, symbol?: string, authority?: string, canChangePrice?: boolean, requireSignOff?: boolean) {
 		if (apiKeyId !== undefined) {
 			this.api_key_id = apiKeyId;
 		}
@@ -23,13 +23,13 @@ export class MarketPlace {
 			this.fee_payer = feePayer;
 		}
 		if (feeReceipient !== undefined) {
-			this.fee_receipeint = feeReceipient;
+			this.fee_receipient = feeReceipient;
 		}
 		if (transactionFee !== undefined) {
 			this.transaction_fee = transactionFee;
 		}
-		if (feeHolderAccount !== undefined) {
-			this.fee_holder_account = feeHolderAccount;
+		if (treasuryAddress !== undefined) {
+			this.treasury_address = treasuryAddress;
 		}
 		if (creator !== undefined) {
 			this.creator = creator;
@@ -68,10 +68,10 @@ export class MarketPlace {
 	fee_payer: string;
 
 	@Prop({ required: true })
-	fee_receipeint: string;
+	fee_receipient: string;
 
 	@Prop({ required: true })
-	fee_holder_account: string;
+	treasury_address: string;
 
 	@Prop({ required: true })
 	creator: string;
@@ -92,4 +92,4 @@ export class MarketPlace {
 	updated_at: Date;
 }
 
-export const MarketPlaceSchema = SchemaFactory.createForClass(MarketPlace);
+export const MarketPlaceSchema = SchemaFactory.createForClass(Marketplace);

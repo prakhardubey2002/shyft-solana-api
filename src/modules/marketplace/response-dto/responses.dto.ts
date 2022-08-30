@@ -7,8 +7,8 @@ export class MarketPlaceResponseDto {
 	currency_symbol: string;
 	authority: string;
 	fee_payer: string;
-	fee_receipient: string;
-	fee_holder_account: string;
+	fee_recipient_account: string;
+	treasury_address: string;
 	creator: string;
 	transaction_fee: number;
 }
@@ -27,7 +27,6 @@ export class ListingCreationResponseDto {
 	list_state: string;
 	currency_symbol: string;
 	receipt?: string;
-	created_at: Date;
 }
 
 export class BuyResponseDto {
@@ -84,4 +83,14 @@ export type PurchasesDto = {
 export type SellerListingsDto = ListingInfoResponseDto & {
 	buyer_address?: string;
 	purchased_at?: Date;
+}
+
+export type DetachedMarketPlaceResponseDto = MarketPlaceResponseDto & {
+	encoded_transaction: string;
+}
+
+export type DetachedUpdatedMarketplaceResponseDto = Omit<Omit<DetachedMarketPlaceResponseDto, "creator">, "currency_symbol">
+
+export type DetachedCreateListingResponseDto = ListingCreationResponseDto & {
+	encoded_transaction: string;
 }

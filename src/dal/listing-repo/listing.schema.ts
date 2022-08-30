@@ -7,7 +7,7 @@ export type ListingDocument = Listing & Document;
 
 @Schema()
 export class Listing {
-	constructor(api: ObjectId, network: WalletAdapterNetwork, market: string, seller: string, price: number, nft: string, listState: string, createdAt: DateTime, receipt?: string, symbol?: string) {
+	constructor(api: ObjectId, network: WalletAdapterNetwork, market: string, seller: string, price: number, nft: string, listState: string, createdAt: DateTime, receipt?: string, symbol?: string, cancelledAt?: DateTime) {
 		this.api_key_id = api;
 		this.network = network;
 		this.marketplace_address = market;
@@ -17,6 +17,7 @@ export class Listing {
 		this.list_state = listState;
 		this.created_at = new Date(createdAt.toNumber() * 1000); // taken from packages/js/src/types/DateTime.ts
 		this.currency_symbol = symbol !== undefined ? symbol : "SOL";
+		this.cancelled_at = cancelledAt ? new Date(cancelledAt.toNumber() * 1000) : null;
 
 		if (receipt !== undefined) {
 			this.receipt_address = receipt;
