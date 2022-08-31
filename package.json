@@ -43,7 +43,6 @@
     "@solana/spl-token": "^0.2.0",
     "@solana/spl-token-registry": "^0.2.4574",
     "@solana/web3.js": "^1.50.1",
-    "bcrypt": "^5.0.1",
     "bs58": "^5.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",

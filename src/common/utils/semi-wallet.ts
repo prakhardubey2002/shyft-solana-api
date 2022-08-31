@@ -1,8 +1,6 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
 import * as base58 from 'bs58';
-import { randomBytes } from 'tweetnacl';
 import * as pandoraBox from './pandora-box';
-import * as bcrypt from 'bcrypt';
 
 export class KeyData {
   publicKey: PublicKey;
@@ -39,14 +37,6 @@ export class Wallet {
 
   get publicKey() {
     return this.keys.publicKey;
-  }
-
-  static async getHash(pwd: string): Promise<string> {
-    const hashedPwd = pwd
-      ? await bcrypt.hash(pwd, 10)
-      : randomBytes(16).toString();
-
-    return hashedPwd;
   }
 
   static async create(pwd: string) {
