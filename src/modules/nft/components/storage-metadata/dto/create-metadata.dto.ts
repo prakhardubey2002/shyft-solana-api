@@ -2,6 +2,15 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
+export class NftFile {
+  constructor (uri: string, type: string) {
+    this.uri = uri;
+    this.type = type;
+  }
+  uri: string;
+  type: string;
+}
+
 export class CreateMetadataDto {
   @ApiProperty({
     title: 'network',
@@ -103,4 +112,15 @@ export class CreateMetadataDto {
   @IsOptional()
   @IsNumber()
   readonly royalty: number;
+  @ApiPropertyOptional({
+    title: 'another file',
+    type: new Object(),
+    description: 'Attach another file',
+    example: {
+      uri: 'https://www.arweave.net/efgh1234?ext=mp4',
+      type: 'video/mp4',
+    },
+  })
+  @IsOptional()
+  readonly file?: NftFile;
 }

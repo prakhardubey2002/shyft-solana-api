@@ -106,6 +106,31 @@ export const Utility = {
     }
   },
 
+  requestFileFromUrl: async function (fileUrl: string): Promise<{ data: any, contentType: string }> {
+    try {
+      const abortController = new AbortController();
+      setTimeout(() => {
+        abortController.abort();
+      }, 12000);
+      const { data, headers } = await axios.get(fileUrl, { responseType: 'stream', signal: abortController.signal });
+      const contentType = headers['content-type'];
+      return { data, contentType };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  isUriMatched: (cachedImageUri: string, imageUri: string): boolean => {
+    if (!cachedImageUri) return false;
+    const cdnUri = cachedImageUri.split('/').slice(4).join('/');
+    const ext = cdnUri.split('.').pop();
+    const cdnUriWithoutExt = cdnUri.replace(`.${ext}`, '');   
+    if (cdnUriWithoutExt === imageUri) {
+      return true;
+    }
+    return false;
+  },
+
   clusterUrl: function (network: WalletAdapterNetwork): string {
     try {
       switch (network) {

@@ -4,6 +4,7 @@ import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { NftFile } from 'src/modules/nft/components/storage-metadata/dto/create-metadata.dto';
 
 //update attributes value type to hold objects also
 export interface NftDbResponse {
@@ -110,9 +111,11 @@ export class NftData {
       symbol: this.onChainMetadata?.data?.symbol,
       royalty: this.onChainMetadata?.data?.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
       image_uri: this.offChainMetadata?.image,
+      cached_image_uri: this.offChainMetadata?.image,
       description: this.offChainMetadata?.description,
       update_authority: this.onChainMetadata?.updateAuthority,
       attributes: {},
+      files: this.offChainMetadata?.properties?.files,
       mint: this.onChainMetadata?.mint,
       owner: this.owner,
     };
@@ -146,6 +149,12 @@ export class NftData {
     nftDbDto.image_uri = this.offChainMetadata?.image ?? '';
     nftDbDto.description = this.offChainMetadata?.description ?? '';
     nftDbDto.external_url = this.offChainMetadata?.external_url ?? '';
+    nftDbDto.files = this.offChainMetadata?.properties?.files?.map((file: NftFile) => {
+      return {
+        uri: file.uri,
+        type: file.type,
+      };
+    });
     nftDbDto.attributes = {};
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait) => {

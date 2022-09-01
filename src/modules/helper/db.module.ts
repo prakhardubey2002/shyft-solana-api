@@ -14,6 +14,7 @@ import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
 import { MarketplaceDbSyncService } from './db-sync/marketplace-db-sync';
 import { MarketplaceRepo } from 'src/dal/marketplace-repo/marketplace-repo';
 import { Marketplace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketplace.schema';
+import { S3UploaderService } from 'src/common/utils/s3-uploader';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { Marketplace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketp
     ListingRepo,
     MarketplaceDbSyncService,
     MarketplaceRepo,
+    S3UploaderService,
     {
       provide: APP_INTERCEPTOR,
       useValue: new RavenInterceptor(),

@@ -21,7 +21,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.160.0",
     "@aws-sdk/client-ses": "^3.107.0",
+    "@aws-sdk/lib-storage": "^3.160.0",
     "@bonfida/spl-name-service": "^0.1.41",
     "@metaplex-foundation/js": "^0.14.0",
     "@metaplex-foundation/mpl-auction": "^0.0.2",
@@ -48,6 +50,7 @@
     "class-validator": "^0.13.2",
     "handlebars": "^4.7.7",
     "lodash": "^4.17.21",
+    "mime": "^3.0.0",
     "mongoose": "^6.3.6",
     "nest-raven": "^8.2.0",
     "nft.storage": "^6.3.0",

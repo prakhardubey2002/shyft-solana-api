@@ -25,6 +25,15 @@ export class NftInfoAccessor {
     return result;
   }
 
+  public async findOne(filter: object): Promise<NftInfoDocument> {
+    try {
+      const result = await this.NftInfoDataModel.findOne(filter).sort({ updated_at: 'desc' });
+      return result;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   public async find(filter: object, page?: number, size?: number): Promise<NftInfoDocument[]> {
     try {
       let result: NftInfoDocument[];

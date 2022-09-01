@@ -110,9 +110,18 @@ export class CreateNftDetachDto {
 
   @ApiProperty({
     name: 'file',
-    description: 'Image/pdf/.doc or any file that you would want to turn into nft',
+    description: 'Image that you would want to turn into nft',
     type: 'string',
     format: 'binary',
   })
   file: string;
+
+  @ApiPropertyOptional({
+    name: 'data',
+    description: 'Image/pdf/doc/video or any file that you would want to turn into nft',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  data?: string;
 }

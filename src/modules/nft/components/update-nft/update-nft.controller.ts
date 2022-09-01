@@ -2,11 +2,11 @@ import {
   Body,
   Controller,
   Post,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   Version,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UpdateNftDetachDto, UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
 import { Blob } from 'nft.storage';
@@ -16,6 +16,7 @@ import { UpdateDetachOpenApi, UpdateOpenApi } from './open-api';
 import { RemoteDataFetcherService } from 'src/modules/helper/remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto } from 'src/modules/helper/remote-data-fetcher/dto/data-fetcher.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
 
 /*Should either be
 [{"trait_type":"health","value":50}, {"trait_type":"attack","value":100}]
@@ -50,16 +51,25 @@ export class UpdateNftController {
   @UpdateOpenApi()
   @Post('update')
   @Version('1')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'file', maxCount: 1 },
+    { name: 'data', maxCount: 1 },
+  ]))
   async update(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: { file?: Express.Multer.File[], data?: Express.Multer.File[] },
     @Body() updateNftDto: UpdateNftDto,
   ): Promise<any> {
     const nftInfo = (await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDto.network, updateNftDto.token_address))).getNftInfoDto();
     let image = nftInfo.image_uri;
-    if (file) {
-      const uploadImage = await this.storageService.uploadToIPFS(new Blob([file.buffer], { type: file.mimetype }));
+    let data: NftFile;
+    if (files?.file) {
+      const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
       image = uploadImage.uri;
+    }
+
+    if (files?.data) {
+      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
     }
 
     const createParams = {
@@ -73,6 +83,7 @@ export class UpdateNftController {
       royalty: updateNftDto.royalty ?? nftInfo.royalty,
       share: 100,
       external_url: nftInfo.external_url,
+      file: data,
     };
 
     const { uri } = await this.storageService.prepareNFTMetadata(createParams);
@@ -95,16 +106,25 @@ export class UpdateNftController {
   @UpdateDetachOpenApi()
   @Post('update_detach')
   @Version('1')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'file', maxCount: 1 },
+    { name: 'data', maxCount: 1 },
+  ]))
   async updateDetach(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: { file: Express.Multer.File[], data?: Express.Multer.File[] },
     @Body() updateNftDetachDto: UpdateNftDetachDto,
   ): Promise<any> {
     const nftInfo = (await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDetachDto.network, updateNftDetachDto.token_address))).getNftInfoDto();
     let image = nftInfo.image_uri;
-    if (file) {
-      const uploadImage = await this.storageService.uploadToIPFS(new Blob([file.buffer], { type: file.mimetype }));
+    let data: NftFile;
+    if (files?.file) {
+      const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
       image = uploadImage.uri;
+    }
+
+    if (files?.data) {
+      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
     }
 
     const createParams = {
@@ -118,6 +138,7 @@ export class UpdateNftController {
       royalty: updateNftDetachDto.royalty ?? nftInfo.royalty,
       share: 100,
       external_url: nftInfo.external_url,
+      file: data,
     };
 
     const { uri } = await this.storageService.prepareNFTMetadata(createParams);

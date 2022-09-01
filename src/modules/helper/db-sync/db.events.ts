@@ -69,6 +69,16 @@ export class NftReadEvent {
   network: WalletAdapterNetwork;
 }
 
+export class NftCacheEvent {
+  constructor(fileUrl: string, image: string) {
+    this.fileUrl = fileUrl;
+    this.image = image;
+  }
+
+  fileUrl: string;
+  image: string;
+}
+
 export class MarketplaceCreationEvent {
   constructor(network: WalletAdapterNetwork, address: string, authority: string, currencyAddress: string, feePayer: string, feeReceipient: string, treasuryAddress: string, creator: string, transactionFee: number, currencySymbol: string, apiKeyId: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
     this.network = network;

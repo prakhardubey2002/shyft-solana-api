@@ -1,11 +1,12 @@
-import { Body, Controller, Post, Req, UploadedFile, UseInterceptors, Version } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Post, Req, UploadedFiles, UseInterceptors, Version } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { CreateNftDetachService } from './create-nft-detach.service';
 import { CreateNftDetachDto } from './dto/create-nft-detach.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { CreateNftDetachOpenApi } from './open-api';
+import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -16,10 +17,20 @@ export class CreateNftDetachController {
   @CreateNftDetachOpenApi()
   @Post('create_detach')
   @Version('1')
-  @UseInterceptors(FileInterceptor('file'))
-  async createNft(@UploadedFile() file: Express.Multer.File, @Body() createNftDetachDto: CreateNftDetachDto, @Req() request: any): Promise<any> {
-    const uploadImage = await this.storageService.uploadToIPFS(new Blob([file.buffer], { type: file.mimetype }));
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'file', maxCount: 1 },
+    { name: 'data', maxCount: 1 },
+  ]))
+  async createNft(@UploadedFiles() files: { file: Express.Multer.File[], data?: Express.Multer.File[] }, @Body() createNftDetachDto: CreateNftDetachDto, @Req() request: any): Promise<any> {
+    const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
     const image = uploadImage.uri;
+
+    let data: NftFile;
+
+    if (files.data) {
+      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
+    }
 
     const { uri } = await this.storageService.prepareNFTMetadata({
       network: createNftDetachDto.network,
@@ -32,6 +43,7 @@ export class CreateNftDetachController {
       share: 100, //keeping it 100 by default for now createNftDto.share,
       royalty: createNftDetachDto.royalty ?? 0, //500 = 5%
       external_url: createNftDetachDto.external_url,
+      file: data,
     });
 
     const mintNftRequest = {

@@ -13,6 +13,11 @@ interface creator {
   share: number;
 }
 
+interface file {
+  uri: string;
+  type: boolean;
+}
+
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class NftInfo {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, default: null })
@@ -63,6 +68,9 @@ export class NftInfo {
   @Prop({ required: true, default: '' })
   image_uri: string;
 
+  @Prop()
+  cached_image_uri: string;
+
   @Prop({ required: true, default: '' })
   metadata_uri: string;
 
@@ -71,6 +79,9 @@ export class NftInfo {
 
   @Prop({ required: false })
   creators: creator[];
+
+  @Prop({ required: false })
+  files: file[];
 }
 
 export const NftInfoSchema = SchemaFactory.createForClass(NftInfo);

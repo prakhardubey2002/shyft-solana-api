@@ -1,17 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { S3UploaderService } from 'src/common/utils/s3-uploader';
+import { Utility } from 'src/common/utils/utils';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
 import { FetchNftDto, FetchAllNftDto, FetchAllNftByCreatorDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
-import { NftCreationEvent, NftDeleteEvent, NftReadByCreatorEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
+import { NftCacheEvent, NftCreationEvent, NftDeleteEvent, NftReadByCreatorEvent, NftReadEvent, NftReadInWalletEvent, NftUpdateEvent } from './db.events';
 
 const afterNftCreationWaitTime_ms = 7000;
 const afterNftUpdateWaitTime_ms = 7000;
 
 @Injectable()
 export class NFtDbSyncService {
-  constructor(private remoteDataFetcher: RemoteDataFetcherService, private nftInfoAccessor: NftInfoAccessor) { }
+  constructor(
+    private remoteDataFetcher: RemoteDataFetcherService,
+    private nftInfoAccessor: NftInfoAccessor,
+    private uploader: S3UploaderService,
+  ) { }
 
   @OnEvent('nft.created', { async: true })
   async handleNftCreatedEvent(event: NftCreationEvent): Promise<any> {
@@ -40,12 +46,14 @@ export class NFtDbSyncService {
   async handleAllNftReadEvent(event: NftReadInWalletEvent): Promise<any> {
     try {
       const nfts = await this.remoteDataFetcher.fetchAllNftDetails(new FetchAllNftDto(event.network, event.walletAddress, event.updateAuthority));
-      const nftInfos: NftInfo[] = nfts?.map((nft) => {
+      const nftInfos: NftInfo[] = await Promise.all(nfts?.map(async (nft) => {
         const info = nft?.getNftInfoDto();
+        const cachedImageUri = await this.cacheNftData(new NftCacheEvent(info.cached_image_uri, info.image_uri));
+        info.cached_image_uri = cachedImageUri;
         info.network = event.network;
         info.owner = event.walletAddress;
         return info;
-      });
+      }));
       await this.nftInfoAccessor.updateManyNft(nftInfos);
     } catch (err) {
       console.error(err);
@@ -105,10 +113,32 @@ export class NFtDbSyncService {
     }
   }
 
+  private async cacheNftData(event: NftCacheEvent): Promise<any> {
+    try {
+      const { fileUrl, image } = event;
+      const isMatched = Utility.isUriMatched(fileUrl, image);
+      
+      if (!isMatched) {
+        const oldCachedUrl = await this.nftInfoAccessor.findOne({ cached_image_uri: fileUrl });
+        if (oldCachedUrl?.cached_image_uri) {
+          await this.uploader.delete(oldCachedUrl?.cached_image_uri);
+        }
+        const { data, contentType } = await Utility.requestFileFromUrl(image);
+        const cachedUrl = await this.uploader.upload(image, data, contentType);
+        return cachedUrl;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
   private async prepareNftDbDto(event: NftReadEvent): Promise<NftInfo> {
     try {
       const nftData = await this.remoteDataFetcher.fetchNftDetails(new FetchNftDto(event.network, event.tokenAddress));
       const nftDbDto = nftData.getNftInfoDto();
+      const oldCachedUri = (await this.nftInfoAccessor.findOne({ network: event.network, mint: event.tokenAddress }))?.cached_image_uri;
+      const cachedImageUri = await this.cacheNftData(new NftCacheEvent(oldCachedUri, nftDbDto.image_uri));
+      nftDbDto.cached_image_uri = cachedImageUri;
       nftDbDto.network = event.network;
       return nftDbDto;
     } catch (error) {

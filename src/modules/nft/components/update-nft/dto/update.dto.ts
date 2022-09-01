@@ -106,12 +106,21 @@ export class UpdateNftDto {
 
   @ApiPropertyOptional({
     name: 'file',
-    description: 'digital file that NFT represents',
+    description: 'Image that you would want to turn into nft',
     type: 'string',
     format: 'binary',
   })
   @IsOptional()
-  file: string;
+  file?: string;
+
+  @ApiPropertyOptional({
+    name: 'data',
+    description: 'Image/pdf/doc/video or any file that you would want to turn into nft',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  data?: string;
 }
 
 export class UpdateNftDetachDto {
@@ -207,10 +216,19 @@ export class UpdateNftDetachDto {
 
   @ApiPropertyOptional({
     name: 'file',
-    description: 'digital file that NFT represents',
+    description: 'Image that you would want to turn into nft',
     type: 'string',
     format: 'binary',
   })
   @IsOptional()
-  file: string;
+  file?: string;
+
+  @ApiPropertyOptional({
+    name: 'data',
+    description: 'Image/pdf/doc/video or any file that you would want to turn into nft',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  data?: string;
 }

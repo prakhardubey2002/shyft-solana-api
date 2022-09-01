@@ -3,6 +3,7 @@ export const configuration = () => ({
   awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
   awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   awsRegion: process.env.AWS_REGION,
+  s3Bucket: process.env.S3_BUCKET,
   sesApiVersion: process.env.SES_API_VERSION,
   sesEmailId: process.env.SES_EMAIL_ID,
   mongoURI: process.env.MONGO_URI,

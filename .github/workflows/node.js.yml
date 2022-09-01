@@ -46,6 +46,7 @@ jobs:
         ENV_AWS_REGION: ${{ secrets.AWS_REGION }}
         ENV_SES_API_VERSION: ${{ secrets.SES_API_VERSION }}
         ENV_SES_EMAIL_ID: ${{ secrets.SES_EMAIL_ID }}
+        ENV_S3_BUCKET: ${{ secrets.S3_BUCKET }}
         ENV_MONGO_URI: ${{ secrets.MONGO_URI }}
         ENV_IPFS_GATEWAY: ${{ secrets.IPFS_GATEWAY }}
         ENV_SOL_DEVNET: ${{ secrets.SOL_DEVNET }}
@@ -92,6 +93,7 @@ jobs:
         ENV_AWS_REGION: ${{ secrets.AWS_REGION }}
         ENV_SES_API_VERSION: ${{ secrets.SES_API_VERSION }}
         ENV_SES_EMAIL_ID: ${{ secrets.SES_EMAIL_ID }}
+        ENV_S3_BUCKET: ${{ secrets.S3_BUCKET }}
         ENV_MONGO_URI: ${{ secrets.MONGO_URI }}
         ENV_IPFS_GATEWAY: ${{ secrets.IPFS_GATEWAY }}
         ENV_SOL_DEVNET: ${{ secrets.SOL_DEVNET }}

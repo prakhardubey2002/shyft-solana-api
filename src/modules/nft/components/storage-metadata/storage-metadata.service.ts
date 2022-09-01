@@ -32,9 +32,10 @@ export class StorageMetadataService {
       share,
       royalty,
       external_url,
+      file,
     } = createMetadataDto;
-
-    const metadata = JSON.stringify({
+    
+    const metadata = {
       name,
       symbol,
       description,
@@ -45,9 +46,12 @@ export class StorageMetadataService {
       properties: {
         creators: [{ address: creator, verified: true, share }],
       },
-    });
+    };
 
-    const uploadResponse = await this.uploadToIPFS(new Blob([metadata], { type: 'application/json' }));
+    if (file) metadata.properties['files'] = [file]; // add files key to metadata obj
+
+    const metadataSting = JSON.stringify(metadata);
+    const uploadResponse = await this.uploadToIPFS(new Blob([metadataSting], { type: 'application/json' }));
     return uploadResponse;
   }
 

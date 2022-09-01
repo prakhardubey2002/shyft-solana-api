@@ -144,7 +144,7 @@ export class RemoteDataFetcherService {
   async fetchOwner(fetchNftDto: FetchNftDto): Promise<string> {
     try {
       const { network, tokenAddress } = fetchNftDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
       if (!tokenAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
@@ -185,7 +185,7 @@ export class RemoteDataFetcherService {
   async fetchNft(fetchNftDto: FetchNftDto): Promise<NftData> {
     try {
       const { network, tokenAddress } = fetchNftDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
       if (!tokenAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
@@ -215,7 +215,7 @@ export class RemoteDataFetcherService {
         this.eventEmitter.emit('nft.deleted', delEvent);
       }
 
-      throw new HttpException('0 supply for the NFT, deleted maybe', HttpStatus.BAD_REQUEST);
+      throw new HttpException(`NFT not found on ${network}`, HttpStatus.BAD_REQUEST);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
