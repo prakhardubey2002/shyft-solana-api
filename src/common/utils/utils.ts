@@ -146,6 +146,16 @@ export const Utility = {
     }
   },
 
+  getElapsedTime: function (date: Date): number {
+    try {
+      const diff = (new Date(Date.now()).getTime() - new Date(date?.toUTCString()).getTime()) / 1000;
+      return diff;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+
   token: {
     getTokenInfo: async function (
       connection: Connection,
@@ -182,7 +192,7 @@ export const Utility = {
       network: WalletAdapterNetwork,
       tokenAddress: string,
     ): Promise<string> {
-      let symbol: string = "";
+      let symbol = '';
       try {
         const connection = new Connection(clusterApiUrl(network), 'confirmed');
         const tokenInfo = await getMint(connection, toPublicKey(tokenAddress));

@@ -121,7 +121,9 @@ export class NftData {
     };
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait: any) => {
-        nftDbResponse.attributes[trait?.trait_type] = trait?.value;
+        if (trait?.trait_type && trait?.value) {
+          nftDbResponse.attributes[trait?.trait_type] = trait?.value;
+        }
       });
     }
 
@@ -158,7 +160,9 @@ export class NftData {
     nftDbDto.attributes = {};
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait) => {
-        nftDbDto.attributes[trait?.trait_type] = trait?.value;
+        if (trait?.trait_type && trait?.value) {
+          nftDbDto.attributes[trait?.trait_type] = trait?.value;
+        }
       });
     }
     return nftDbDto;

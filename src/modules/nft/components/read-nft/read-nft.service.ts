@@ -2,15 +2,29 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadAllNftByCreatorDto, ReadAllNftDto } from './dto/read-all-nft.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NftReadByCreatorEvent, NftReadEvent, NftReadInWalletEvent } from '../../../helper/db-sync/db.events';
+import {
+  NftReadByCreatorEvent,
+  NftReadEvent,
+  NftReadInWalletEvent,
+} from '../../../helper/db-sync/db.events';
 import { RemoteDataFetcherService } from '../../../helper/remote-data-fetcher/data-fetcher.service';
 import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
-import { FetchAllNftByCreatorDto, FetchAllNftDto, FetchNftDto, NftDbResponse } from '../../../helper/remote-data-fetcher/dto/data-fetcher.dto';
+import {
+  FetchAllNftByCreatorDto,
+  FetchAllNftDto,
+  FetchNftDto,
+  NftDbResponse,
+} from '../../../helper/remote-data-fetcher/dto/data-fetcher.dto';
 import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
+import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class ReadNftService {
-  constructor(private remoteDataFetcher: RemoteDataFetcherService, private nftInfoAccessor: NftInfoAccessor, private eventEmitter: EventEmitter2) { }
+  constructor(
+    private remoteDataFetcher: RemoteDataFetcherService,
+    private nftInfoAccessor: NftInfoAccessor,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
@@ -19,7 +33,11 @@ export class ReadNftService {
       //If refresh is not present in query string, we fetch from DB
       const fetchFromDB = readAllNftDto.refresh === undefined;
 
-      const fetchAllNft = new FetchAllNftDto(network, address, update_authority);
+      const fetchAllNft = new FetchAllNftDto(
+        network,
+        address,
+        update_authority,
+      );
       const dbFilter = { owner: address, network: network };
 
       if (update_authority) {
@@ -95,10 +113,15 @@ export class ReadNftService {
 
       //Fetch from DB, if refresh is false
       const dbNftInfo = fetchFromDB ? await this.nftInfoAccessor.readNft({ mint: readNftDto.token_address, network: network }) : false;
+      //Check should we resync
+      const sinceLastUpdate = Utility.getElapsedTime((<any>dbNftInfo)?.updated_at);
+      const resync = !fetchFromDB || (sinceLastUpdate > (24 * 60 * 60));
 
-      //Trigger read event, to update DB (to-do:can be skipped)
-      const nftReadEvent = new NftReadEvent(token_address, network);
-      this.eventEmitter.emit('nft.read', nftReadEvent);
+      //Trigger read event, if refreshing or if last update > 1 day
+      if (!fetchFromDB || resync) {
+        const nftReadEvent = new NftReadEvent(token_address, network);
+        this.eventEmitter.emit('nft.read', nftReadEvent);
+      }
 
       if (dbNftInfo) {
         return getNftDbResponseFromNftInfo(dbNftInfo);
