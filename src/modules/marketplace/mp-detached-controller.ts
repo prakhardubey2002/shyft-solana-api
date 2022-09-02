@@ -103,7 +103,7 @@ export class MarketplaceDetachController {
 		const result = await this.marketplaceService.withdrawFee(withdrawFeeDto);
 		return {
 			success: true,
-			message: 'Fee withdrawl transaction created successfully',
+			message: 'Fee withdrawal transaction created successfully',
 			result: result,
 		}
 	}

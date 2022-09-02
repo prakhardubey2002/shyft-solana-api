@@ -109,7 +109,7 @@ export class UpdateMarketplaceDto {
 	@ApiPropertyOptional({
 		title: 'New Update Authority Address',
 		type: String,
-		description: 'address of the Marketplace in which the NFT is being sold',
+		description: 'account address that will be the new update authority of the marketplace.',
 		example: '54K5BTMj8ynktzEeaD1iGhAJsCN2svBKmD1fTQTonbBB',
 	})
 	@IsOptional()
