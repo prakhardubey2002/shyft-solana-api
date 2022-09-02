@@ -118,7 +118,7 @@ export class ReadNftService {
       const resync = !fetchFromDB || (sinceLastUpdate > (24 * 60 * 60));
 
       //Trigger read event, if refreshing or if last update > 1 day
-      if (!fetchFromDB || resync) {
+      if (!dbNftInfo || resync) {
         const nftReadEvent = new NftReadEvent(token_address, network);
         this.eventEmitter.emit('nft.read', nftReadEvent);
       }
