@@ -48,8 +48,6 @@ export class NFtDbSyncService {
       const nfts = await this.remoteDataFetcher.fetchAllNftDetails(new FetchAllNftDto(event.network, event.walletAddress, event.updateAuthority));
       const nftInfos: NftInfo[] = await Promise.all(nfts?.map(async (nft) => {
         const info = nft?.getNftInfoDto();
-        const cachedImageUri = await this.cacheNftData(new NftCacheEvent(info.cached_image_uri, info.image_uri));
-        info.cached_image_uri = cachedImageUri;
         info.network = event.network;
         info.owner = event.walletAddress;
         return info;
@@ -123,9 +121,11 @@ export class NFtDbSyncService {
         if (oldCachedUrl?.cached_image_uri) {
           await this.uploader.delete(oldCachedUrl?.cached_image_uri);
         }
-        const { data, contentType } = await Utility.requestFileFromUrl(image);
-        const cachedUrl = await this.uploader.upload(image, data, contentType);
-        return cachedUrl;
+        const response = await Utility.requestFileFromUrl(image);
+        if (response?.data && response?.contentType) {
+          const cachedUrl = await this.uploader.upload(image, response.data, response.contentType);
+          return cachedUrl;
+        }
       }
     } catch (error) {
       console.error(error);

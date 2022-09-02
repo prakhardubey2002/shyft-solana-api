@@ -92,6 +92,15 @@ async function fetchInfoFromSplRegistry(
   };
 }
 
+const isValidUrl = (url: string) => {
+  try { 
+    return Boolean(new URL(url)); 
+  }
+  catch(e){ 
+    return false; 
+  }
+};
+
 export const Utility = {
   request: async function (uri: string): Promise<any> {
     try {
@@ -108,14 +117,17 @@ export const Utility = {
 
   requestFileFromUrl: async function (fileUrl: string): Promise<{ data: any, contentType: string }> {
     try {
-      const abortController = new AbortController();
-      setTimeout(() => {
-        abortController.abort();
-      }, 12000);
-      const { data, headers } = await axios.get(fileUrl, { responseType: 'stream', signal: abortController.signal });
-      const contentType = headers['content-type'];
-      return { data, contentType };
+      if (isValidUrl(fileUrl)) {
+        const abortController = new AbortController();
+        setTimeout(() => {
+          abortController.abort();
+        }, 12000);
+        const { data, headers } = await axios.get(fileUrl, { responseType: 'stream', signal: abortController.signal });
+        const contentType = headers['content-type'];
+        return { data, contentType };
+      }
     } catch (error) {
+      console.log(error);
       throw error;
     }
   },
