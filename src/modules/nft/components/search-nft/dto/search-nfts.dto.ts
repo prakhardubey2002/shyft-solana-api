@@ -4,6 +4,15 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Transform } from 'class-transformer';
 
 export class SearchNftsDto {
+
+  constructor(wallet: string, network?: WalletAdapterNetwork, creators?: string[], royalty?: number | object, attributes?: object) {
+    this.wallet = wallet;
+    this.network = network;
+    this.creators = creators;
+    this.royalty = royalty;
+    this.attributes = attributes;
+  }
+
   @ApiPropertyOptional({
     title: 'network',
     type: String,

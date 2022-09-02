@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isArray } from 'class-validator';
 import { ObjectId } from 'mongoose';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
@@ -10,7 +9,6 @@ import { SearchNftsDto } from './dto/search-nfts.dto';
 export class SearchNftService {
   constructor(
     private nftInfoAccessor: NftInfoAccessor,
-    private eventEmitter: EventEmitter2,
   ) {}
   async searchNftsByAttributes(query: any, apiKeyId: ObjectId): Promise<any> {
     const filter = {};
@@ -34,11 +32,25 @@ export class SearchNftService {
   }
 
   async searchNfts(searchNftDto: SearchNftsDto): Promise<any> {
-    const { network, wallet, creators, attributes, royalty } = searchNftDto;
     let { page, size } = searchNftDto;
     if (!page) page = 1;
     if (!size) size = 10;
 
+    const filter = this.createDbFilter(searchNftDto);
+
+    const totalData = await this.nftInfoAccessor.count(filter);
+    const totalPage = Math.ceil(totalData / size);
+    const filteredResult = await this.nftInfoAccessor.find(filter, page, size);
+
+    const nfts = filteredResult.map((r) => {
+      return getNftDbResponseFromNftInfo(r);
+    });
+
+    return { nfts, page, size, total_data: totalData, total_page: totalPage };
+  }
+
+  createDbFilter(searchNftDto: SearchNftsDto) {
+    const { network, wallet, creators, attributes, royalty } = searchNftDto;
     const filter = {};
     const searchExp = [];
     for (const key in attributes) {
@@ -66,7 +78,6 @@ export class SearchNftService {
       // include extra ops if included
       Object.assign(filter, { $and: searchExp });
     }
-
     if (royalty) {
       if (typeof royalty === 'object') {
         const searchMethod = `$${Object.keys(royalty)[0]}`;
@@ -76,21 +87,11 @@ export class SearchNftService {
         filter['royalty'] = royalty * 100;
       }
     }
-
     if (network) filter['network'] = network;
     if (wallet) filter['owner'] = wallet;
     if (isArray(creators)) {
       filter['creators'] = { $elemMatch: { address: { $in: creators } } };
     }
-
-    const totalData = await this.nftInfoAccessor.count(filter);
-    const totalPage = Math.ceil(totalData / size);
-    const filteredResult = await this.nftInfoAccessor.find(filter, page, size);
-
-    const nfts = filteredResult.map((r) => {
-      return getNftDbResponseFromNftInfo(r);
-    });
-
-    return { nfts, page, size, total_data: totalData, total_page: totalPage };
+    return filter;
   }
 }
