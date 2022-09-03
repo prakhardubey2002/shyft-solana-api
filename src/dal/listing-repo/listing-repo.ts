@@ -45,7 +45,7 @@ export class ListingRepo {
 
 	async getActiveListings(network: WalletAdapterNetwork, marketPlaceAddress: string): Promise<ListingDocument[]> {
 		try {
-			const filter = { network: network, marketplace_address: marketPlaceAddress, cancelled_at: { $exists: false }, purchased_at: { $exists: false } }
+			const filter = { $or: [{ cancelled_at: { $exists: false } }, { cancelled_at: { $eq: null } }], network: network, marketplace_address: marketPlaceAddress, purchased_at: { $exists: false } }
 			const result = await this.ListingModel.find(filter);
 			return result;
 		} catch (err) {

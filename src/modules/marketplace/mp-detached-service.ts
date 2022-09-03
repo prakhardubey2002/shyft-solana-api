@@ -148,9 +148,9 @@ export class MarketplaceDetachedService {
 
 			const updatedData = {
 				authority: updateMarketplaceDto.params.new_authority_address ? toPublicKey(updateMarketplaceDto.params.new_authority_address) : originalData.authority,
-				feeWithdrawalDestination: updateMarketplaceDto.params.new_fee_payer ? toPublicKey(updateMarketplaceDto.params.new_fee_payer) : originalData.feeWithdrawalDestination,
+				feeWithdrawalDestination: updateMarketplaceDto.params.fee_payer ? toPublicKey(updateMarketplaceDto.params.fee_payer) : originalData.feeWithdrawalDestination,
 				treasuryWithdrawalDestination,
-				sellerFeeBasisPoints: updateMarketplaceDto.params.new_transaction_fee ? updateMarketplaceDto.params.new_transaction_fee * 100 : originalData.sellerFeeBasisPoints,
+				sellerFeeBasisPoints: updateMarketplaceDto.params.transaction_fee ? updateMarketplaceDto.params.transaction_fee * 100 : originalData.sellerFeeBasisPoints,
 				requiresSignOff: originalData.requiresSignOff,
 				canChangeSalePrice: originalData.canChangeSalePrice,
 			};
@@ -179,7 +179,7 @@ export class MarketplaceDetachedService {
 			}
 
 			const args: UpdateAuctionHouseInstructionArgs = {
-				sellerFeeBasisPoints: updateMarketplaceDto.params.new_transaction_fee ? updateMarketplaceDto.params.new_transaction_fee * 100 : null,
+				sellerFeeBasisPoints: updateMarketplaceDto.params.transaction_fee ? updateMarketplaceDto.params.transaction_fee * 100 : null,
 				requiresSignOff: null,
 				canChangeSalePrice: null,
 			}

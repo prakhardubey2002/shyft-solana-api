@@ -26,9 +26,14 @@ import { ObjectId } from 'mongoose';
 import * as base58 from 'bs58';
 import { VerifyDto } from './dto/semi-wallet-dto';
 
+export type TokenBalanceDto = {
+  address: string;
+  balance: number;
+}
+
 @Injectable()
 export class WalletService {
-  constructor(private dataFetcher: RemoteDataFetcherService, private walletAccessor: SemiWalletAccessor ) { }
+  constructor(private dataFetcher: RemoteDataFetcherService, private walletAccessor: SemiWalletAccessor) { }
   async getBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
       const { wallet, network } = balanceCheckDto;
@@ -51,7 +56,7 @@ export class WalletService {
         'confirmed',
       );
 
-      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), { limit: tx_num || 10 } );
+      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), { limit: tx_num || 10 });
       const signature = transactionList.map((tx) => tx.signature);
       // if not required detailed info simply return 'signature'
       const transactionDetails = await connection.getParsedTransactions(signature);
@@ -82,7 +87,8 @@ export class WalletService {
     }
   }
 
-  async getAllTokensBalance(balanceCheckDto: BalanceCheckDto): Promise<Record<string, number>[]> {
+
+  async getAllTokensBalance(balanceCheckDto: BalanceCheckDto): Promise<TokenBalanceDto[]> {
     try {
       const { wallet, network } = balanceCheckDto;
       const connection = new Connection(Utility.clusterUrl(network), 'confirmed');

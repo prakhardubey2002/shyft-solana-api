@@ -1,6 +1,6 @@
 import { findAuctionHousePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey } from "@metaplex-foundation/js";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { clusterApiUrl, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { CreateMarketPlaceAttachedDto } from "./dto/create-mp.dto";
 import { NodeWallet } from "@metaplex/js";
@@ -14,9 +14,11 @@ import { createWithdrawFromTreasuryInstruction, WithdrawFromTreasuryInstructionA
 import { WithdrawFeeAttachedDto } from "./dto/withdraw-royalty.dto";
 import { UpdateMarketplaceAttachedDto } from "./dto/update-marketplace.dto";
 import { newProgramError, newProgramErrorFrom, ProgramError } from "src/core/program-error";
-import { MarketPlaceResponseDto, MarketplaceInfoResponseDto } from "./response-dto/responses.dto";
+import { MarketPlaceResponseDto, MarketplaceInfoResponseDto, TreasuryBalanceRespDto } from "./response-dto/responses.dto";
 import { FindMarketplaceDto } from "./dto/find-marketplace.dto";
 import { Utility } from "src/common/utils/utils";
+import { GetTreasuryBalanceDto } from "./dto/treasury-balance.dto";
+import { WalletService } from "../account/account.service";
 
 class CreateMarketplaceServiceDto {
 	apiKeyId: ObjectId;
@@ -34,7 +36,7 @@ export type UpdateMpSerivceDto = {
 
 @Injectable()
 export class MarketplaceService {
-	constructor(private eventEmitter: EventEmitter2, private marketplaceRepo: MarketplaceRepo) { }
+	constructor(private eventEmitter: EventEmitter2, private marketplaceRepo: MarketplaceRepo, private walletService: WalletService) { }
 	async createMarketPlace(createMarketPlaceDto: CreateMarketplaceServiceDto): Promise<MarketPlaceResponseDto> {
 		try {
 			const creatorKp = AccountUtils.getKeypair(createMarketPlaceDto.createMarketplaceParams.private_key);
@@ -155,9 +157,9 @@ export class MarketplaceService {
 
 			metaplex.use(keypairIdentity(callerKp));
 			const { auctionHouse: updatedAuctionHouse } = await metaplex.auctions().updateAuctionHouse(originalAuctionHouse, {
-				sellerFeeBasisPoints: updateMarketplaceDto.update.new_transaction_fee ? updateMarketplaceDto.update.new_transaction_fee * 100 : originalAuctionHouse.sellerFeeBasisPoints,
+				sellerFeeBasisPoints: updateMarketplaceDto.update.transaction_fee ? updateMarketplaceDto.update.transaction_fee * 100 : originalAuctionHouse.sellerFeeBasisPoints,
 				newAuthority: updateMarketplaceDto.update.new_authority_address ? toPublicKey(updateMarketplaceDto.update.new_authority_address) : originalAuctionHouse.authorityAddress,
-				feeWithdrawalDestination: updateMarketplaceDto.update.new_fee_payer ? toPublicKey(updateMarketplaceDto.update.new_fee_payer) : originalAuctionHouse.feeWithdrawalDestinationAddress,
+				feeWithdrawalDestination: updateMarketplaceDto.update.fee_payer ? toPublicKey(updateMarketplaceDto.update.fee_payer) : originalAuctionHouse.feeWithdrawalDestinationAddress,
 				treasuryWithdrawalDestinationOwner: updateMarketplaceDto.update.fee_recipient ? toPublicKey(updateMarketplaceDto.update.fee_recipient) : originalAuctionHouse.treasuryWithdrawalDestinationAddress,
 			}).run();
 
@@ -240,6 +242,55 @@ export class MarketplaceService {
 			} else {
 				throw newProgramErrorFrom(err, "mp_withdraw_fee_error");
 			}
+		}
+	}
+
+	async getTreasuryBalance(getTreasuryBalance: GetTreasuryBalanceDto) {
+		try {
+			const marketplace = await this.marketplaceRepo.getMarketplacesByAddress(getTreasuryBalance.network, getTreasuryBalance.marketplace_address);
+			let currencyAddress: string, currencySymbol: string, balance: number, connection: Connection, treasuryAccount: string, address: string;
+
+			if (marketplace) {
+				currencyAddress = marketplace.currency_address;
+				currencySymbol = marketplace.currency_symbol;
+				treasuryAccount = marketplace.treasury_address;
+				address = marketplace.address;
+			} else {
+				connection = new Connection(clusterApiUrl(getTreasuryBalance.network), 'confirmed');
+				const metaplex = Metaplex.make(connection, { cluster: getTreasuryBalance.network });
+				const auctionsClient = metaplex.auctions();
+				const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(getTreasuryBalance.marketplace_address)).run();
+				currencyAddress = auctionHouse.treasuryMint.address.toBase58();
+				treasuryAccount = auctionHouse.treasuryAccountAddress.toBase58();
+				address = auctionHouse.address.toBase58();
+			}
+
+			if (currencyAddress == NATIVE_MINT.toBase58()) {
+				balance = await connection.getBalance(toPublicKey(treasuryAccount));
+				currencySymbol = 'SOL'
+				balance = balance / LAMPORTS_PER_SOL;
+			} else {
+				const tb = await this.walletService.getAllTokensBalance({
+					network: getTreasuryBalance.network,
+					wallet: address
+				})
+				tb.forEach(e => {
+					if (e.address == currencyAddress) {
+						balance = e.balance;
+						return;
+					}
+				});
+			}
+
+			currencySymbol = currencySymbol ?? await Utility.token.getTokenSymbol(getTreasuryBalance.network, currencyAddress);
+			const resp: TreasuryBalanceRespDto = {
+				amount: balance,
+				symbol: currencySymbol
+			}
+
+			return resp;
+		} catch (err) {
+			throw newProgramErrorFrom(err, "get_treasury_balance_error");
 		}
 	}
 }

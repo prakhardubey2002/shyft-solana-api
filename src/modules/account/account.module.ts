@@ -28,7 +28,7 @@ import { SemiWalletSchema, SemiCustodialWallet } from 'src/dal/semi-wallet-repo/
     ]),
     DbModule,
   ],
-  exports: [SemiWalletAccessor],
+  exports: [SemiWalletAccessor, WalletService],
   providers: [
     WalletService,
     RemoteDataFetcherService,

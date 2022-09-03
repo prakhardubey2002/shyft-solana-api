@@ -10,6 +10,7 @@ import { GetListingsDto } from './dto/get-listings.dto';
 import { GetMarketplacesDto } from './dto/get-mp.dto';
 import { GetPurchasesDto } from './dto/get-purchases.dto';
 import { GetSellerListingsDto } from './dto/get-seller-listings.dto';
+import { GetTreasuryBalanceDto } from './dto/treasury-balance.dto';
 import { UpdateMarketplaceAttachedDto } from './dto/update-marketplace.dto';
 import { WithdrawFeeAttachedDto } from './dto/withdraw-royalty.dto';
 import { ListingService } from './listing-service';
@@ -68,6 +69,19 @@ export class CreateMarketplaceController {
 			message: 'Marketplace updated successfully',
 			result: result,
 		}
+	}
+
+	@Get('treasury_balance')
+	@Version('1')
+	async getTreasuryBalance(@Query() getTreasuryBalance: GetTreasuryBalanceDto, @Req() request: any): Promise<any> {
+		console.log('get treasury balance request received');
+		const result = await this.marketplaceService.getTreasuryBalance(getTreasuryBalance);
+		return {
+			success: true,
+			message: "treasury balance fetched successfully",
+			result: result
+		}
+
 	}
 
 	@Post('list')

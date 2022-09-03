@@ -53,7 +53,7 @@ export class UpdateMarketplaceAttachedDto {
 	@IsNumber()
 	@Max(100)
 	@IsPositive()
-	readonly new_transaction_fee: number;
+	readonly transaction_fee: number;
 
 	@ApiPropertyOptional({
 		title: 'New Fee payer\'s address',
@@ -63,7 +63,7 @@ export class UpdateMarketplaceAttachedDto {
 	})
 	@IsOptional()
 	@IsString()
-	readonly new_fee_payer: string;
+	readonly fee_payer: string;
 
 	@ApiPropertyOptional({
 		title: 'New Fee Recipient\'s address',
@@ -127,7 +127,7 @@ export class UpdateMarketplaceDto {
 	@IsNumber()
 	@Max(100)
 	@IsPositive()
-	readonly new_transaction_fee: number;
+	readonly transaction_fee: number;
 
 	@ApiPropertyOptional({
 		title: 'New Fee payer\'s address',
@@ -137,7 +137,7 @@ export class UpdateMarketplaceDto {
 	})
 	@IsOptional()
 	@IsString()
-	readonly new_fee_payer: string;
+	readonly fee_payer: string;
 
 	@ApiPropertyOptional({
 		title: 'New Fee Recipient\'s address',

@@ -80,6 +80,11 @@ export type PurchasesDto = {
 	purchased_at?: Date;
 };
 
+export type TreasuryBalanceRespDto = {
+	amount: number;
+	symbol: string;
+}
+
 export type SellerListingsDto = ListingInfoResponseDto & {
 	buyer_address?: string;
 	purchased_at?: Date;
