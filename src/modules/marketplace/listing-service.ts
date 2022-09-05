@@ -22,6 +22,7 @@ import { ObjectId } from "mongoose";
 import { PurchasesDto, SellerListingsDto, ActiveListingsResultDto, BuyResponseDto, ListingCreationResponseDto, ListingInfoResponseDto } from "./response-dto/responses.dto";
 import { newProgramErrorFrom } from "src/core/program-error";
 import { Utility } from "src/common/utils/utils";
+import { GetStatsDto } from "./dto/get-stats.dto";
 
 class CreateListingServiceDto {
 	apiKeyId: ObjectId;
@@ -335,6 +336,15 @@ export class ListingService {
 			return result;
 		} catch (err) {
 			throw newProgramErrorFrom(err, "get_purchases_error");
+		}
+	}
+
+	async stats(getStatsDto: GetStatsDto): Promise<any> {
+		try {
+			const result = await this.listingRepo.stats(getStatsDto);
+			return result;
+		} catch (err) {
+			throw newProgramErrorFrom(err, 'no_data_found');
 		}
 	}
 }

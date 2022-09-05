@@ -5,6 +5,7 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 import { Listing, ListingDocument } from "./listing.schema";
 import { DateTime } from "@metaplex-foundation/js";
+import { GetStatsDto } from "src/modules/marketplace/dto/get-stats.dto";
 
 @Injectable()
 export class ListingRepo {
@@ -67,6 +68,60 @@ export class ListingRepo {
 		try {
 			const filter = { network: network, marketplace_address: marketPlaceAddress, buyer_address: buyer };
 			const result = await this.ListingModel.find(filter);
+			return result;
+		} catch (err) {
+			throw new Error(err);
+		}
+	}
+
+	async stats(filter: GetStatsDto): Promise<any> {
+		try {
+			const { network, marketplace_address, start_date, end_date } = filter;
+			const createdAtQuery = start_date ? { $gte: start_date, $lte: end_date ?? new Date() } : { $ne: null };
+			
+			const salesDetail = await this.ListingModel.aggregate([
+				{
+					$match: {
+						network,
+						marketplace_address,
+						purchased_at: { $ne: null },
+						created_at: createdAtQuery,
+					},
+				},
+				{ $group: { _id: 0, totalSales: { $sum: 1 }, salesVolume: { $sum: '$price' } } },
+			]);
+			
+			const sellerDetails = await this.ListingModel.aggregate([
+				{
+					$match: {
+						marketplace_address,
+						created_at: createdAtQuery,
+					},
+				},
+				{ $group: {_id: null, seller: {$addToSet: '$seller_address'}, }},
+    		{ $unwind: '$seller' },
+    		{ $group: { _id: 0, totalSellers: { $sum: 1 } }},
+			]);
+			const listingDetails = await this.ListingModel.aggregate([
+				{
+					$match: {
+						network,
+						marketplace_address,
+						cancelled_at: { $eq: null },
+						created_at: createdAtQuery,
+					},
+				},
+				{ $group: { _id: 0, totalListings: { $sum: 1 }, listedVolume: { $sum: '$price' } } },
+			]);
+
+			const result = {
+				total_sales: salesDetail[0].totalSales,
+				sales_volume: salesDetail[0].salesVolume,
+				total_sellers: sellerDetails[0].totalSellers,
+				total_listings: listingDetails[0].totalListings,
+				listed_volume: listingDetails[0].listedVolume,
+			}
+			
 			return result;
 		} catch (err) {
 			throw new Error(err);

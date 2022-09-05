@@ -10,12 +10,13 @@ import { GetListingsDto } from './dto/get-listings.dto';
 import { GetMarketplacesDto } from './dto/get-mp.dto';
 import { GetPurchasesDto } from './dto/get-purchases.dto';
 import { GetSellerListingsDto } from './dto/get-seller-listings.dto';
+import { GetStatsDto } from './dto/get-stats.dto';
 import { GetTreasuryBalanceDto } from './dto/treasury-balance.dto';
 import { UpdateMarketplaceAttachedDto } from './dto/update-marketplace.dto';
 import { WithdrawFeeAttachedDto } from './dto/withdraw-royalty.dto';
 import { ListingService } from './listing-service';
 import { MarketplaceService, UpdateMpSerivceDto } from './mp-service';
-import { ActiveListingsOpenApi, ActiveSellersOpenApi, BuyListingAttachedOpenApi, CreateListingAttachedOpenApi, CreateMpAttachedOpenApi, FindMpOpenApi, ListDetailsOpenApi, MyMarketsOpenApi, OrderHistoryOpenApi, SellerListingsOpenApi, UnlistOpenAttachedApi, UpdateMpAttachedOpenApi, WithdrawAttachedOpenApi } from './open-api';
+import { ActiveListingsOpenApi, ActiveSellersOpenApi, BuyListingAttachedOpenApi, CreateListingAttachedOpenApi, CreateMpAttachedOpenApi, FindMpOpenApi, ListDetailsOpenApi, MyMarketsOpenApi, OrderHistoryOpenApi, SellerListingsOpenApi, StatsOpenApi, UnlistOpenAttachedApi, UpdateMpAttachedOpenApi, WithdrawAttachedOpenApi } from './open-api';
 
 @ApiTags('MarketPlace')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -220,6 +221,18 @@ export class CreateMarketplaceController {
 			success: true,
 			message: 'Order history fetched successfully',
 			result: result,
+		}
+	}
+
+	@Get('stats')
+	@StatsOpenApi()
+	@Version('1')
+	async stats(@Query() getStatsDto: GetStatsDto): Promise<any> {
+		const result = await this.listingService.stats(getStatsDto);
+		return {
+			success: true,
+			message: 'Marketplace stats fetched successfully',
+			result,
 		}
 	}
 }

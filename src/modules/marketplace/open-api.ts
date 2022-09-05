@@ -562,3 +562,25 @@ export function OrderHistoryOpenApi() {
 		}),
 	);
 }
+
+export function StatsOpenApi() {
+	return applyDecorators(
+		ApiOperation({ summary: 'Marketplace stats' }),
+		ApiOkResponse({
+			description: 'Marketplace stats fetched successfully',
+			schema: {
+				example: {
+					success: true,
+					message: 'Marketplace stats fetched successfully',
+					result: {
+						total_sales: 1,
+        		sales_volume: 0.1,
+        		total_sellers: 1,
+        		total_listings: 2,
+        		listed_volume: 0.2
+					},
+				},
+			},
+		}),
+	);
+}
