@@ -114,7 +114,7 @@ export class ReadNftService {
       //Fetch from DB, if refresh is false
       const dbNftInfo = fetchFromDB ? await this.nftInfoAccessor.readNft({ mint: readNftDto.token_address, network: network }) : false;
       //Check should we resync
-      const sinceLastUpdate = Utility.getElapsedTime((<any>dbNftInfo)?.updated_at);
+      const sinceLastUpdate = Utility.getElapsedTimeSec((<any>dbNftInfo)?.updated_at);
       const resync = !fetchFromDB || (sinceLastUpdate > (24 * 60 * 60));
 
       //Trigger read event, if refreshing or if last update > 1 day

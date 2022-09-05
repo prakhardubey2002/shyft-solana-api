@@ -102,12 +102,12 @@ const isValidUrl = (url: string) => {
 };
 
 export const Utility = {
-  request: async function (uri: string): Promise<any> {
+  request: async function (uri: string, timeout = 15000): Promise<any> {
     try {
       const abortController = new AbortController();
       setTimeout(() => {
         abortController.abort();
-      }, 12000);
+      }, timeout);
       const res = await axios.get(uri, { signal: abortController.signal });
       return res.status === 200 ? res.data : {};
     } catch (error) {
@@ -158,7 +158,7 @@ export const Utility = {
     }
   },
 
-  getElapsedTime: function (date: Date): number {
+  getElapsedTimeSec: function (date: Date): number {
     try {
       const diff = (new Date(Date.now()).getTime() - new Date(date?.toUTCString()).getTime()) / 1000;
       return diff;

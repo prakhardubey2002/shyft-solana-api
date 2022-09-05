@@ -112,18 +112,22 @@ export class NftData {
       royalty: this.onChainMetadata?.data?.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
       image_uri: this.offChainMetadata?.image ?? '',
       cached_image_uri: this.offChainMetadata?.image ?? '',
+      metadata_uri: this.onChainMetadata?.data.uri ?? '',
       description: this.offChainMetadata?.description ?? '',
       update_authority: this.onChainMetadata?.updateAuthority,
       attributes: {},
+      attributes_array: [],
       external_url: this.offChainMetadata?.external_url ?? '',
       files: this.offChainMetadata?.properties?.files,
       mint: this.onChainMetadata?.mint,
       owner: this.owner,
+      creators: this.onChainMetadata?.data?.creators,
     };
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait: any) => {
         if (trait?.trait_type && trait?.value) {
           nftDbResponse.attributes[trait?.trait_type] = trait?.value;
+          nftDbResponse.attributes_array.push({trait_type: trait?.trait_type, value: trait?.value});
         }
       });
     }
