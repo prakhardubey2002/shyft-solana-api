@@ -1,6 +1,6 @@
 import { findAuctionHousePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey } from "@metaplex-foundation/js";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { CreateMarketPlaceAttachedDto } from "./dto/create-mp.dto";
 import { NodeWallet } from "@metaplex/js";
@@ -41,7 +41,7 @@ export class MarketplaceService {
 		try {
 			const creatorKp = AccountUtils.getKeypair(createMarketPlaceDto.createMarketplaceParams.private_key);
 			const wallet = new NodeWallet(creatorKp)
-			const connection = new Connection(clusterApiUrl(createMarketPlaceDto.createMarketplaceParams.network), 'confirmed');
+			const connection = Utility.connectRpc(createMarketPlaceDto.createMarketplaceParams.network);
 			const metaplex = Metaplex.make(connection, { cluster: createMarketPlaceDto.createMarketplaceParams.network });
 			const auctionsClient = metaplex.auctions();
 
@@ -145,7 +145,7 @@ export class MarketplaceService {
 	async updateAuctionHouse(updateMarketplaceDto: UpdateMpSerivceDto) {
 		try {
 			const callerKp = AccountUtils.getKeypair(updateMarketplaceDto.update.private_key);
-			const connection = new Connection(clusterApiUrl(updateMarketplaceDto.update.network), 'confirmed');
+			const connection = Utility.connectRpc(updateMarketplaceDto.update.network);
 			const metaplex = Metaplex.make(connection, { cluster: updateMarketplaceDto.update.network });
 			const auctionsClient = metaplex.auctions();
 			const originalAuctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(updateMarketplaceDto.update.marketplace_address)).run();
@@ -207,7 +207,7 @@ export class MarketplaceService {
 		try {
 			const callerKp = AccountUtils.getKeypair(withdrawRoyaltyDto.private_key);
 			const wallet = new NodeWallet(callerKp);
-			const connection = new Connection(clusterApiUrl(withdrawRoyaltyDto.network), 'confirmed');
+			const connection = Utility.connectRpc(withdrawRoyaltyDto.network);
 			const metaplex = Metaplex.make(connection, { cluster: withdrawRoyaltyDto.network });
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(withdrawRoyaltyDto.marketplace_address)).run();
@@ -256,7 +256,7 @@ export class MarketplaceService {
 				treasuryAccount = marketplace.treasury_address;
 				address = marketplace.address;
 			} else {
-				connection = new Connection(clusterApiUrl(getTreasuryBalance.network), 'confirmed');
+				const connection = Utility.connectRpc(getTreasuryBalance.network);
 				const metaplex = Metaplex.make(connection, { cluster: getTreasuryBalance.network });
 				const auctionsClient = metaplex.auctions();
 				const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(getTreasuryBalance.marketplace_address)).run();

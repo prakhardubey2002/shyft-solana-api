@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AccountInfo, clusterApiUrl, PublicKey } from '@solana/web3.js';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { Connection, programs } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
@@ -96,7 +96,7 @@ export class RemoteDataFetcherService {
   async fetchAllNfts(fetchAllNftDto: FetchAllNftDto): Promise<MetadataData[]> {
     try {
       const { network, walletAddress } = fetchAllNftDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       if (!walletAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
@@ -144,7 +144,7 @@ export class RemoteDataFetcherService {
   async fetchOwner(fetchNftDto: FetchNftDto): Promise<string> {
     try {
       const { network, tokenAddress } = fetchNftDto;
-      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       if (!tokenAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
@@ -185,7 +185,7 @@ export class RemoteDataFetcherService {
   async fetchNft(fetchNftDto: FetchNftDto): Promise<NftData> {
     try {
       const { network, tokenAddress } = fetchNftDto;
-      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       if (!tokenAddress) {
         throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
       }
@@ -224,7 +224,7 @@ export class RemoteDataFetcherService {
   async fetchAllNftsByCreator(fetchAllNftByCreatorDto: FetchAllNftByCreatorDto): Promise<PaginatedNftsResponse> {
     try {
       const { network, creator, page, size } = fetchAllNftByCreatorDto;
-      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const rawMetadatas = await connection.getProgramAccounts(
         new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
         {

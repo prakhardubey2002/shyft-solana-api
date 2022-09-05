@@ -1,7 +1,7 @@
 import { amount, findAuctionHouseTradeStatePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey, token, findAssociatedTokenAccountPda, Pda } from "@metaplex-foundation/js";
 import { NodeWallet } from "@metaplex/js";
 import { Injectable } from "@nestjs/common";
-import { clusterApiUrl, Connection, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
+import { PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
 import { AccountUtils } from "src/common/utils/account-utils";
 import { BuyAttachedDto } from "./dto/buy-listed.dto";
 import { UnlistAttachedDto } from "./dto/cancel-listing.dto";
@@ -36,7 +36,7 @@ export class ListingService {
 		try {
 			const sellerKp = AccountUtils.getKeypair(createListDto.createListingParams.private_key);
 			const wallet = new NodeWallet(sellerKp);
-			const connection = new Connection(clusterApiUrl(createListDto.createListingParams.network), 'confirmed');
+			const connection = Utility.connectRpc(createListDto.createListingParams.network);
 			const metaplex = Metaplex.make(connection, { cluster: createListDto.createListingParams.network }).use(keypairIdentity(sellerKp));
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(createListDto.createListingParams.marketplace_address)).run();
@@ -89,7 +89,7 @@ export class ListingService {
 		try {
 			const buyerKp = AccountUtils.getKeypair(buyDto.private_key);
 			const wallet = new NodeWallet(buyerKp);
-			const connection = new Connection(clusterApiUrl(buyDto.network), 'confirmed');
+			const connection = Utility.connectRpc(buyDto.network);
 			const metaplex = Metaplex.make(connection, { cluster: buyDto.network }).use(keypairIdentity(buyerKp));
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(buyDto.marketplace_address)).run();
@@ -156,7 +156,7 @@ export class ListingService {
 
 	async findListing(getListingDetailsDto: GetListingDetailsDto): Promise<any> {
 		try {
-			const connection = new Connection(clusterApiUrl(getListingDetailsDto.network), 'confirmed');
+			const connection = Utility.connectRpc(getListingDetailsDto.network);
 			const metaplex = Metaplex.make(connection, { cluster: getListingDetailsDto.network })
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(getListingDetailsDto.marketplace_address)).run();
@@ -195,7 +195,7 @@ export class ListingService {
 		try {
 			const sellerKp = AccountUtils.getKeypair(cancelListingDto.private_key);
 			const wallet = new NodeWallet(sellerKp);
-			const connection = new Connection(clusterApiUrl(cancelListingDto.network), 'confirmed');
+			const connection = Utility.connectRpc(cancelListingDto.network);
 			const metaplex = Metaplex.make(connection, { cluster: cancelListingDto.network }).use(keypairIdentity(sellerKp));
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(cancelListingDto.marketplace_address)).run();

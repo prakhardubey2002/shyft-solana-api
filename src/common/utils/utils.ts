@@ -93,15 +93,44 @@ async function fetchInfoFromSplRegistry(
 }
 
 const isValidUrl = (url: string) => {
-  try { 
-    return Boolean(new URL(url)); 
-  }
-  catch(e){ 
-    return false; 
+  try {
+    return Boolean(new URL(url));
+  } catch (e) {
+    return false;
   }
 };
 
+function attemptConnection(endpoint: string): Connection {
+  try {
+    const connection = new Connection(endpoint, {
+      commitment: 'confirmed',
+      disableRetryOnRateLimit: true,
+    });
+    return connection;
+  } catch (error) {
+    throw error;
+  }
+}
+
 export const Utility = {
+  connectRpc: function (network: WalletAdapterNetwork): Connection {
+    try {
+      return attemptConnection(Utility.clusterUrl(network));
+    } catch (error) {
+      console.log(error);
+      //In case of an error, try fallback endpoint if mainnet
+      try {
+        if (network === WalletAdapterNetwork.Mainnet) {
+          return attemptConnection(configuration().solFallBackMainnet);
+        } else {
+          throw Error(`RPC ${network} node not responding`);
+        }
+      } catch (error) {
+        throw error;
+      }
+    }
+  },
+
   request: async function (uri: string, timeout = 15000): Promise<any> {
     try {
       const abortController = new AbortController();

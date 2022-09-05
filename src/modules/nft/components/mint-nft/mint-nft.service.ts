@@ -2,10 +2,11 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Metaplex, keypairIdentity, findAssociatedTokenAccountPda, findMetadataPda, findMasterEditionV2Pda, parseOriginalEditionAccount, findEditionPda, findEditionMarkerPda, AccountNotFoundError, toBigNumber } from '@metaplex-foundation/js';
 import { PrintNftEditionDto, PrintNftEditionDetachDto } from './dto/mint-nft.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
-import { clusterApiUrl, Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { createMintNewEditionFromMasterEditionViaTokenInstruction } from '@metaplex-foundation/mpl-token-metadata';
 import * as BN from 'bn.js';
+import { Utility } from 'src/common/utils/utils';
 @Injectable()
 export class MintNftService {
   async printNewEdition(printNftEditionDto: PrintNftEditionDto): Promise<any> {
@@ -18,7 +19,7 @@ export class MintNftService {
         transfer_authority,
       } = printNftEditionDto;
       const feePayer = AccountUtils.getKeypair(private_key);
-      const connection = new Connection(clusterApiUrl(network));
+      const connection = Utility.connectRpc(network);
       const metaplex = Metaplex.make(connection).use(keypairIdentity(feePayer));
       const master_address = new PublicKey(master_nft_address);
       const newOwner = receiver ? new PublicKey(receiver) : feePayer.publicKey;
@@ -50,7 +51,7 @@ export class MintNftService {
         transfer_authority,
       } = printNftEditionDetachDto;
       const addressPubKey = new PublicKey(wallet);
-      const connection = new Connection(clusterApiUrl(network));
+      const connection = Utility.connectRpc(network);
       const metaplex = Metaplex.make(connection);
       // Original NFT.
       const originalMint = new PublicKey(master_nft_address);

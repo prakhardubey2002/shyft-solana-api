@@ -1,13 +1,14 @@
 /* eslint-disable prettier/prettier */
 import { HttpException, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey, Transaction } from '@solana/web3.js';
-import { Connection, NodeWallet, programs } from '@metaplex/js';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { NodeWallet, programs } from '@metaplex/js';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { NftUpdateEvent } from '../../../helper/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Creator as CreatorV2, createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import { Utility } from 'src/common/utils/utils';
 
 interface UpdateParams {
   update_authority: string,
@@ -57,7 +58,7 @@ export class UpdateNftService {
         new_update_authority,
       } = updateParams;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
 
       //generate wallet
       const keypair = AccountUtils.getKeypair(private_key);
@@ -78,7 +79,7 @@ export class UpdateNftService {
         feePayer: wallet.publicKey
       }, {
         metadata: pda,
-        updateAuthority: new PublicKey(update_authority),
+        updateAuthority: new PublicKey(newAuthority),
         newUpdateAuthority: new_update_authority ? new PublicKey(new_update_authority): undefined,
         metadataData: new programs.metadata.DataV2({
           name: name,
@@ -124,7 +125,7 @@ export class UpdateNftService {
         primary_sale_happened,
       } = updateParams;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
 
       const addressPubKey = new PublicKey(wallet);
 

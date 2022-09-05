@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   burnChecked,
@@ -10,6 +10,7 @@ import {
 } from '@solana/spl-token';
 import { BurnTokenDto, BurnTokenDetachDto } from './dto/burn-token.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class BurnTokenService {
@@ -17,7 +18,7 @@ export class BurnTokenService {
     try {
       const { network, private_key, token_address, amount } = burnTokenDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const feePayer = AccountUtils.getKeypair(private_key);
 
       const tokenAddressPubkey = new PublicKey(token_address);
@@ -58,7 +59,7 @@ export class BurnTokenService {
     try {
       const { network, wallet, token_address, amount } = burnTokenDetachDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const addressPubkey = new PublicKey(wallet);
 
       const tokenAddressPubkey = new PublicKey(token_address);

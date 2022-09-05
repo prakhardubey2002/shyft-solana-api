@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
-  Connection,
   LAMPORTS_PER_SOL,
   Transaction,
   SystemProgram,
@@ -33,14 +32,14 @@ export type TokenBalanceDto = {
 
 @Injectable()
 export class WalletService {
-  constructor(private dataFetcher: RemoteDataFetcherService, private walletAccessor: SemiWalletAccessor) { }
+  constructor(
+    private dataFetcher: RemoteDataFetcherService,
+    private walletAccessor: SemiWalletAccessor,
+  ) {}
   async getBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
       const { wallet, network } = balanceCheckDto;
-      const connection = new Connection(
-        Utility.clusterUrl(network),
-        'confirmed',
-      );
+      const connection = Utility.connectRpc(network);
       const balance = await connection.getBalance(new PublicKey(wallet));
       return balance / LAMPORTS_PER_SOL;
     } catch (error) {
@@ -51,10 +50,7 @@ export class WalletService {
   async getTransactionHistory(transactionHistoryDto: TransactionHistoryDto): Promise<any> {
     try {
       const { wallet, network, tx_num } = transactionHistoryDto;
-      const connection = new Connection(
-        Utility.clusterUrl(network),
-        'confirmed',
-      );
+      const connection = Utility.connectRpc(network);
 
       const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), { limit: tx_num || 10 });
       const signature = transactionList.map((tx) => tx.signature);
@@ -69,7 +65,7 @@ export class WalletService {
   async getTokenBalance(balanceCheckDto: TokenBalanceCheckDto): Promise<number> {
     try {
       const { wallet, network, token } = balanceCheckDto;
-      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       let tokenAccount;
       try {
         tokenAccount = await connection.getParsedTokenAccountsByOwner(
@@ -91,7 +87,7 @@ export class WalletService {
   async getAllTokensBalance(balanceCheckDto: BalanceCheckDto): Promise<TokenBalanceDto[]> {
     try {
       const { wallet, network } = balanceCheckDto;
-      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const allTokenInfo = [];
       try {
         const parsedSplAccts = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), { programId: TOKEN_PROGRAM_ID });
@@ -143,20 +139,25 @@ export class WalletService {
   }
 
   async getDomains(walletDto: BalanceCheckDto) {
-    const connection = new Connection(Utility.clusterUrl(walletDto.network), 'confirmed');
-    const domains = await getAllDomains(connection, new PublicKey(walletDto.wallet));
-    const names = await performReverseLookupBatch(connection, domains);
-    const resp = [];
-    names.forEach((element, i) => {
-      resp.push({ address: domains[i], name: `${element}.sol` });
-    });
+    try {
+      const connection = Utility.connectRpc(walletDto.network);
+      const domains = await getAllDomains(connection, new PublicKey(walletDto.wallet));
+      const names = await performReverseLookupBatch(connection, domains);
+      const resp = [];
+      names.forEach((element, i) => {
+        resp.push({ address: domains[i], name: `${element}.sol` });
+      });
 
-    return resp;
+      return resp;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
   }
 
   async resolveAddress(nameAddressDto: ResolveAddressDto) {
     try {
-      const connection = new Connection(Utility.clusterUrl(nameAddressDto.network), 'confirmed');
+      const connection = Utility.connectRpc(nameAddressDto.network);
       const name = await performReverseLookup(connection, new PublicKey(nameAddressDto.address));
       return { name: `${name}.sol` };
     } catch (error) {
@@ -244,10 +245,7 @@ export class WalletService {
   async sendSol(sendSolDto: SendSolDto): Promise<string> {
     try {
       const { network, from_private_key, to_address, amount } = sendSolDto;
-      const connection = new Connection(
-        Utility.clusterUrl(network),
-        'confirmed',
-      );
+      const connection = Utility.connectRpc(network);
 
       const from = AccountUtils.getKeypair(from_private_key);
       // Add transfer instruction to transaction

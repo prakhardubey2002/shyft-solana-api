@@ -1,7 +1,6 @@
 import { findListingReceiptPda, findPurchaseReceiptPda, Metaplex, toDateTime, toListingReceiptAccount, toPublicKey, toPurchaseReceiptAccount } from "@metaplex-foundation/js";
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
-import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { Utility } from "src/common/utils/utils";
 import { newProgramErrorFrom } from "src/core/program-error";
 import { ListingRepo } from "src/dal/listing-repo/listing-repo";
@@ -56,7 +55,7 @@ export class ListingDbSyncService {
 
 		setTimeout(async () => {
 			try {
-				const connection = new Connection(clusterApiUrl(event.network), 'confirmed');
+				const connection = Utility.connectRpc(event.network);
 				const metaplex = Metaplex.make(connection, { cluster: event.network });
 				const auctionsClient = metaplex.auctions();
 				const auctionHouse = await auctionsClient.findAuctionHouseByAddress(event.auctionHouseAddress).run();
@@ -92,7 +91,7 @@ export class ListingDbSyncService {
 	async handleUnlistInitiationEvent(event: UnlistInitiationEvent): Promise<any> {
 		setTimeout(async () => {
 			const receiptAddress = findListingReceiptPda(event.listState);
-			const connection = new Connection(clusterApiUrl(event.network), 'confirmed');
+			const connection = Utility.connectRpc(event.network);
 			const metaplex = Metaplex.make(connection);
 			const account = toListingReceiptAccount(
 				await metaplex.rpc().getAccount(receiptAddress)
@@ -110,7 +109,7 @@ export class ListingDbSyncService {
 	async handleSaleInitiationEvent(event: SaleInitiationEvent): Promise<any> {
 		setTimeout(async () => {
 			try {
-				const connection = new Connection(clusterApiUrl(event.network), 'confirmed');
+				const connection = Utility.connectRpc(event.network);
 				const metaplex = Metaplex.make(connection);
 				const receiptAddress = findPurchaseReceiptPda(
 					event.listState,

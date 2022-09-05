@@ -2,7 +2,7 @@ import { amount, findAssociatedTokenAccountPda, findAuctionHouseBuyerEscrowPda, 
 import { BuyInstructionAccounts, BuyInstructionArgs, CancelInstructionAccounts, createBuyInstruction, createCancelInstruction, createCancelListingReceiptInstruction, createExecuteSaleInstruction, createPrintBidReceiptInstruction, createPrintListingReceiptInstruction, createPrintPurchaseReceiptInstruction, createSellInstruction, ExecuteSaleInstructionAccounts, ExecuteSaleInstructionArgs, PrintBidReceiptInstructionAccounts, PrintBidReceiptInstructionArgs, PrintListingReceiptInstructionAccounts, PrintListingReceiptInstructionArgs, PrintPurchaseReceiptInstructionAccounts, PrintPurchaseReceiptInstructionArgs, SellInstructionAccounts, SellInstructionArgs } from "@metaplex-foundation/mpl-auction-house";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { clusterApiUrl, Connection, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
+import { SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
 import { ObjectId } from "mongoose";
 import { Utility } from "src/common/utils/utils";
 import { newProgramError, newProgramErrorFrom } from "src/core/program-error";
@@ -22,7 +22,7 @@ export class ListingDetachedService {
 	constructor(private eventEmitter: EventEmitter2) { }
 	async createListing(createListDto: CreateListingServiceDto): Promise<any> {
 		try {
-			const connection = new Connection(clusterApiUrl(createListDto.params.network), 'confirmed');
+			const connection = Utility.connectRpc(createListDto.params.network);
 			const seller = toPublicKey(createListDto.params.seller_wallet);
 
 			const metaplex = Metaplex.make(connection, { cluster: createListDto.params.network });
@@ -122,7 +122,7 @@ export class ListingDetachedService {
 
 	async buy(buyDto: BuyDto): Promise<any> {
 		try {
-			const connection = new Connection(clusterApiUrl(buyDto.network), 'confirmed');
+			const connection = Utility.connectRpc(buyDto.network);
 			const buyer = toPublicKey(buyDto.buyer_wallet);
 			const seller = toPublicKey(buyDto.seller_address);
 			const metaplex = Metaplex.make(connection, { cluster: buyDto.network });
@@ -267,7 +267,7 @@ export class ListingDetachedService {
 			};
 
 			// Execute Sale Instruction
-			let executeSaleInstruction = createExecuteSaleInstruction(exsAccounts, exsArgs);
+			const executeSaleInstruction = createExecuteSaleInstruction(exsAccounts, exsArgs);
 
 			// Provide additional keys to pay royalties.
 			listing.asset.creators.forEach(({ address }) => {
@@ -346,7 +346,7 @@ export class ListingDetachedService {
 	async cancelListing(unlistDto: UnlistDto) {
 		try {
 			const executor = toPublicKey(unlistDto.seller_wallet);
-			const connection = new Connection(clusterApiUrl(unlistDto.network), 'confirmed');
+			const connection = Utility.connectRpc(unlistDto.network);
 			const metaplex = Metaplex.make(connection, { cluster: unlistDto.network });
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(toPublicKey(unlistDto.marketplace_address)).run();

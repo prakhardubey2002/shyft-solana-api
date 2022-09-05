@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { getMint } from '@solana/spl-token';
-import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { Utility } from 'src/common/utils/utils';
 import { GetTokenDto } from './dto/get-token.dto';
 
@@ -9,7 +9,7 @@ export class GetTokenService {
   async getToken(getTokenDto: GetTokenDto): Promise<any> {
     try {
       const { network, token_address } = getTokenDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
 
       const tokenInfo = await getMint(connection, new PublicKey(token_address));
       return await Utility.token.getTokenInfo(connection, network, tokenInfo);

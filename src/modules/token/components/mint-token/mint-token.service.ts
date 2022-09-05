@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { getMint, getAssociatedTokenAddress, createMintToCheckedInstruction, createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount, mintToChecked } from '@solana/spl-token';
-import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { Utility } from 'src/common/utils/utils';
 import { MintTokenDto, MintTokenDetachDto } from './dto/mint-token.dto';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class MintTokenService {
         receiver,
       } = mintTokenDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const feePayer = AccountUtils.getKeypair(private_key);
 
       const tokenAddressPubkey = new PublicKey(token_address);
@@ -64,7 +65,7 @@ export class MintTokenService {
         amount,
       } = mintTokenDetachDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const tokenAddressPubkey = new PublicKey(token_address);
       const tokenInfo = await getMint(connection, tokenAddressPubkey);
       const addressPubkey = new PublicKey(wallet);

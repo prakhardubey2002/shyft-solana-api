@@ -1,12 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
-  clusterApiUrl,
   Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { Connection } from '@metaplex/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ObjectId } from 'mongoose';
 import {
@@ -20,6 +18,7 @@ import {
 } from '@solana/spl-token';
 import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda, toPublicKey } from '@metaplex-foundation/js';
 import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import { Utility } from 'src/common/utils/utils';
 export interface CreateParams {
   network: WalletAdapterNetwork;
   name: string;
@@ -40,7 +39,7 @@ export class CreateNftDetachService {
       throw new Error('No metadata URI');
     }
     try {
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(createParams.network);
       const mintRent = await getMinimumBalanceForRentExemptMint(connection);
       const mintKeypair = Keypair.generate();
 

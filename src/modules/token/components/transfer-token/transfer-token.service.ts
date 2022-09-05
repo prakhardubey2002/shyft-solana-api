@@ -25,7 +25,7 @@ export class TransferTokenService {
         to_address,
       } = transferTokenDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const fromKeypair = AccountUtils.getKeypair(from_address);
 
       const tokenAddressPubkey = new PublicKey(token_address);
@@ -85,7 +85,7 @@ export class TransferTokenService {
         to_address,
       } = transferTokenDetachDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const fromAddressPubKey = new PublicKey(from_address);
       const toAddressPubKey = new PublicKey(to_address);
 

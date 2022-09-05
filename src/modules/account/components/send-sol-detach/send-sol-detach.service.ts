@@ -7,6 +7,7 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
+import { Utility } from 'src/common/utils/utils';
 
 import { SendSolDetachDto } from './dto/send-sol-detach.dto';
 
@@ -19,7 +20,7 @@ export class SendSolDetachService {
       const fromAddressPubKey = new PublicKey(from_address);
       const toAddressPubkey = new PublicKey(to_address);
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
 
       const tx = new Transaction().add(
         SystemProgram.transfer({

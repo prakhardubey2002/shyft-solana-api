@@ -30,7 +30,7 @@ export class TransferNftService {
       const tokenAddress = new PublicKey(transferNftDto.token_address);
       const toAddress = new PublicKey(transferNftDto.to_address);
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
 
       // generate wallet
       const fromKeypair = AccountUtils.getKeypair(fromAdress);
@@ -109,7 +109,7 @@ export class TransferNftService {
       const tokenAddressPubKey = new PublicKey(transferNftDto.token_address);
       const toAddressPubKey = new PublicKey(transferNftDto.to_address);
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const fromAddressPubKey = new PublicKey(fromAdress);
 
       // Find user token account

@@ -10,5 +10,6 @@ export const configuration = () => ({
   ipfsGateway: process.env.IPFS_GATEWAY,
   solDevnet: process.env.SOL_DEVNET,
   solMainnetBeta: process.env.SOL_MAINNET_BETA,
+  solFallBackMainnet: process.env.SOL_FALLBACK_MAINNET_BETA,
   sentryDSN: process.env.SENTRY_DSN,
 });

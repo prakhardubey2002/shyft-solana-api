@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey } from '@solana/web3.js';
-import { actions, Connection, NodeWallet } from '@metaplex/js';
+import { PublicKey } from '@solana/web3.js';
+import { actions, NodeWallet } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { BurnNftDto } from './dto/burn-nft.dto';
 import { NftDeleteEvent } from '../../../helper/db-sync/db.events';
+import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class BurnNftService {
@@ -13,7 +14,7 @@ export class BurnNftService {
   async burnNft(burnNftDto: BurnNftDto): Promise<any> {
     try {
       const { network, private_key, token_address, close, amount } = burnNftDto;
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(burnNftDto.network);
       const keypair = AccountUtils.getKeypair(private_key);
       const wallet = new NodeWallet(keypair);
 

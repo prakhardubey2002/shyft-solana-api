@@ -19,12 +19,15 @@ export class CreateNftController {
   @Post('create')
   @Version('1')
   @UseInterceptors(FileFieldsInterceptor([
-    { name: 'file', maxCount: 1 },
-    { name: 'data', maxCount: 1 },
+      { name: 'file', maxCount: 1 },
+      { name: 'data', maxCount: 1 },
   ]))
   async createNft(@UploadedFiles() files: { file: Express.Multer.File[], data?: Express.Multer.File[] }, @Body() createNftDto: CreateNftDto, @Req() request: any): Promise<any> {
-    const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
-    const image = uploadImage.uri;
+    let image: string;
+    if(files.file) {
+      const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
+      image = uploadImage.uri;
+    }
 
     let data: NftFile;
 

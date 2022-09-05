@@ -65,7 +65,7 @@ export class NftInfo {
   @Prop({ required: false, default: '' })
   external_url: string;
 
-  @Prop({ required: true, default: '' })
+  @Prop({ required: false, default: '' })
   image_uri: string;
 
   @Prop()

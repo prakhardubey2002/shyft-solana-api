@@ -7,8 +7,6 @@ import {
 } from '@solana/spl-token';
 import { createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import {
-  clusterApiUrl,
-  Connection,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -18,6 +16,7 @@ import { NodeWallet } from '@metaplex/js';
 import { findMetadataPda } from '@metaplex-foundation/js';
 import { CreateTokenDto, CreateTokenDetachDto } from './dto/create-token.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
+import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class CreateTokenService {
@@ -25,7 +24,7 @@ export class CreateTokenService {
     try {
       const { network, private_key, name, symbol, decimals } = createTokenDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
       const feePayer = AccountUtils.getKeypair(private_key);
       const wallet = new NodeWallet(feePayer);
 
@@ -99,7 +98,7 @@ export class CreateTokenService {
     try {
       const { network, wallet, name, symbol, decimals } = createTokenDetachDto;
 
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = Utility.connectRpc(network);
 
       const addressPubKey = new PublicKey(wallet);
       const lamports = await getMinimumBalanceForRentExemptMint(connection);

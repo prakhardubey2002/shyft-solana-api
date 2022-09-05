@@ -3,7 +3,7 @@ import { CreateAuctionHouseInstructionAccounts, CreateAuctionHouseInstructionArg
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { clusterApiUrl, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { ObjectId } from "mongoose";
 import { Utility } from "src/common/utils/utils";
 import { newProgramError, newProgramErrorFrom, ProgramError } from "src/core/program-error";
@@ -30,7 +30,7 @@ export class MarketplaceDetachedService {
 	constructor(private eventEmitter: EventEmitter2) { }
 	async createMarketPlace(createMarketPlaceDto: CreateMarketplaceServiceDto) {
 		try {
-			const connection = new Connection(clusterApiUrl(createMarketPlaceDto.params.network), 'confirmed');
+			const connection = Utility.connectRpc(createMarketPlaceDto.params.network);
 			const wallet = toPublicKey(createMarketPlaceDto.params.creator_wallet);
 			const canChangeSalePrice = false;
 			const requiresSignOff = false;
@@ -106,7 +106,7 @@ export class MarketplaceDetachedService {
 
 	async updateMarketplace(updateMarketplaceDto: UpdateMpSerivceDto) {
 		try {
-			const connection = new Connection(clusterApiUrl(updateMarketplaceDto.params.network), 'confirmed');
+			const connection = Utility.connectRpc(updateMarketplaceDto.params.network);
 			const wallet = toPublicKey(updateMarketplaceDto.params.authority_wallet);
 
 			const auctionHouseAddress = toPublicKey(updateMarketplaceDto.params.marketplace_address);
@@ -218,7 +218,7 @@ export class MarketplaceDetachedService {
 	async withdrawFee(withdrawRoyaltyDto: WithdrawFeeDto): Promise<any> {
 		try {
 			const executor = toPublicKey(withdrawRoyaltyDto.authority_wallet);
-			const connection = new Connection(clusterApiUrl(withdrawRoyaltyDto.network), 'confirmed');
+			const connection = Utility.connectRpc(withdrawRoyaltyDto.network);
 			const metaplex = Metaplex.make(connection, { cluster: withdrawRoyaltyDto.network });
 			const auctionsClient = metaplex.auctions();
 			const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(withdrawRoyaltyDto.marketplace_address)).run();
