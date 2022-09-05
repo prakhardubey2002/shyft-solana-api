@@ -52,6 +52,7 @@ jobs:
         ENV_SOL_DEVNET: ${{ secrets.SOL_DEVNET }}
         ENV_SOL_MAINNET_BETA: ${{ secrets.SOL_MAINNET_BETA }}
         ENV_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        ENV_SOL_FALLBACK_MAINNET_BETA: ${{ secrets.SOL_FALLBACK_MAINNET_BETA }}
 
     - name: Build and Test
       run: |
@@ -99,6 +100,7 @@ jobs:
         ENV_SOL_DEVNET: ${{ secrets.SOL_DEVNET }}
         ENV_SOL_MAINNET_BETA: ${{ secrets.SOL_MAINNET_BETA }}
         ENV_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        ENV_SOL_FALLBACK_MAINNET_BETA: ${{ secrets.SOL_FALLBACK_MAINNET_BETA }}
 
     - name: Build
       run: |
