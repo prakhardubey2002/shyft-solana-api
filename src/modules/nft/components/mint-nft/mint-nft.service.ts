@@ -49,6 +49,7 @@ export class MintNftService {
         master_nft_address,
         receiver,
         transfer_authority,
+        message,
       } = printNftEditionDetachDto;
       const addressPubKey = new PublicKey(wallet);
       const connection = Utility.connectRpc(network);
@@ -147,6 +148,10 @@ export class MintNftService {
           { mintNewEditionFromMasterEditionViaTokenArgs: { edition } },
         ),
       );
+
+      if (message) {
+        tx.add(Utility.transaction.getMemoTx(addressPubKey, message));
+      }
 
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;;

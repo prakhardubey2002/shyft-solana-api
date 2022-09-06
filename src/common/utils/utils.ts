@@ -7,6 +7,7 @@ import {
   Keypair,
   PublicKey,
   Transaction,
+  TransactionInstruction,
 } from '@solana/web3.js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
@@ -195,6 +196,18 @@ export const Utility = {
       console.log(error);
       throw error;
     }
+  },
+
+  transaction: {
+    getMemoTx: function (publicKey: PublicKey, message: string): TransactionInstruction {
+      return new TransactionInstruction({
+        keys: [
+          { pubkey: publicKey, isSigner: true, isWritable: true },
+        ],
+        data: Buffer.from(message, 'utf-8'),
+        programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      })
+    },
   },
 
   token: {
