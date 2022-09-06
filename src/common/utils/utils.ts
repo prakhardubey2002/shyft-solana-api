@@ -162,15 +162,12 @@ export const Utility = {
     }
   },
 
-  isUriMatched: (cachedImageUri: string, imageUri: string): boolean => {
-    if (!cachedImageUri) return false;
-    const cdnUri = cachedImageUri.split('/').slice(4).join('/');
+  isUriMatched: (ipfsFileUri: string, cachedFileUri?: string): boolean => {
+    if (!cachedFileUri) return false;
+    const cdnUri = cachedFileUri.split('/').slice(4).join('/');
     const ext = cdnUri.split('.').pop();
-    const cdnUriWithoutExt = cdnUri.replace(`.${ext}`, '');   
-    if (cdnUriWithoutExt === imageUri) {
-      return true;
-    }
-    return false;
+    const cdnUriWithoutExt = decodeURIComponent(cdnUri.replace(`.${ext}`, ''));
+    return cdnUriWithoutExt === ipfsFileUri;
   },
 
   clusterUrl: function (network: WalletAdapterNetwork): string {

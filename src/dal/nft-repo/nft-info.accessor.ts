@@ -17,10 +17,11 @@ export class NftInfoAccessor {
     return result;
   }
 
-  public async updateNft(data: NftInfo): Promise<any> {
+  public async updateNft(data: NftInfo): Promise<NftInfoDocument> {
     const filter = { mint: data.mint };
-    const result = await this.NftInfoDataModel.updateOne(filter, data, {
+    const result = await this.NftInfoDataModel.findOneAndUpdate(filter, data, {
       upsert: true,
+      new: true,
     });
     return result;
   }

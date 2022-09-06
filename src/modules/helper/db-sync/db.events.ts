@@ -70,13 +70,13 @@ export class NftReadEvent {
 }
 
 export class NftCacheEvent {
-  constructor(fileUrl: string, image: string) {
-    this.fileUrl = fileUrl;
-    this.image = image;
+  constructor(ipfsFileUri: string, cachedFileUri?: string) {
+    this.ipfsFileUri = ipfsFileUri;
+    this.cachedFileUri = cachedFileUri;
   }
 
-  fileUrl: string;
-  image: string;
+  ipfsFileUri: string;
+  cachedFileUri: string;
 }
 
 export class MarketplaceCreationEvent {
