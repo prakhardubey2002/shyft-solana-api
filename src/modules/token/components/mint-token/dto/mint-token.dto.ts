@@ -51,6 +51,17 @@ export class MintTokenDto {
   @IsNotEmpty()
   @IsNumber()
   readonly amount: number;
+
+  @ApiPropertyOptional({
+    title: 'Transaction Message',
+    type: String,
+    description: 'can add a message making use of the memo program',
+    example: 'Thank you',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  readonly message?: string;
 }
 
 export class MintTokenDetachDto {

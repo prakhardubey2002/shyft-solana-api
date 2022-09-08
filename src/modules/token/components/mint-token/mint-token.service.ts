@@ -1,5 +1,11 @@
+import { NodeWallet } from '@metaplex/js';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { getMint, createMintToCheckedInstruction, getOrCreateAssociatedTokenAccount, mintToChecked } from '@solana/spl-token';
+import {
+  getMint,
+  createMintToCheckedInstruction,
+  getOrCreateAssociatedTokenAccount,
+  mintToChecked,
+} from '@solana/spl-token';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Utility } from 'src/common/utils/utils';
@@ -15,37 +21,56 @@ export class MintTokenService {
         token_address: token_address,
         amount,
         receiver,
+        message,
       } = mintTokenDto;
 
       const connection = Utility.connectRpc(network);
       const feePayer = AccountUtils.getKeypair(private_key);
-
+      const receiverPubKey = new PublicKey(receiver);
       const tokenAddressPubkey = new PublicKey(token_address);
       const tokenInfo = await getMint(connection, tokenAddressPubkey);
 
       if (tokenInfo.isInitialized) {
-        if (tokenInfo.mintAuthority.toBase58() !== feePayer.publicKey.toBase58()) {
+        if (
+          tokenInfo.mintAuthority.toBase58() !== feePayer.publicKey.toBase58()
+        ) {
           throw Error('You dont have the authority to mint these tokens');
         }
-        //Get or Create an associated token address for receiver.
-        const tokenAccountOwner = await getOrCreateAssociatedTokenAccount(
-          connection,
-          feePayer,
-          new PublicKey(token_address),
-          new PublicKey(receiver),
-        );
+        const { associatedAccountAddress, createTx } =
+          await Utility.account.getOrCreateAsscociatedAccountTx(
+            connection,
+            feePayer.publicKey,
+            tokenAddressPubkey,
+            receiverPubKey,
+          );
 
         const decimalAmount = Math.pow(10, tokenInfo.decimals);
 
-        const txhash = await mintToChecked(
-          connection, // connection
-          feePayer, // fee payer
-          tokenAddressPubkey, // mint
-          tokenAccountOwner.address, // receiver (sholud be a token account)
-          feePayer, // mint authority
-          decimalAmount * amount,
-          tokenInfo.decimals, // decimals
+        const tx: Transaction = new Transaction();
+        if (createTx) {
+          tx.add(createTx);
+        }
+        tx.add(
+          createMintToCheckedInstruction(
+            tokenAddressPubkey, // mint
+            associatedAccountAddress, // destination
+            feePayer.publicKey, // authority
+            decimalAmount * amount, // amount
+            tokenInfo.decimals, // decimals
+          ),
         );
+
+        if (message) {
+          tx.add(Utility.transaction.getMemoTx(feePayer.publicKey, message));
+        }
+
+        const blockHash = (await connection.getLatestBlockhash('finalized'))
+          .blockhash;
+        tx.recentBlockhash = blockHash;
+        tx.feePayer = feePayer.publicKey;
+        const wallet = new NodeWallet(feePayer);
+        const signedTx = await wallet.signTransaction(tx);
+        const txhash = await connection.sendRawTransaction(signedTx.serialize());
 
         return { txhash };
       } else {
@@ -77,13 +102,14 @@ export class MintTokenService {
         if (tokenInfo.mintAuthority.toBase58() !== wallet) {
           throw Error('You dont have the authority to mint these tokens');
         }
-        const { associatedAccountAddress, createTx } = await Utility.account.getOrCreateAsscociatedAccountTx(
-          connection,
-          addressPubkey,
-          tokenAddressPubkey,
-          receiverPubkey,
-        );
-        
+        const { associatedAccountAddress, createTx } =
+          await Utility.account.getOrCreateAsscociatedAccountTx(
+            connection,
+            addressPubkey,
+            tokenAddressPubkey,
+            receiverPubkey,
+          );
+
         const decimalAmount = Math.pow(10, tokenInfo.decimals);
 
         const tx: Transaction = new Transaction();
@@ -104,11 +130,14 @@ export class MintTokenService {
           tx.add(Utility.transaction.getMemoTx(addressPubkey, message));
         }
 
-        const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        const blockHash = (await connection.getLatestBlockhash('finalized'))
+          .blockhash;
         tx.recentBlockhash = blockHash;
         tx.feePayer = addressPubkey;
 
-        const serializedTransaction = tx.serialize({ requireAllSignatures: false });
+        const serializedTransaction = tx.serialize({
+          requireAllSignatures: false,
+        });
         const transactionBase64 = serializedTransaction.toString('base64');
 
         return { encoded_transaction: transactionBase64, mint: token_address };
