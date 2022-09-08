@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { getMint, getAssociatedTokenAddress, createMintToCheckedInstruction, createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount, mintToChecked } from '@solana/spl-token';
+import { getMint, createMintToCheckedInstruction, getOrCreateAssociatedTokenAccount, mintToChecked } from '@solana/spl-token';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Utility } from 'src/common/utils/utils';
@@ -61,42 +61,48 @@ export class MintTokenService {
       const {
         network,
         wallet,
+        receiver,
         token_address: token_address,
         amount,
+        message,
       } = mintTokenDetachDto;
 
       const connection = Utility.connectRpc(network);
       const tokenAddressPubkey = new PublicKey(token_address);
       const tokenInfo = await getMint(connection, tokenAddressPubkey);
       const addressPubkey = new PublicKey(wallet);
+      const receiverPubkey = new PublicKey(receiver);
 
       if (tokenInfo.isInitialized) {
         if (tokenInfo.mintAuthority.toBase58() !== wallet) {
           throw Error('You dont have the authority to mint these tokens');
         }
-        const associatedTokenAddress = await getAssociatedTokenAddress(
-          tokenAddressPubkey,
+        const { associatedAccountAddress, createTx } = await Utility.account.getOrCreateAsscociatedAccountTx(
+          connection,
           addressPubkey,
+          tokenAddressPubkey,
+          receiverPubkey,
         );
+        
         const decimalAmount = Math.pow(10, tokenInfo.decimals);
 
-        const tx = new Transaction().add(
-          createAssociatedTokenAccountInstruction(
-            addressPubkey,
-            associatedTokenAddress,
-            addressPubkey,
-            tokenAddressPubkey,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-          ),
+        const tx: Transaction = new Transaction();
+        if (createTx) {
+          tx.add(createTx);
+        }
+        tx.add(
           createMintToCheckedInstruction(
             tokenAddressPubkey, // mint
-            associatedTokenAddress, // destination
+            associatedAccountAddress, // destination
             addressPubkey, // authority
             decimalAmount * amount, // amount
             tokenInfo.decimals, // decimals
           ),
         );
+
+        if (message) {
+          tx.add(Utility.transaction.getMemoTx(addressPubkey, message));
+        }
 
         const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
         tx.recentBlockhash = blockHash;

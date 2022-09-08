@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export class MintTokenDto {
@@ -16,7 +16,7 @@ export class MintTokenDto {
     title: 'private_key',
     type: String,
     description: 'YOUR_WALLET_PRIVATE_KEY',
-    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
+    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvKq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3RmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
   @IsString()
@@ -26,7 +26,7 @@ export class MintTokenDto {
     title: 'receiver',
     type: String,
     description: 'Public Key of receiver',
-    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
   @IsString()
@@ -74,6 +74,16 @@ export class MintTokenDetachDto {
   readonly wallet: string;
 
   @ApiProperty({
+    title: 'receiver',
+    type: String,
+    description: 'Public Key of receiver',
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly receiver: string;
+
+  @ApiProperty({
     title: 'mint_token',
     type: String,
     description: 'Mint Token',
@@ -92,4 +102,15 @@ export class MintTokenDetachDto {
   @IsNotEmpty()
   @IsNumber()
   readonly amount: number;
+
+  @ApiPropertyOptional({
+    title: 'Transaction Message',
+    type: String,
+    description: 'can add a message making use of the memo program',
+    example: 'Thank you',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  readonly message?: string;
 }

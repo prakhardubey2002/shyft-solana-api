@@ -323,9 +323,6 @@ export const Utility = {
             // Ignore all errors; for now there is no API-compatible way to selectively ignore the expected
             // instruction error if the associated account exists already.
           }
-
-          // Now this should always succeed
-          account = await getAccount(connection, associatedToken);
         } else {
           throw error;
         }
