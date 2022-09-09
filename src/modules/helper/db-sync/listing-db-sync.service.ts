@@ -1,15 +1,22 @@
-import { findListingReceiptPda, findPurchaseReceiptPda, Metaplex, toDateTime, toListingReceiptAccount, toPublicKey, toPurchaseReceiptAccount } from "@metaplex-foundation/js";
+import { findListingReceiptPda, findPurchaseReceiptPda, Metaplex, toDateTime, toListingReceiptAccount, toPurchaseReceiptAccount } from "@metaplex-foundation/js";
 import { Injectable } from "@nestjs/common";
-import { OnEvent } from "@nestjs/event-emitter";
+import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Utility } from "src/common/utils/utils";
 import { newProgramErrorFrom } from "src/core/program-error";
 import { ListingRepo } from "src/dal/listing-repo/listing-repo";
 import { Listing } from "src/dal/listing-repo/listing.schema";
-import { ListingCancelledEvent, ListingCreatedEvent, ListingInitiationEvent, ListingSoldEvent, SaleInitiationEvent, UnlistInitiationEvent } from "./db.events";
+import { NftInfoAccessor } from "src/dal/nft-repo/nft-info.accessor";
+import { NftInfo, NftInfoDocument } from "src/dal/nft-repo/nft-info.schema";
+import { ListingCancelledEvent, ListingCreatedEvent, ListingInitiationEvent, ListingSoldEvent, NftReadEvent, SaleInitiationEvent, UnlistInitiationEvent } from "./db.events";
 
 @Injectable()
 export class ListingDbSyncService {
-	constructor(private listingRepo: ListingRepo) { }
+	constructor(
+		private eventEmitter: EventEmitter2,
+		private listingRepo: ListingRepo,
+		private nftInfoAccessor: NftInfoAccessor,
+	) { }
 	@OnEvent('listing.created', { async: true })
 	async handleListingCreatedEvent(event: ListingCreatedEvent): Promise<any> {
 		try {
@@ -26,6 +33,8 @@ export class ListingDbSyncService {
 				event.currency_symbol
 			);
 			await this.listingRepo.insert(listing);
+			const nftReadEvent = new NftReadEvent(event.nftAddress, event.network);
+			this.eventEmitter.emit('nft.check.db', nftReadEvent);
 		} catch (err) {
 			newProgramErrorFrom(err, "listing_db_insert").log();
 		}
@@ -35,6 +44,7 @@ export class ListingDbSyncService {
 	async handleListingSoldEvent(event: ListingSoldEvent): Promise<any> {
 		try {
 			await this.listingRepo.markSold(event.network, event.listState, event.buyerAddress, event.purchasedAt, event.purchaseReceipt);
+			await this.updateNftOwnerInDB(event.network, event.nftAddress, event.buyerAddress);
 		} catch (err) {
 			newProgramErrorFrom(err, "listing_db_mark_sold").log();
 		}
@@ -76,6 +86,10 @@ export class ListingDbSyncService {
 					listing.canceledAt,
 				);
 				await this.listingRepo.insert(dbListing);
+
+				const nftAddress = listing.asset.address.toBase58();
+				const nftReadEvent = new NftReadEvent(nftAddress, event.network);
+				this.eventEmitter.emit('nft.check.db', nftReadEvent);
 			} catch (error) {
 				const err = newProgramErrorFrom(error);
 				if (!err.name.includes("account_not_found")) {
@@ -124,6 +138,11 @@ export class ListingDbSyncService {
 					const buyer = account.data.buyer.toBase58();
 					const purchaseReceipt = account.publicKey.toBase58();
 					this.listingRepo.markSold(event.network, event.listState.toBase58(), buyer, createdAt, purchaseReceipt);
+					// update nft owner
+					const nftDbDto = new NftInfo();
+    			nftDbDto.mint = event.nftAddress;
+    			nftDbDto.owner = buyer;
+					await this.nftInfoAccessor.updateNft(nftDbDto);
 					console.log("listing cancelled");
 				}
 			} catch (error) {
@@ -136,5 +155,27 @@ export class ListingDbSyncService {
 				}
 			}
 		}, 20000);
+	}
+
+	@OnEvent('nft.check.db', { async: true })
+	async nftCheckOnDbEvent(event: NftReadEvent): Promise<any> {
+		try {
+			const isNftExist = await this.nftInfoAccessor.isExist({ network: event.network, mint: event.tokenAddress });
+				if (!isNftExist) {
+					const nftReadEvent = new NftReadEvent(event.tokenAddress, event.network);
+					this.eventEmitter.emit('nft.read', nftReadEvent);
+				}
+		} catch (err) {
+			newProgramErrorFrom(err, "listing_db_mark_sold").log();
+		}
+	}
+
+	async updateNftOwnerInDB(network: WalletAdapterNetwork, nftAddress: string, buyerAddress: string): Promise<NftInfoDocument> {
+		const nftDbDto = new NftInfo();
+		nftDbDto.network = network;
+		nftDbDto.mint = nftAddress;
+		nftDbDto.owner = buyerAddress;
+		const result = await this.nftInfoAccessor.updateNft(nftDbDto);
+		return result;
 	}
 }

@@ -173,9 +173,10 @@ export class ListingCreatedEvent {
 }
 
 export class ListingSoldEvent {
-  constructor(ts: string, ba: string, network: WalletAdapterNetwork, purchasedAt: DateTime, purchaseReceipt?: string) {
-    this.listState = ts;
-    this.buyerAddress = ba;
+  constructor(listState: string, buyerAddress: string, nftAddress: string, network: WalletAdapterNetwork, purchasedAt: DateTime, purchaseReceipt?: string) {
+    this.listState = listState;
+    this.buyerAddress = buyerAddress;
+    this.nftAddress = nftAddress;
     this.network = network;
     this.purchasedAt = purchasedAt;
     if (purchaseReceipt !== undefined) {
@@ -186,6 +187,7 @@ export class ListingSoldEvent {
   network: WalletAdapterNetwork;
   listState: string;
   buyerAddress: string;
+  nftAddress: string;
   purchasedAt: DateTime;
   purchaseReceipt?: string;
 }
@@ -229,12 +231,14 @@ export class ListingInitiationEvent {
 }
 
 export class SaleInitiationEvent {
-  constructor(network: WalletAdapterNetwork, listState: PublicKey, purchaseReceipt: PublicKey) {
+  constructor(network: WalletAdapterNetwork, nftAddress: string, listState: PublicKey, purchaseReceipt: PublicKey) {
     this.network = network;
+    this.nftAddress = nftAddress;
     this.listState = listState;
     this.bidState = purchaseReceipt;
   }
   network: WalletAdapterNetwork;
+  nftAddress: string;
   bidState: PublicKey;
   listState: PublicKey;
 }

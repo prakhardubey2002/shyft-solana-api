@@ -1,14 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { Connection, programs } from '@metaplex/js';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
 import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto } from './dto/data-fetcher.dto';
+import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto, NftDbResponse } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { Account } from 'src/common/utils/account';
-import { NftDeleteEvent } from '../db-sync/db.events';
+import { NftDeleteEvent, NftCacheEvent } from '../db-sync/db.events';
+import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
+import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
+import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 
 export interface RawMetaData {
   pubkey: PublicKey;
@@ -29,7 +33,10 @@ export interface PaginatedNftsResponse {
 
 @Injectable()
 export class RemoteDataFetcherService {
-  constructor(private eventEmitter: EventEmitter2) { }
+  constructor(
+    private eventEmitter: EventEmitter2,
+    private nftInfoAccessor: NftInfoAccessor,
+  ) { }
 
   baseFilters = [
     // Filter for MetadataV1 by key
@@ -271,4 +278,21 @@ export class RemoteDataFetcherService {
       throw new HttpException(error.message, error.status);
     }
   }
+
+  async getNftDetails(network: WalletAdapterNetwork, mint: string): Promise<NftDbResponse> {
+		const nft = await this.nftInfoAccessor.findOne({ network, mint });
+		let nftResponse: NftDbResponse;
+		if (nft) nftResponse = getNftDbResponseFromNftInfo(nft);
+		else {
+			const nftData = await this.fetchNftDetails(new FetchNftDto(network, mint));
+			nftResponse = nftData.getNftInfoDto();
+			await this.nftInfoAccessor.insert(nftResponse as NftInfo);
+			Object.assign(nftResponse, { cached_image_uri: nftResponse.image_uri });
+		}
+		if (nftResponse.image_uri) {
+			const nftCacheEvent = new NftCacheEvent(nftResponse.image_uri);
+			this.eventEmitter.emit('nft.cache', nftCacheEvent);
+		}
+		return nftResponse;
+	}
 }

@@ -1,6 +1,6 @@
 import { amount, findAuctionHouseTradeStatePda, keypairIdentity, Metaplex, toBigNumber, toPublicKey, token, findAssociatedTokenAccountPda, Pda } from "@metaplex-foundation/js";
 import { NodeWallet } from "@metaplex/js";
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
 import { AccountUtils } from "src/common/utils/account-utils";
 import { BuyAttachedDto } from "./dto/buy-listed.dto";
@@ -23,6 +23,7 @@ import { PurchasesDto, SellerListingsDto, ActiveListingsResultDto, BuyResponseDt
 import { newProgramErrorFrom } from "src/core/program-error";
 import { Utility } from "src/common/utils/utils";
 import { GetStatsDto } from "./dto/get-stats.dto";
+import { RemoteDataFetcherService } from "../helper/remote-data-fetcher/data-fetcher.service";
 
 class CreateListingServiceDto {
 	apiKeyId: ObjectId;
@@ -31,7 +32,11 @@ class CreateListingServiceDto {
 
 @Injectable()
 export class ListingService {
-	constructor(private eventEmitter: EventEmitter2, private listingRepo: ListingRepo) { }
+	constructor(
+		private eventEmitter: EventEmitter2,
+		private listingRepo: ListingRepo,
+		private remoteDataFetcher: RemoteDataFetcherService,
+	) { }
 	async createListing(createListDto: CreateListingServiceDto): Promise<any> {
 		try {
 			const sellerKp = AccountUtils.getKeypair(createListDto.createListingParams.private_key);
@@ -127,6 +132,7 @@ export class ListingService {
 			const listingSoldEvent = new ListingSoldEvent(
 				sellerTradeState.toBase58(),
 				bid.buyerAddress.toBase58(),
+				buyDto.nft_address,
 				buyDto.network,
 				purchase.createdAt,
 				purchase.receiptAddress.toBase58(),
@@ -166,12 +172,16 @@ export class ListingService {
 
 			const price = listing.price.basisPoints.toNumber() / Math.pow(10, listing.price.currency.decimals);
 			const currencySymbol = await Utility.token.getTokenSymbol(getListingDetailsDto.network, auctionHouse.treasuryMint.address.toBase58());
+			const nftAddress = listing.asset.address.toBase58();
+			const nft = await this.remoteDataFetcher.getNftDetails(getListingDetailsDto.network, nftAddress);
+			
 			const result: ListingInfoResponseDto = {
 				network: getListingDetailsDto.network,
 				marketplace_address: listing.auctionHouse.address.toBase58(),
 				seller_address: listing.sellerAddress.toBase58(),
 				price: price,
-				nft_address: listing.asset.address.toBase58(),
+				nft_address: nftAddress,
+				nft,
 				list_state: listing.tradeStateAddress.toBase58(),
 				currency_symbol: currencySymbol,
 				created_at: new Date(listing.createdAt.toNumber() * 1000),
@@ -249,8 +259,10 @@ export class ListingService {
 
 	async getActiveListings(getListingDto: GetListingsDto): Promise<ActiveListingsResultDto[]> {
 		try {
-			const dataSet = await this.listingRepo.getActiveListings(getListingDto.network, getListingDto.marketplace_address);
-			const result = dataSet.map(listing => {
+			const { network, marketplace_address } = getListingDto;
+			const dataSet = await this.listingRepo.getActiveListings(network, marketplace_address);
+			const result = await Promise.all(dataSet.map(async (listing) => {
+				const nft = await this.remoteDataFetcher.getNftDetails(network, listing.nft_address);
 				const acl: ActiveListingsResultDto = {
 					network: listing.network,
 					marketplace_address: listing.marketplace_address,
@@ -258,6 +270,7 @@ export class ListingService {
 					price: listing.price,
 					currency_symbol: listing.currency_symbol,
 					nft_address: listing.nft_address,
+					nft,
 					list_state: listing.list_state,
 					created_at: listing.created_at,
 				}
@@ -265,7 +278,7 @@ export class ListingService {
 					acl.receipt = listing.receipt_address
 				}
 				return acl;
-			});
+			}));
 			return result;
 		} catch (err) {
 			throw newProgramErrorFrom(err, "get_active_listings_error");
@@ -341,10 +354,22 @@ export class ListingService {
 
 	async stats(getStatsDto: GetStatsDto): Promise<any> {
 		try {
+			const { start_date, end_date } = getStatsDto;
+			if (end_date && end_date < start_date) {
+				throw new Error('invalid_date_input');
+			}
 			const result = await this.listingRepo.stats(getStatsDto);
 			return result;
 		} catch (err) {
-			throw newProgramErrorFrom(err, 'no_data_found');
+			if(err.message = 'invalid_date_input') {
+				throw new HttpException({
+					status: HttpStatus.BAD_REQUEST,
+					error: 'start_date should not be greater than end_date',
+				}, HttpStatus.BAD_REQUEST);
+			} else {
+				throw newProgramErrorFrom(err, 'no_data_found');
+			}
 		}
 	}
 }
+
