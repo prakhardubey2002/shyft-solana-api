@@ -35,6 +35,15 @@ export class NftInfoAccessor {
     }
   }
 
+  public async isExist(filter: object): Promise<boolean> {
+    try {
+      const result = await this.NftInfoDataModel.exists(filter);
+      return Boolean(result?._id);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   public async find(filter: object, page?: number, size?: number): Promise<NftInfoDocument[]> {
     try {
       let result: NftInfoDocument[];

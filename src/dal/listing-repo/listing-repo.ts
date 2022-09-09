@@ -2,10 +2,12 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-
 import { Listing, ListingDocument } from "./listing.schema";
 import { DateTime } from "@metaplex-foundation/js";
 import { GetStatsDto } from "src/modules/marketplace/dto/get-stats.dto";
+import { configuration } from 'src/common/configs/config';
+
+const { minDateOnSearch } = configuration();
 
 @Injectable()
 export class ListingRepo {
@@ -76,8 +78,12 @@ export class ListingRepo {
 
 	async stats(filter: GetStatsDto): Promise<any> {
 		try {
-			const { network, marketplace_address, start_date, end_date } = filter;
-			const createdAtQuery = start_date ? { $gte: start_date, $lte: end_date ?? new Date() } : { $ne: null };
+			const { network, marketplace_address, start_date } = filter;
+			let { end_date } = filter;
+			end_date = end_date ?? new Date();
+			// add a day to the date, cause mongoose not feching today's data if date query added
+			end_date.setDate(end_date.getDate() + 1); 
+			const createdAtQuery = start_date ? { $gte: start_date, $lte: end_date } : { $ne: null };
 			
 			const salesDetail = await this.ListingModel.aggregate([
 				{
@@ -114,12 +120,17 @@ export class ListingRepo {
 				{ $group: { _id: 0, totalListings: { $sum: 1 }, listedVolume: { $sum: '$price' } } },
 			]);
 
+			// again revert back to exact date
+			end_date.setDate(end_date.getDate() - 1);
+
 			const result = {
-				total_sales: salesDetail[0].totalSales,
-				sales_volume: salesDetail[0].salesVolume,
-				total_sellers: sellerDetails[0].totalSellers,
-				total_listings: listingDetails[0].totalListings,
-				listed_volume: listingDetails[0].listedVolume,
+				total_sales: salesDetail[0]?.totalSales ?? 0,
+				sales_volume: salesDetail[0]?.salesVolume ?? 0,
+				total_sellers: sellerDetails[0]?.totalSellers ?? 0,
+				total_listings: listingDetails[0]?.totalListings ?? 0,
+				listed_volume: listingDetails[0]?.listedVolume ?? 0,
+				start_date: start_date ?? new Date(minDateOnSearch),
+				end_date,
 			}
 			
 			return result;

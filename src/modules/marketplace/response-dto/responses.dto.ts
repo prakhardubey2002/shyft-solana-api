@@ -1,4 +1,5 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { NftDbResponse } from 'src/modules/helper/remote-data-fetcher/dto/data-fetcher.dto';
 
 export class MarketPlaceResponseDto {
 	network: string;
@@ -47,6 +48,7 @@ export class ListingInfoResponseDto {
 	seller_address: string;
 	price: number;
 	nft_address: string;
+	nft?: NftDbResponse; 
 	list_state: string;
 	currency_symbol: string;
 	receipt?: string;
@@ -62,6 +64,7 @@ export class ActiveListingsResultDto {
 	seller_address: string;
 	price: number;
 	nft_address: string;
+	nft?: NftDbResponse;
 	list_state: string;
 	currency_symbol: string;
 	receipt?: string;

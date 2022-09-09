@@ -20,7 +20,7 @@ interface file {
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class NftInfo {
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, default: null })
+  @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, default: null })
   api_key_id: ObjectId;
 
   @Prop({ required: true, default: 'solana' })

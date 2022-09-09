@@ -45,7 +45,7 @@ export class CreateMarketplaceController {
 	@Post('withdraw_fee')
 	@WithdrawAttachedOpenApi()
 	@Version('0')
-	async withdrawFees(@Body() withdrawFeeDto: WithdrawFeeAttachedDto, @Req() request: any): Promise<any> {
+	async withdrawFees(@Body() withdrawFeeDto: WithdrawFeeAttachedDto): Promise<any> {
 		console.log("withdraw fee request received");
 		const result = await this.marketplaceService.withdrawFee(withdrawFeeDto);
 		return {
@@ -74,7 +74,7 @@ export class CreateMarketplaceController {
 
 	@Get('treasury_balance')
 	@Version('1')
-	async getTreasuryBalance(@Query() getTreasuryBalance: GetTreasuryBalanceDto, @Req() request: any): Promise<any> {
+	async getTreasuryBalance(@Query() getTreasuryBalance: GetTreasuryBalanceDto): Promise<any> {
 		console.log('get treasury balance request received');
 		const result = await this.marketplaceService.getTreasuryBalance(getTreasuryBalance);
 		return {
@@ -105,7 +105,7 @@ export class CreateMarketplaceController {
 	@Post('buy')
 	@BuyListingAttachedOpenApi()
 	@Version('0')
-	async buy(@Body() buyListedDto: BuyAttachedDto, @Req() request: any): Promise<any> {
+	async buy(@Body() buyListedDto: BuyAttachedDto): Promise<any> {
 		console.log("buy listed item request received");
 		const result = await this.listingService.buy(buyListedDto);
 		return {
@@ -118,7 +118,7 @@ export class CreateMarketplaceController {
 	@Post('unlist')
 	@UnlistOpenAttachedApi()
 	@Version('0')
-	async unlist(@Body() unlistDto: UnlistAttachedDto, @Req() request: any): Promise<any> {
+	async unlist(@Body() unlistDto: UnlistAttachedDto): Promise<any> {
 		console.log("unlist item request received");
 		const result = await this.listingService.cancelListing(unlistDto);
 		return {
@@ -149,7 +149,7 @@ export class CreateMarketplaceController {
 	@Get('find')
 	@FindMpOpenApi()
 	@Version('1')
-	async findMarketplace(@Query() findMarketplaceDto: FindMarketplaceDto, @Req() request: any) {
+	async findMarketplace(@Query() findMarketplaceDto: FindMarketplaceDto) {
 		console.log("find marketplace request received");
 		const result = await this.marketplaceService.findMarketplace(findMarketplaceDto)
 		return {
@@ -162,7 +162,7 @@ export class CreateMarketplaceController {
 	@Get('list_details')
 	@ListDetailsOpenApi()
 	@Version('1')
-	async findListing(@Query() getListingDetailsDto: GetListingDetailsDto, @Req() request: any): Promise<any> {
+	async findListing(@Query() getListingDetailsDto: GetListingDetailsDto): Promise<any> {
 		console.log("getListingDetails request received");
 		const result = await this.listingService.findListing(getListingDetailsDto);
 		return {
@@ -175,9 +175,9 @@ export class CreateMarketplaceController {
 	@Get('active_listings')
 	@ActiveListingsOpenApi()
 	@Version('1')
-	async getActiveListingInMarketPlace(@Query() getListingDto: GetListingsDto, @Req() request: any): Promise<any> {
+	async getActiveListingInMarketPlace(@Query() getListingDto: GetListingsDto): Promise<any> {
 		console.log("get activeListings request received");
-		const result = await this.listingService.getActiveListings(getListingDto);
+		const result = await this.listingService.getActiveListings(getListingDto); 
 		return {
 			success: true,
 			message: 'Active listing fetched successfully',
@@ -188,7 +188,7 @@ export class CreateMarketplaceController {
 	@Get('active_sellers')
 	@ActiveSellersOpenApi()
 	@Version('1')
-	async getActiveSellersInMarketPlace(@Query() getListingDto: GetListingsDto, @Req() request: any): Promise<any> {
+	async getActiveSellersInMarketPlace(@Query() getListingDto: GetListingsDto): Promise<any> {
 		console.log("get active sellers in market request received");
 		const result = await this.listingService.getActiveSellers(getListingDto);
 		return {
@@ -201,7 +201,7 @@ export class CreateMarketplaceController {
 	@Get('seller_listings')
 	@SellerListingsOpenApi()
 	@Version('1')
-	async getSellerListingsInMarketPlace(@Query() getListingDto: GetSellerListingsDto, @Req() request: any): Promise<any> {
+	async getSellerListingsInMarketPlace(@Query() getListingDto: GetSellerListingsDto): Promise<any> {
 		console.log("get active listings of a seller in market request received");
 		const result = await this.listingService.getSellerListings(getListingDto);
 		return {
@@ -214,7 +214,7 @@ export class CreateMarketplaceController {
 	@Get('buy_history')
 	@OrderHistoryOpenApi()
 	@Version('1')
-	async getPurchases(@Query() getPurchasesDto: GetPurchasesDto, @Req() request: any): Promise<any> {
+	async getPurchases(@Query() getPurchasesDto: GetPurchasesDto): Promise<any> {
 		console.log("get active listings of a seller in market request received");
 		const result = await this.listingService.getPurchases(getPurchasesDto);
 		return {

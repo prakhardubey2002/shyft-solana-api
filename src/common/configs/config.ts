@@ -12,4 +12,6 @@ export const configuration = () => ({
   solMainnetBeta: process.env.SOL_MAINNET_BETA,
   solFallBackMainnet: process.env.SOL_FALLBACK_MAINNET_BETA,
   sentryDSN: process.env.SENTRY_DSN,
+
+  minDateOnSearch: '2020-03-16'
 });

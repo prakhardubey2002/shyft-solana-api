@@ -320,6 +320,7 @@ export class ListingDetachedService {
 
 			const saleInitiationEvent = new SaleInitiationEvent(
 				buyDto.network,
+				buyDto.nft_address,
 				sellerTradeState,
 				buyerTradeState,
 			);
