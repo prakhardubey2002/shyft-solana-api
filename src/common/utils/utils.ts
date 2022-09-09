@@ -162,12 +162,12 @@ export const Utility = {
     }
   },
 
-  isUriMatched: (ipfsFileUri: string, cachedFileUri?: string): boolean => {
+  isUriMatched: (metadataImageUri: string, cachedFileUri?: string): boolean => {
     if (!cachedFileUri) return false;
     const cdnUri = cachedFileUri.split('/').slice(4).join('/');
     const ext = cdnUri.split('.').pop();
     const cdnUriWithoutExt = decodeURIComponent(cdnUri.replace(`.${ext}`, ''));
-    return cdnUriWithoutExt === ipfsFileUri;
+    return cdnUriWithoutExt === metadataImageUri;
   },
 
   clusterUrl: function (network: WalletAdapterNetwork): string {

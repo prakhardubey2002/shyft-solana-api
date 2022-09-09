@@ -108,7 +108,7 @@ export class ReadAllNftByCreatorDto {
   @IsOptional()
   @Max(50)
   @Transform(({ value }) => {
-    return parseInt(value);
+  return parseInt(value);
   })
   readonly size?: number;
 }
