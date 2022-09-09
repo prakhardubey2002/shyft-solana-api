@@ -121,6 +121,8 @@ export class NFtDbSyncService {
 
   @OnEvent('nft.cache', { async: true })
   async cacheNftEvent(event: NftCacheEvent): Promise<any> {
+
+    return;
     try {
       const { metadataImageUri, cachedImageUri } = event;
       const isMatched = Utility.isUriMatched(metadataImageUri, cachedImageUri);
