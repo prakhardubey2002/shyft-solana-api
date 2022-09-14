@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Metaplex, keypairIdentity, findAssociatedTokenAccountPda, findMetadataPda, findMasterEditionV2Pda, parseOriginalEditionAccount, findEditionPda, findEditionMarkerPda, AccountNotFoundError, toBigNumber } from '@metaplex-foundation/js';
+import { Metaplex, keypairIdentity, findAssociatedTokenAccountPda, findMetadataPda, findMasterEditionV2Pda, parseOriginalEditionAccount, findEditionPda, findEditionMarkerPda, AccountNotFoundError, toBigNumber, ProgramError } from '@metaplex-foundation/js';
 import { PrintNftEditionDto, PrintNftEditionDetachDto } from './dto/mint-nft.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
@@ -7,6 +7,8 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, c
 import { createMintNewEditionFromMasterEditionViaTokenInstruction } from '@metaplex-foundation/mpl-token-metadata';
 import * as BN from 'bn.js';
 import { Utility } from 'src/common/utils/utils';
+import { newProgramErrorFrom } from 'src/core/program-error';
+
 @Injectable()
 export class MintNftService {
   async printNewEdition(printNftEditionDto: PrintNftEditionDto): Promise<any> {
@@ -50,6 +52,7 @@ export class MintNftService {
         receiver,
         transfer_authority,
         message,
+        service_charge,
       } = printNftEditionDetachDto;
       const addressPubKey = new PublicKey(wallet);
       const connection = Utility.connectRpc(network);
@@ -102,7 +105,7 @@ export class MintNftService {
       );
       const mintRent = await getMinimumBalanceForRentExemptMint(connection);
 
-      const tx = new Transaction().add(
+      let tx = new Transaction().add(
         SystemProgram.createAccount({
           fromPubkey: addressPubKey,
           newAccountPubkey: newMintKeypair.publicKey,
@@ -153,6 +156,10 @@ export class MintNftService {
         tx.add(Utility.transaction.getMemoTx(addressPubKey, message));
       }
 
+      if (service_charge) {        
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, service_charge, newOwner);
+      }
+
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;;
       tx.partialSign(newMintKeypair);
@@ -163,8 +170,11 @@ export class MintNftService {
 
       return { encoded_transaction: transactionBase64, mint: newMintKeypair.publicKey.toBase58() };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      if (error instanceof ProgramError) {
+        throw error;
+      } else {
+        throw newProgramErrorFrom(error, 'mint_nft_detach_error');
+      }
     }
   }
 }

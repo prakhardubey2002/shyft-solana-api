@@ -1,16 +1,23 @@
+import { HttpStatus } from '@nestjs/common';
 import {
   AuctionHouse,
   findMetadataPda,
   Metaplex,
   toPublicKey,
 } from '@metaplex-foundation/js';
-import { getMint, Mint } from '@solana/spl-token';
+import {
+  createTransferCheckedInstruction,
+  getMint,
+  Mint,
+} from '@solana/spl-token';
 import axios from 'axios';
 import {
   clusterApiUrl,
   Connection,
   Keypair,
+  LAMPORTS_PER_SOL,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -29,7 +36,7 @@ import { configuration } from '../configs/config';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenListProvider } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
-import { newProgramErrorFrom } from 'src/core/program-error';
+import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
 
 const endpoint = {
   http: {
@@ -54,6 +61,12 @@ interface TokenResponse {
   current_supply: number;
   address: string;
   decimals: number;
+}
+
+export interface ServiceCharge {
+  receiver: string;
+  token?: string;
+  amount: number;
 }
 
 async function fetchInfoFromMeta(connection: Connection, mintAddress: string) {
@@ -266,6 +279,73 @@ export const Utility = {
         return symbol != '' ? symbol : 'Token';
       }
     },
+
+    transferTokenTransaction: async (
+      connection: Connection,
+      tx: Transaction,
+      tokenAddress: PublicKey,
+      amount: number,
+      receiver: PublicKey,
+      feePayer: PublicKey,
+    ): Promise<Transaction> => {
+      try {
+        const tokenInfo = await getMint(connection, tokenAddress);
+
+        if (tokenInfo.isInitialized) {
+          const fromAccount = await getAssociatedTokenAddress(
+            tokenAddress,
+            feePayer,
+            false,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+          );
+          const amtToTransfer = Math.pow(10, tokenInfo.decimals) * amount;
+          const { associatedAccountAddress: toAccount, createTx } =
+            await Utility.account.getOrCreateAsscociatedAccountTx(
+              connection,
+              feePayer,
+              tokenAddress,
+              new PublicKey(receiver),
+            );
+          if (createTx) {
+            tx.add(createTx);
+          }
+          tx.add(
+            createTransferCheckedInstruction(
+              fromAccount,
+              tokenAddress,
+              toAccount,
+              feePayer,
+              amtToTransfer,
+              tokenInfo.decimals,
+            ),
+          );
+        }
+        return tx;
+      } catch (err) {
+        if (err instanceof TokenAccountNotFoundError) {
+          throw newProgramError(
+            err.name,
+            HttpStatus.BAD_REQUEST,
+            'token account passed not found',
+            err.message,
+            'Utils_Utility_token_transferTokenTransaction',
+            {},
+            err.stack,
+          );
+        } else {
+          throw newProgramError(
+            err.name,
+            HttpStatus.BAD_REQUEST,
+            'invalid_input',
+            err.message,
+            'Utils_Utility_token_transferTokenTransaction',
+            {},
+            err.stack,
+          );
+        }
+      }
+    },
   },
 
   auctionHouse: {
@@ -345,6 +425,50 @@ export const Utility = {
         associatedAccountAddress: associatedToken,
         createTx: transaction,
       };
+    },
+
+    addSeviceChargeOnTransaction: async (
+      connection: Connection,
+      tx: Transaction,
+      serviceCharge: ServiceCharge,
+      feePayer: PublicKey,
+    ): Promise<Transaction> => {
+      try {
+        if (!(serviceCharge.receiver && serviceCharge.amount)) {
+          throw newProgramError(
+            'validation_error',
+            HttpStatus.BAD_REQUEST,
+            'Please provide service_charge in proper format',
+            '',
+            'addSeviceChargeOnTransaction',
+            {
+              serviceCharge,
+            },
+          );
+        }
+        if (serviceCharge.token) {
+          const transaction = await Utility.token.transferTokenTransaction(
+            connection,
+            tx,
+            new PublicKey(serviceCharge.token),
+            serviceCharge.amount,
+            new PublicKey(serviceCharge.receiver),
+            feePayer,
+          );
+          return transaction;
+        } else {
+          tx.add(
+            SystemProgram.transfer({
+              fromPubkey: feePayer,
+              toPubkey: new PublicKey(serviceCharge.receiver),
+              lamports: LAMPORTS_PER_SOL * serviceCharge.amount,
+            }),
+          );
+        }
+        return tx;
+      } catch (error) {
+        throw error;
+      }
     },
   },
 

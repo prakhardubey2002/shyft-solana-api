@@ -59,6 +59,7 @@ export class CreateNftController {
       royalty: createNftDto.royalty,
       maxSupply: createNftDto.max_supply,
       userId: request.id,
+      serviceCharge: createNftDto?.service_charge,
     };
 
     const nft = await this.createNftService.createMasterNft(mintNftRequest);

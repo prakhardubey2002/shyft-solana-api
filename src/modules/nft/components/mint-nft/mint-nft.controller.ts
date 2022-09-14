@@ -30,15 +30,11 @@ export class MintNftController {
   @Post('mint_detach')
   @Version('1')
   async mintDetach(@Body() printNftEditionDetachDto: PrintNftEditionDetachDto): Promise<any> {
-    try {
-      const res = await this.mintNftService.printNewEditionDetach(printNftEditionDetachDto);
-      return {
-        success: true,
-        message: 'NFT Edition mint request generated successfully',
-        result: res,
-      };
-    } catch (err) {
-      throw new HttpException(err.message, HttpStatus.FORBIDDEN);
-    }
+    const res = await this.mintNftService.printNewEditionDetach(printNftEditionDetachDto);
+    return {
+      success: true,
+      message: 'NFT Edition mint request generated successfully',
+      result: res,
+    };
   }
 }

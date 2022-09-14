@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
 import { NodeWallet } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -7,9 +7,18 @@ import { ObjectId } from 'mongoose';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda } from '@metaplex-foundation/js';
-import { Utility } from 'src/common/utils/utils';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  getMinimumBalanceForRentExemptMint,
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda, ProgramError } from '@metaplex-foundation/js';
+import { Utility, ServiceCharge } from 'src/common/utils/utils';
+import { newProgramErrorFrom } from 'src/core/program-error';
 
 export interface CreateParams {
   network: WalletAdapterNetwork;
@@ -20,6 +29,7 @@ export interface CreateParams {
   maxSupply: number;
   royalty: number;
   userId: ObjectId;
+  serviceCharge?: ServiceCharge;
 }
 
 @Injectable()
@@ -27,12 +37,12 @@ export class CreateNftService {
   constructor(private eventEmitter: EventEmitter2) { }
 
   async createMasterNft(createParams: CreateParams): Promise<unknown> {
-    const { name, symbol, metadataUri, royalty, maxSupply, network, privateKey, } = createParams;
+    const { name, symbol, metadataUri, royalty, maxSupply, network, privateKey, serviceCharge } = createParams;
     if (!metadataUri) {
       throw new Error('No metadata URI');
     }
     try {
-      const connection = Utility.connectRpc(createParams.network);
+      const connection = Utility.connectRpc(network);
       const feePayer = AccountUtils.getKeypair(privateKey);
       const wallet = new NodeWallet(feePayer);
       const mintRent = await getMinimumBalanceForRentExemptMint(connection);
@@ -64,7 +74,7 @@ export class CreateNftService {
         uses: null,
       } as DataV2;
 
-      const tx = new Transaction().add(
+      let tx = new Transaction().add(
         SystemProgram.createAccount({
           fromPubkey: feePayer.publicKey,
           newAccountPubkey: mintKeypair.publicKey,
@@ -118,6 +128,10 @@ export class CreateNftService {
         ),
       );
 
+      if(serviceCharge) {
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, feePayer.publicKey);        
+      }
+
       const blockHash = (await connection.getLatestBlockhash('finalized'))
         .blockhash;
       tx.feePayer = feePayer.publicKey;
@@ -136,8 +150,11 @@ export class CreateNftService {
         edition: masterEditionPda.toBase58(),
       };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      if (error instanceof ProgramError) {
+        throw error;
+      } else {
+        throw newProgramErrorFrom(error, 'create_nft_error');
+      }
     }
   }
 }

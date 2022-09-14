@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   Keypair,
   PublicKey,
@@ -16,9 +16,19 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda, toPublicKey } from '@metaplex-foundation/js';
-import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
-import { Utility } from 'src/common/utils/utils';
+import {
+  findAssociatedTokenAccountPda,
+  findMasterEditionV2Pda,
+  findMetadataPda,
+} from '@metaplex-foundation/js';
+import {
+  createCreateMasterEditionV3Instruction,
+  createCreateMetadataAccountV2Instruction,
+  DataV2,
+} from '@metaplex-foundation/mpl-token-metadata';
+import { Utility, ServiceCharge } from 'src/common/utils/utils';
+import { newProgramErrorFrom, ProgramError } from 'src/core/program-error';
+
 import { NftCreationEvent } from 'src/modules/helper/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 export interface CreateParams {
@@ -30,19 +40,28 @@ export interface CreateParams {
   maxSupply: number;
   royalty: number;
   userId: ObjectId;
+  serviceCharge: ServiceCharge;
 }
 
 @Injectable()
 export class CreateNftDetachService {
   constructor(private eventEmitter: EventEmitter2) {}
   async createMasterNft(createParams: CreateParams): Promise<unknown> {
-    const { name, symbol, metadataUri, maxSupply, royalty, network, address } =
-      createParams;
+    const {
+      name,
+      symbol,
+      metadataUri,
+      maxSupply,
+      royalty,
+      network,
+      address,
+      serviceCharge,
+    } = createParams;
     if (!metadataUri) {
       throw new Error('No metadata URI');
     }
     try {
-      const connection = Utility.connectRpc(createParams.network);
+      const connection = Utility.connectRpc(network);
       const mintRent = await getMinimumBalanceForRentExemptMint(connection);
       const mintKeypair = Keypair.generate();
 
@@ -73,7 +92,7 @@ export class CreateNftDetachService {
         uses: null,
       } as DataV2;
 
-      const tx = new Transaction().add(
+      let tx = new Transaction().add(
         SystemProgram.createAccount({
           fromPubkey: addressPubKey,
           newAccountPubkey: mintKeypair.publicKey,
@@ -127,7 +146,17 @@ export class CreateNftDetachService {
         ),
       );
 
-      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      if (serviceCharge) {
+        tx = await Utility.account.addSeviceChargeOnTransaction(
+          connection,
+          tx,
+          serviceCharge,
+          addressPubKey,
+        );
+      }
+
+      const blockHash = (await connection.getLatestBlockhash('finalized'))
+        .blockhash;
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
@@ -149,8 +178,11 @@ export class CreateNftDetachService {
         mint: mintKeypair.publicKey.toBase58(),
       };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      if (error instanceof ProgramError) {
+        throw error;
+      } else {
+        throw newProgramErrorFrom(error, 'create_nft_detach_error');
+      }
     }
   }
 }

@@ -8,31 +8,34 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Creator as CreatorV2, createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
-import { Utility } from 'src/common/utils/utils';
+import { Utility, ServiceCharge } from 'src/common/utils/utils';
+import { ProgramError } from '@metaplex-foundation/js';
+import { newProgramErrorFrom } from 'src/core/program-error';
 
 interface UpdateParams {
-  update_authority: string,
-  new_update_authority: string,
-  royalty: number,
-  private_key: string,
-  is_mutable: boolean,
-  primary_sale_happened: boolean,
-  network: WalletAdapterNetwork,
-  token_address: string,
-  name: string,
-  symbol: string,
+  update_authority: string;
+  new_update_authority: string;
+  royalty: number;
+  private_key: string;
+  is_mutable: boolean;
+  primary_sale_happened: boolean;
+  network: WalletAdapterNetwork;
+  token_address: string;
+  name: string;
+  symbol: string;
 }
 
 interface UpdateDetachParams {
-  update_authority: string,
-  royalty: number,
-  wallet: string,
-  is_mutable: boolean,
-  primary_sale_happened: boolean,
-  network: WalletAdapterNetwork,
-  token_address: string,
-  name: string,
-  symbol: string,
+  update_authority: string;
+  royalty: number;
+  wallet: string;
+  is_mutable: boolean;
+  primary_sale_happened: boolean;
+  network: WalletAdapterNetwork;
+  token_address: string;
+  name: string;
+  symbol: string;
+  serviceCharge: ServiceCharge;
 }
 
 @Injectable()
@@ -108,7 +111,7 @@ export class UpdateNftService {
   }
 
 
-  async updateNftDetach(metaDataUri: string, updateParams: UpdateDetachParams): Promise<any> {
+  async updateNftDetach(metaDataUri: string, updateDetachParams: UpdateDetachParams): Promise<any> {
     if (!metaDataUri) {
       throw new Error('metadata URI missing');
     }
@@ -123,7 +126,8 @@ export class UpdateNftService {
         wallet,
         is_mutable,
         primary_sale_happened,
-      } = updateParams;
+        serviceCharge,
+      } = updateDetachParams;
 
       const connection = Utility.connectRpc(network);
 
@@ -138,7 +142,7 @@ export class UpdateNftService {
       };
       const updateAuthority = update_authority ? new PublicKey(update_authority) : addressPubKey;
 
-      const tx = new Transaction().add(
+      let tx = new Transaction().add(
         createUpdateMetadataAccountV2Instruction(
           {
             metadata: pda,
@@ -162,6 +166,10 @@ export class UpdateNftService {
           }
       ));
 
+      if (serviceCharge) {
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, addressPubKey);
+      }
+
       const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
@@ -173,7 +181,11 @@ export class UpdateNftService {
 
       return transactionBase64;
     } catch (error) {
-      throw new HttpException(error.message, error.status);
+      if (error instanceof ProgramError) {
+        throw error;
+      } else {
+        throw newProgramErrorFrom(error, 'update_nft_detach_error');
+      }
     }
   }
 }

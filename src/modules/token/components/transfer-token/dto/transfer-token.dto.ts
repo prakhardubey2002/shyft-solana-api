@@ -64,7 +64,7 @@ export class TransferTokenDetachDto {
   readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
-    title: 'address',
+    title: 'from_address',
     type: String,
     description: 'YOUR_WALLET_ADDRESS',
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
@@ -74,7 +74,7 @@ export class TransferTokenDetachDto {
   readonly from_address: string;
 
   @ApiProperty({
-    title: 'receiver',
+    title: 'to_address',
     type: String,
     description: 'Public Key of receiver',
     example: 'BFefyp7jNF5Xq2A4JDLLFFGpxLq5oPEFKBAQ46KJHW2R',

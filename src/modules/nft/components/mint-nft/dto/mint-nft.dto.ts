@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Transform } from 'class-transformer';
+import { ServiceCharge } from 'src/common/utils/utils';
 
 export class PrintNftEditionDto {
   @ApiProperty({
@@ -122,4 +123,17 @@ export class PrintNftEditionDetachDto {
   @IsOptional()
   @IsString()
   readonly message?: string;
+
+  @ApiPropertyOptional({
+    name: 'service_charge',
+    description: 'You can charge some token/sol while creating nft',
+    type: 'string',
+    example: {
+      receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+      token: 'DjMA5cCK95X333t7SgkpsG5vC9wMk7u9JV4w8qipvFE8',
+      amount: 0.01,
+    },
+  })
+  @IsOptional()
+  service_charge?: ServiceCharge;
 }

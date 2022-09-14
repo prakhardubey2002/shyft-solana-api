@@ -4,13 +4,11 @@ import {
   getOrCreateAssociatedTokenAccount,
   getMint,
   createTransferCheckedInstruction,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Utility } from 'src/common/utils/utils';
+import { newProgramErrorFrom, ProgramError } from 'src/core/program-error';
 import { TransferTokenDto, TransferTokenDetachDto } from './dto/transfer-token.dto';
 
 @Injectable()
@@ -64,7 +62,6 @@ export class TransferTokenService {
         tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
         const signedTx = await wallet.signTransaction(tx);
         const txId = await connection.sendRawTransaction(signedTx.serialize());
-
         return { txId };
       } else {
         throw Error('Token not initialized');
@@ -90,55 +87,20 @@ export class TransferTokenService {
       const toAddressPubKey = new PublicKey(to_address);
 
       const tokenAddressPubKey = new PublicKey(token_address);
-      const tokenInfo = await getMint(connection, tokenAddressPubKey);
+      let tx = new Transaction();
+      tx = await Utility.token.transferTokenTransaction(connection, tx, tokenAddressPubKey, amount, toAddressPubKey, fromAddressPubKey);
+      tx.feePayer = fromAddressPubKey;
+      tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+      const transactionBase64 = serializedTransaction.toString('base64');
 
-      if (tokenInfo.isInitialized) {
-        // Get an associated token address for receiver.
-        const fromAccount = await getAssociatedTokenAddress(
-          tokenAddressPubKey,
-          fromAddressPubKey,
-          false,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-        );
-
-        const amtToTransfer = Math.pow(10, tokenInfo.decimals) * amount;
-
-        let tx: Transaction = new Transaction();
-        // create associatedTokenAccount if not exist
-        const { associatedAccountAddress: toAccount, createTx } =
-          await Utility.account.getOrCreateAsscociatedAccountTx(
-            connection,
-            fromAddressPubKey,
-            tokenAddressPubKey,
-            toAddressPubKey,
-          );
-        if (createTx) {
-          tx.add(createTx);
-        }
-
-        tx = tx.add(
-          createTransferCheckedInstruction(
-            fromAccount,
-            tokenAddressPubKey,
-            toAccount,
-            fromAddressPubKey,
-            amtToTransfer,
-            tokenInfo.decimals,
-          ),
-        );
-        tx.feePayer = fromAddressPubKey;
-        tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
-        const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
-        const transactionBase64 = serializedTransaction.toString('base64');
-
-        return { encoded_transaction: transactionBase64 };
-      } else {
-        throw Error('Token not initialized');
-      }
+      return { encoded_transaction: transactionBase64 };
     } catch (err) {
-      console.log(err);
-      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      if (err instanceof ProgramError) {
+        throw err;
+      } else {
+        throw newProgramErrorFrom(err, 'transfer_token_error');
+      }
     }
   }
 }

@@ -139,6 +139,7 @@ export class UpdateNftController {
       share: 100,
       external_url: nftInfo.external_url,
       file: data,
+      serviceCharge: updateNftDetachDto.service_charge,
     };
 
     const { uri } = await this.storageService.prepareNFTMetadata(createParams);

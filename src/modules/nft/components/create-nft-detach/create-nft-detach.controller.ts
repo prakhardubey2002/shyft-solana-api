@@ -80,6 +80,7 @@ export class CreateNftDetachController {
       maxSupply: createNftDetachDto.max_supply,
       royalty: createNftDetachDto.royalty ?? 0,
       userId: request.id,
+      serviceCharge: createNftDetachDto?.service_charge,
     };
 
     const result = await this.createNftDetachService.createMasterNft(

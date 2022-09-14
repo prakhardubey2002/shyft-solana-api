@@ -1,6 +1,5 @@
 import { MetaplexError } from '@metaplex-foundation/js';
 import { HttpStatus } from '@nestjs/common';
-import { SendTransactionError } from '@solana/web3.js';
 
 export class ProgramError extends Error {
   constructor(
@@ -92,18 +91,6 @@ export const newProgramErrorFrom = (
       { logs: error.logs },
     );
     return obj;
-  } else if (error instanceof SendTransactionError) {
-    return new ProgramError(
-      error.name,
-      HttpStatus.EXPECTATION_FAILED,
-      error.message,
-      '',
-      '',
-      {
-        logs: error.logs,
-      },
-      error.stack,
-    );
   } else {
     let errName = 'unknown';
     if (errorName !== undefined) {
