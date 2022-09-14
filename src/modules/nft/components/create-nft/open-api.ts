@@ -7,11 +7,11 @@ export function CreateOpenApi() {
     ApiOperation({ summary: 'Create NFT' }),
     ApiConsumes('multipart/form-data'),
     ApiCreatedResponse({
-      description: 'NFT created successfully',
+      description: 'Master NFT created successfully',
       schema: {
         example: {
           success: true,
-          message: 'NFT created successfully',
+          message: 'Master NFT created successfully',
           result: {
             txId: '4qUvyoFd7dfbsdRWiXaTV9zdpCJS7ZAzXGQQET1cFcbaXJ1f539MnDbmKaGGxKDbaFjyJjSJ6UvDk5ytRPqfSPAb',
             mint: 'DYitxNvtLxEsn2SChFfHMTCHhcZHgGhFnZeP8zSCof1X',

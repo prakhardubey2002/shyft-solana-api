@@ -4,7 +4,7 @@ import { ReadAllNftByCreatorDto, ReadAllNftDto } from './dto/read-all-nft.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   NftReadByCreatorEvent,
-  NftReadEvent,
+  NftSyncEvent,
   NftReadInWalletEvent,
 } from '../../../helper/db-sync/db.events';
 import { RemoteDataFetcherService } from '../../../helper/remote-data-fetcher/data-fetcher.service';
@@ -119,7 +119,7 @@ export class ReadNftService {
 
       //Trigger read event, if refreshing or if last update > 1 day
       if (!dbNftInfo || resync) {
-        const nftReadEvent = new NftReadEvent(token_address, network);
+        const nftReadEvent = new NftSyncEvent(token_address, network);
         this.eventEmitter.emit('nft.read', nftReadEvent);
       }
 

@@ -48,6 +48,7 @@
     "bs58": "^5.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
+    "fastq": "^1.13.0",
     "handlebars": "^4.7.7",
     "lodash": "^4.17.21",
     "mime": "^3.0.0",

@@ -1,4 +1,9 @@
-import { AuctionHouse, findAuctionHousePda, findMetadataPda, Metaplex, token, toPublicKey } from '@metaplex-foundation/js';
+import {
+  AuctionHouse,
+  findMetadataPda,
+  Metaplex,
+  toPublicKey,
+} from '@metaplex-foundation/js';
 import { getMint, Mint } from '@solana/spl-token';
 import axios from 'axios';
 import {
@@ -134,25 +139,23 @@ export const Utility = {
 
   request: async function (uri: string, timeout = 15000): Promise<any> {
     try {
-      const abortController = new AbortController();
-      setTimeout(() => {
-        abortController.abort();
-      }, timeout);
-      const res = await axios.get(uri, { signal: abortController.signal });
+      const res = await axios.get(uri, { timeout: timeout });
       return res.status === 200 ? res.data : {};
     } catch (error) {
       throw error;
     }
   },
 
-  requestFileFromUrl: async function (fileUrl: string): Promise<{ data: any, contentType: string }> {
+  downloadFile: async function (
+    fileUrl: string,
+    timeout = 15000,
+  ): Promise<{ data: any; contentType: string }> {
     try {
       if (isValidUrl(fileUrl)) {
-        const abortController = new AbortController();
-        setTimeout(() => {
-          abortController.abort();
-        }, 12000);
-        const { data, headers } = await axios.get(fileUrl, { responseType: 'stream', signal: abortController.signal });
+        const { data, headers } = await axios.get(fileUrl, {
+          responseType: 'stream',
+          timeout: timeout,
+        });
         const contentType = headers['content-type'];
         return { data, contentType };
       }
@@ -187,7 +190,10 @@ export const Utility = {
 
   getElapsedTimeSec: function (date: Date): number {
     try {
-      const diff = (new Date(Date.now()).getTime() - new Date(date?.toUTCString()).getTime()) / 1000;
+      const diff =
+        (new Date(Date.now()).getTime() -
+          new Date(date?.toUTCString()).getTime()) /
+        1000;
       return diff;
     } catch (error) {
       console.log(error);
@@ -196,14 +202,15 @@ export const Utility = {
   },
 
   transaction: {
-    getMemoTx: function (publicKey: PublicKey, message: string): TransactionInstruction {
+    getMemoTx: function (
+      publicKey: PublicKey,
+      message: string,
+    ): TransactionInstruction {
       return new TransactionInstruction({
-        keys: [
-          { pubkey: publicKey, isSigner: true, isWritable: true },
-        ],
+        keys: [{ pubkey: publicKey, isSigner: true, isWritable: true }],
         data: Buffer.from(message, 'utf-8'),
         programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
-      })
+      });
     },
   },
 
@@ -247,14 +254,18 @@ export const Utility = {
       try {
         const connection = new Connection(clusterApiUrl(network), 'confirmed');
         const tokenInfo = await getMint(connection, toPublicKey(tokenAddress));
-        const tokenResp = await Utility.token.getTokenInfo(connection, network, tokenInfo);
+        const tokenResp = await Utility.token.getTokenInfo(
+          connection,
+          network,
+          tokenInfo,
+        );
         symbol = tokenResp.symbol;
       } catch (err) {
-        newProgramErrorFrom(err, "get_token_symbol_error").log();
+        newProgramErrorFrom(err, 'get_token_symbol_error').log();
       } finally {
-        return symbol != "" ? symbol : "Token";
+        return symbol != '' ? symbol : 'Token';
       }
-    }
+    },
   },
 
   auctionHouse: {
@@ -265,9 +276,11 @@ export const Utility = {
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
       const metaplex = Metaplex.make(connection, { cluster: network });
       const auctionsClient = metaplex.auctions();
-      const auctionHouse = await auctionsClient.findAuctionHouseByAddress(auctionHouseAddress).run();
+      const auctionHouse = await auctionsClient
+        .findAuctionHouseByAddress(auctionHouseAddress)
+        .run();
       return auctionHouse;
-    }
+    },
   },
 
   account: {
@@ -328,7 +341,23 @@ export const Utility = {
         }
       }
 
-      return { associatedAccountAddress: associatedToken, createTx: transaction };
+      return {
+        associatedAccountAddress: associatedToken,
+        createTx: transaction,
+      };
+    },
+  },
+
+  s3: {
+    getS3ImgKey: function (fileName: string) {
+      const encodedName = encodeURIComponent(fileName);
+      const key = `img/${encodedName}`;
+      return key;
+    },
+
+    getImgCdnUrl: function (key: string) {
+      const cdnUrl = `https://${configuration().s3Bucket}/${key}`;
+      return cdnUrl;
     },
   },
 };

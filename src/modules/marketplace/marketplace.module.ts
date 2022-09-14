@@ -9,6 +9,7 @@ import { NftInfoAccessor } from "src/dal/nft-repo/nft-info.accessor";
 import { NftInfo, NftInfoSchema } from "src/dal/nft-repo/nft-info.schema";
 import { AccountModule } from "../account/account.module";
 import { RemoteDataFetcherService } from "../helper/remote-data-fetcher/data-fetcher.service";
+import { NftModule } from "../nft/nft.module";
 import { ListingDetachedService } from "./listing-detached-service";
 import { ListingService } from "./listing-service";
 import { CreateMarketplaceController } from "./mp-controller";
@@ -20,6 +21,7 @@ import { MarketplaceService } from "./mp-service";
 	imports: [
 		AccountModule,
 		HttpModule,
+		NftModule,
 		MongooseModule.forFeature([
 			{ name: Listing.name, schema: ListingSchema },
 			{ name: Marketplace.name, schema: MarketPlaceSchema },

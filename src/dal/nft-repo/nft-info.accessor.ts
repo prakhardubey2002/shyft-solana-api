@@ -8,31 +8,50 @@ export class NftInfoAccessor {
   constructor(@InjectModel(NftInfo.name) public NftInfoDataModel: Model<NftInfoDocument>) { }
 
   public async insert(data: NftInfo): Promise<any> {
-    const result = await this.NftInfoDataModel.create(data);
-    return result;
-  }
-
-  public async readNft(data: object): Promise<NftInfoDocument> {
-    const result = await this.NftInfoDataModel.findOne(data);
-    return result;
-  }
-
-  public async updateNft(data: NftInfo): Promise<NftInfoDocument> {
-    const filter = { mint: data.mint };
-    const result = await this.NftInfoDataModel.findOneAndUpdate(filter, data, {
-      upsert: true,
-      new: true,
-    });
-    return result;
-  }
-
-  public async findOne(filter: object): Promise<NftInfoDocument> {
     try {
-      const result = await this.NftInfoDataModel.findOne(filter).sort({ updated_at: 'desc' });
+      const result = await this.NftInfoDataModel.create(data);
       return result;
     } catch (err) {
       console.log(err);
     }
+    return null;
+  }
+
+  public async readNft(data: object): Promise<NftInfoDocument> {
+    try {
+      const result = await this.NftInfoDataModel.findOne(data);
+      return result;
+    } catch (err) {
+      console.log(err);
+    }
+    return null;
+  }
+
+  public async updateNft(data: NftInfo): Promise<NftInfoDocument> {
+    try {
+      const filter = { mint: data?.mint, network: data?.network };
+      const result = await this.NftInfoDataModel.findOneAndUpdate(filter, data, {
+          upsert: true,
+          new: true,
+        },
+      );
+      return result;
+    } catch (err) {
+      console.log(err);
+    }
+    return null;
+  }
+
+  public async findOne(filter: object): Promise<NftInfoDocument> {
+    try {
+      if (filter) {
+        const result = await this.NftInfoDataModel.findOne(filter).sort({ updated_at: 'desc' });
+        return result;
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    return null;
   }
 
   public async isExist(filter: object): Promise<boolean> {
@@ -41,6 +60,7 @@ export class NftInfoAccessor {
       return Boolean(result?._id);
     } catch (err) {
       console.log(err);
+      return false;
     }
   }
 

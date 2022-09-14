@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { Transform } from 'class-transformer';
 
 export class ReadNftDto {
   @ApiProperty({
@@ -32,5 +31,5 @@ export class ReadNftDto {
   })
   @IsOptional()
   @IsString()
-  readonly refresh: string;
+  readonly refresh?: string;
 }

@@ -5,8 +5,17 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
-import { Metadata, MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto, NftDbResponse } from './dto/data-fetcher.dto';
+import {
+  Metadata,
+  MetadataData,
+} from '@metaplex-foundation/mpl-token-metadata-depricated';
+import {
+  FetchNftDto,
+  FetchAllNftDto,
+  NftData,
+  FetchAllNftByCreatorDto,
+  NftDbResponse,
+} from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { Account } from 'src/common/utils/account';
 import { NftDeleteEvent, NftCacheEvent } from '../db-sync/db.events';
@@ -36,7 +45,7 @@ export class RemoteDataFetcherService {
   constructor(
     private eventEmitter: EventEmitter2,
     private nftInfoAccessor: NftInfoAccessor,
-  ) { }
+  ) {}
 
   baseFilters = [
     // Filter for MetadataV1 by key
@@ -53,12 +62,18 @@ export class RemoteDataFetcherService {
     return Metadata.from(acc);
   }
 
-  async getHolderByMint(connection: Connection, mint: PublicKey): Promise<PublicKey> {
+  async getHolderByMint(
+    connection: Connection,
+    mint: PublicKey,
+  ): Promise<PublicKey> {
     const tokens = await connection.getTokenLargestAccounts(mint);
     return tokens.value[0].address; // since it's an NFT, we just grab the 1st account
   }
 
-  async metadatasToTokens(connection: Connection, rawMetadatas: RawMetaData[]): Promise<MetadatasToTokens[]> {
+  async metadatasToTokens(
+    connection: Connection,
+    rawMetadatas: RawMetaData[],
+  ): Promise<MetadatasToTokens[]> {
     const promises = await Promise.all(
       rawMetadatas.map(async (m) => {
         try {
@@ -80,7 +95,12 @@ export class RemoteDataFetcherService {
     return promises.filter((t) => !!t);
   }
 
-  async getPage(connection: Connection, accountPublicKeys: PublicKey[], page: number, size: number): Promise<RawMetaData[]> {
+  async getPage(
+    connection: Connection,
+    accountPublicKeys: PublicKey[],
+    page: number,
+    size: number,
+  ): Promise<RawMetaData[]> {
     const paginatedPublicKeys = accountPublicKeys.slice(
       (page - 1) * size,
       page * size,
@@ -90,7 +110,9 @@ export class RemoteDataFetcherService {
       return [];
     }
 
-    const accountsWithData = await connection.getMultipleAccountsInfo(paginatedPublicKeys);
+    const accountsWithData = await connection.getMultipleAccountsInfo(
+      paginatedPublicKeys,
+    );
     // console.log(accountsWithData);
     const accountsWithRawData: RawMetaData[] = [];
     accountsWithData.forEach((key, i) => {
@@ -105,7 +127,10 @@ export class RemoteDataFetcherService {
       const { network, walletAddress } = fetchAllNftDto;
       const connection = Utility.connectRpc(network);
       if (!walletAddress) {
-        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Please provide any public or private key',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const nfts = await Metadata.findDataByOwner(connection, walletAddress);
@@ -143,7 +168,8 @@ export class RemoteDataFetcherService {
     const res = await Promise.allSettled(promises);
 
     res?.forEach((data, i) => {
-      result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
+      result[i].offChainMetadata =
+        data.status === 'fulfilled' ? data.value : {};
     });
     return result;
   }
@@ -153,9 +179,14 @@ export class RemoteDataFetcherService {
       const { network, tokenAddress } = fetchNftDto;
       const connection = Utility.connectRpc(network);
       if (!tokenAddress) {
-        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Please provide any public or private key',
+          HttpStatus.BAD_REQUEST,
+        );
       }
-      const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
+      const largestAcc = await connection.getTokenLargestAccounts(
+        new PublicKey(tokenAddress),
+      );
 
       if (largestAcc?.value.length) {
         const ownerInfo = <any>(
@@ -177,14 +208,16 @@ export class RemoteDataFetcherService {
   async fetchNftDetails(fetchNftDto: FetchNftDto): Promise<NftData> {
     try {
       if (!fetchNftDto.tokenAddress) {
-        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Please provide any public or private key',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       const nftData = await this.fetchNft(fetchNftDto);
       nftData.owner = await this.fetchOwner(fetchNftDto);
 
       return nftData;
     } catch (error) {
-      console.log(error);
       throw new HttpException(error.message, error.status);
     }
   }
@@ -194,12 +227,16 @@ export class RemoteDataFetcherService {
       const { network, tokenAddress } = fetchNftDto;
       const connection = Utility.connectRpc(network);
       if (!tokenAddress) {
-        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Please provide any public or private key',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       const accInfo = <any>(
         await connection.getParsedAccountInfo(new PublicKey(tokenAddress))
       );
       const supply = parseInt(accInfo?.value?.data?.parsed?.info?.supply);
+
       if (supply) {
         const pda = await Metadata.getPDA(new PublicKey(tokenAddress));
         const metadata = await Metadata.load(connection, pda);
@@ -212,23 +249,34 @@ export class RemoteDataFetcherService {
         }
 
         if (!metadata) {
-          throw new HttpException('No metadata account found', HttpStatus.NOT_FOUND);
+          throw new HttpException(
+            'No metadata account found',
+            HttpStatus.NOT_FOUND,
+          );
         }
 
         return new NftData(metadata.data, uriRes);
       } else {
         //0 supply for the NFT, trigger a delete from DB just in case
-        const delEvent = new NftDeleteEvent(fetchNftDto.tokenAddress, fetchNftDto.network);
+        const delEvent = new NftDeleteEvent(
+          fetchNftDto.tokenAddress,
+          fetchNftDto.network,
+        );
         this.eventEmitter.emit('nft.deleted', delEvent);
       }
 
-      throw new HttpException(`NFT not found on ${network}`, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        `NFT not found on ${network}`,
+        HttpStatus.NOT_FOUND,
+      );
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
   }
 
-  async fetchAllNftsByCreator(fetchAllNftByCreatorDto: FetchAllNftByCreatorDto): Promise<PaginatedNftsResponse> {
+  async fetchAllNftsByCreator(
+    fetchAllNftByCreatorDto: FetchAllNftByCreatorDto,
+  ): Promise<PaginatedNftsResponse> {
     try {
       const { network, creator, page, size } = fetchAllNftByCreatorDto;
       const connection = Utility.connectRpc(network);
@@ -247,17 +295,28 @@ export class RemoteDataFetcherService {
           ],
         },
       );
-      const accountPublicKeys = rawMetadatas.map(account => account.pubkey);
-      const pageResults = await this.getPage(connection, accountPublicKeys, page, size);
-      const resultsWithMetaData = await this.metadatasToTokens(connection, pageResults);
-      const nfts = resultsWithMetaData.map((x) => x.metadataOnchain)
+      const accountPublicKeys = rawMetadatas.map((account) => account.pubkey);
+      const pageResults = await this.getPage(
+        connection,
+        accountPublicKeys,
+        page,
+        size,
+      );
+      const resultsWithMetaData = await this.metadatasToTokens(
+        connection,
+        pageResults,
+      );
+      const nfts = resultsWithMetaData.map((x) => x.metadataOnchain);
 
       const result: NftData[] = [];
       // Run all offchain requests parallely instead of one by one
       const promises: Promise<NftData>[] = [];
       for (const oncd of nfts) {
         try {
-          const owner = await this.fetchOwner({ network, tokenAddress: oncd.mint });
+          const owner = await this.fetchOwner({
+            network,
+            tokenAddress: oncd.mint,
+          });
           if (owner) {
             promises.push(Utility.request(oncd.data.uri));
             result.push(new NftData(oncd, null, owner));
@@ -271,28 +330,12 @@ export class RemoteDataFetcherService {
       const res = await Promise.allSettled(promises);
 
       res?.forEach((data, i) => {
-        result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
+        result[i].offChainMetadata =
+          data.status === 'fulfilled' ? data.value : {};
       });
       return { nfts: result, total: accountPublicKeys.length };
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
   }
-
-  async getNftDetails(network: WalletAdapterNetwork, mint: string): Promise<NftDbResponse> {
-		const nft = await this.nftInfoAccessor.findOne({ network, mint });
-		let nftResponse: NftDbResponse;
-		if (nft) nftResponse = getNftDbResponseFromNftInfo(nft);
-		else {
-			const nftData = await this.fetchNftDetails(new FetchNftDto(network, mint));
-			nftResponse = nftData.getNftInfoDto();
-			await this.nftInfoAccessor.insert(nftResponse as NftInfo);
-			Object.assign(nftResponse, { cached_image_uri: nftResponse.image_uri });
-		}
-		if (nftResponse.image_uri) {
-			const nftCacheEvent = new NftCacheEvent(nftResponse.image_uri);
-			this.eventEmitter.emit('nft.cache', nftCacheEvent);
-		}
-		return nftResponse;
-	}
 }

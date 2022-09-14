@@ -5,7 +5,11 @@ import { ObjectId } from 'mongoose';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 
 export class NftCreationEvent {
-  constructor(tokenAddress: string, network: WalletAdapterNetwork, apiKeyId: ObjectId) {
+  constructor(
+    tokenAddress: string,
+    network: WalletAdapterNetwork,
+    apiKeyId: ObjectId,
+  ) {
     this.tokenAddress = tokenAddress;
     this.network = network;
     this.apiKeyId = apiKeyId;
@@ -17,7 +21,11 @@ export class NftCreationEvent {
 }
 
 export class NftReadInWalletEvent {
-  constructor(walletAddress: string, network: WalletAdapterNetwork, updateAuthority: string) {
+  constructor(
+    walletAddress: string,
+    network: WalletAdapterNetwork,
+    updateAuthority: string,
+  ) {
     this.walletAddress = walletAddress;
     this.network = network;
     this.updateAuthority = updateAuthority;
@@ -29,7 +37,11 @@ export class NftReadInWalletEvent {
 }
 
 export class NftReadByCreatorEvent {
-  constructor(creator_wallet_address: string, network: WalletAdapterNetwork, nfts?: NftInfo[]) {
+  constructor(
+    creator_wallet_address: string,
+    network: WalletAdapterNetwork,
+    nfts?: NftInfo[],
+  ) {
     this.creator = creator_wallet_address;
     this.network = network;
     this.nfts = nfts;
@@ -38,16 +50,6 @@ export class NftReadByCreatorEvent {
   creator: string;
   network: WalletAdapterNetwork;
   nfts?: NftInfo[];
-}
-
-export class NftUpdateEvent {
-  constructor(tokenAddress: string, network: WalletAdapterNetwork) {
-    this.tokenAddress = tokenAddress;
-    this.network = network;
-  }
-
-  tokenAddress: string;
-  network: WalletAdapterNetwork;
 }
 
 export class NftDeleteEvent {
@@ -59,7 +61,7 @@ export class NftDeleteEvent {
   network: WalletAdapterNetwork;
 }
 
-export class NftReadEvent {
+export class NftSyncEvent {
   constructor(tokenAddress: string, network: WalletAdapterNetwork) {
     this.tokenAddress = tokenAddress;
     this.network = network;
@@ -70,13 +72,15 @@ export class NftReadEvent {
 }
 
 export class NftCacheEvent {
-  constructor(metadataImageUri: string, cachedImageUri?: string) {
+  constructor(metadataImageUri: string, mint: string, network: string) {
     this.metadataImageUri = metadataImageUri;
-    this.cachedImageUri = cachedImageUri;
+    this.mint = mint;
+    this.network = network;
   }
 
+  mint: string;
+  network: string;
   metadataImageUri: string;
-  cachedImageUri: string;
 }
 
 export class MarketplaceCreationEvent {

@@ -162,7 +162,7 @@ export class CreateTokenService {
       const serializedTransaction = createNewTokenTransaction.serialize({ requireAllSignatures: false, verifySignatures: false });
       const transactionBase64 = serializedTransaction.toString('base64');
 
-      return { enoded_transaction: transactionBase64, mint: mintKeypair.publicKey.toBase58() };
+      return { encoded_transaction: transactionBase64, mint: mintKeypair.publicKey.toBase58() };
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }

@@ -1,5 +1,11 @@
 import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+} from 'class-validator';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -20,7 +26,11 @@ export interface NftDbResponse {
 }
 
 export class FetchAllNftDto {
-  constructor(network: WalletAdapterNetwork, address: string, updateAuthority?: string) {
+  constructor(
+    network: WalletAdapterNetwork,
+    address: string,
+    updateAuthority?: string,
+  ) {
     this.network = network;
     this.walletAddress = address;
     this.updateAuthority = updateAuthority;
@@ -38,7 +48,12 @@ export class FetchAllNftDto {
 }
 
 export class FetchAllNftByCreatorDto {
-  constructor(network: WalletAdapterNetwork, creator_address: string, page?: number, size?: number) {
+  constructor(
+    network: WalletAdapterNetwork,
+    creator_address: string,
+    page?: number,
+    size?: number,
+  ) {
     this.network = network;
     this.creator = creator_address;
     this.page = page;
@@ -105,6 +120,7 @@ export class NftData {
     this.owner = owner;
   }
 
+  //For API response
   public getNftDbResponse(): NftDbResponse {
     const nftDbResponse = {
       name: this.onChainMetadata?.data?.name,
@@ -127,7 +143,10 @@ export class NftData {
       this.offChainMetadata?.attributes?.map((trait: any) => {
         if (trait?.trait_type && trait?.value) {
           nftDbResponse.attributes[trait?.trait_type] = trait?.value;
-          nftDbResponse.attributes_array.push({trait_type: trait?.trait_type, value: trait?.value});
+          nftDbResponse.attributes_array.push({
+            trait_type: trait?.trait_type,
+            value: trait?.value,
+          });
         }
       });
     }
@@ -135,6 +154,7 @@ export class NftData {
     return nftDbResponse;
   }
 
+  //Convert to a format which can be saved in DB
   public getNftInfoDto(): NftInfo {
     const nftDbDto = new NftInfo();
     nftDbDto.update_authority = this.onChainMetadata.updateAuthority;
@@ -153,17 +173,32 @@ export class NftData {
         verified: cr.verified,
       };
     });
-    nftDbDto.image_uri = this.offChainMetadata?.image ?? '';
-    nftDbDto.description = this.offChainMetadata?.description ?? '';
-    nftDbDto.external_url = this.offChainMetadata?.external_url ?? '';
-    nftDbDto.files = this.offChainMetadata?.properties?.files?.map((file: NftFile) => {
-      return {
-        uri: file.uri,
-        type: file.type,
-      };
-    });
-    nftDbDto.attributes = {};
-    if (Array.isArray(this.offChainMetadata?.attributes)) {
+    //Only add these keys, if we have valid values
+    this.offChainMetadata?.image
+      ? (nftDbDto.image_uri = this.offChainMetadata?.image)
+      : {};
+
+    this.offChainMetadata?.description
+      ? (nftDbDto.description = this.offChainMetadata?.description)
+      : {};
+
+    this.offChainMetadata?.external_url
+      ? (nftDbDto.external_url = this.offChainMetadata?.external_url)
+      : {};
+
+    this.offChainMetadata?.properties?.files
+      ? (nftDbDto.files = this.offChainMetadata?.properties?.files?.map(
+          (file: NftFile) => {
+            return {
+              uri: file.uri,
+              type: file.type,
+            };
+          },
+        ))
+      : {};
+
+    if (this.offChainMetadata?.attributes?.length) {
+      nftDbDto.attributes = {};
       this.offChainMetadata?.attributes?.map((trait) => {
         if (trait?.trait_type && trait?.value) {
           nftDbDto.attributes[trait?.trait_type] = trait?.value;

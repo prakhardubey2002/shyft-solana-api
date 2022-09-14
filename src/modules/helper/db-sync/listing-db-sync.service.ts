@@ -8,7 +8,7 @@ import { ListingRepo } from "src/dal/listing-repo/listing-repo";
 import { Listing } from "src/dal/listing-repo/listing.schema";
 import { NftInfoAccessor } from "src/dal/nft-repo/nft-info.accessor";
 import { NftInfo, NftInfoDocument } from "src/dal/nft-repo/nft-info.schema";
-import { ListingCancelledEvent, ListingCreatedEvent, ListingInitiationEvent, ListingSoldEvent, NftReadEvent, SaleInitiationEvent, UnlistInitiationEvent } from "./db.events";
+import { ListingCancelledEvent, ListingCreatedEvent, ListingInitiationEvent, ListingSoldEvent, NftSyncEvent, SaleInitiationEvent, UnlistInitiationEvent } from "./db.events";
 
 @Injectable()
 export class ListingDbSyncService {
@@ -33,7 +33,7 @@ export class ListingDbSyncService {
 				event.currency_symbol
 			);
 			await this.listingRepo.insert(listing);
-			const nftReadEvent = new NftReadEvent(event.nftAddress, event.network);
+			const nftReadEvent = new NftSyncEvent(event.nftAddress, event.network);
 			this.eventEmitter.emit('nft.check.db', nftReadEvent);
 		} catch (err) {
 			newProgramErrorFrom(err, "listing_db_insert").log();
@@ -88,7 +88,7 @@ export class ListingDbSyncService {
 				await this.listingRepo.insert(dbListing);
 
 				const nftAddress = listing.asset.address.toBase58();
-				const nftReadEvent = new NftReadEvent(nftAddress, event.network);
+				const nftReadEvent = new NftSyncEvent(nftAddress, event.network);
 				this.eventEmitter.emit('nft.check.db', nftReadEvent);
 			} catch (error) {
 				const err = newProgramErrorFrom(error);
@@ -158,11 +158,11 @@ export class ListingDbSyncService {
 	}
 
 	@OnEvent('nft.check.db', { async: true })
-	async nftCheckOnDbEvent(event: NftReadEvent): Promise<any> {
+	async nftCheckOnDbEvent(event: NftSyncEvent): Promise<any> {
 		try {
 			const isNftExist = await this.nftInfoAccessor.isExist({ network: event.network, mint: event.tokenAddress });
 				if (!isNftExist) {
-					const nftReadEvent = new NftReadEvent(event.tokenAddress, event.network);
+					const nftReadEvent = new NftSyncEvent(event.tokenAddress, event.network);
 					this.eventEmitter.emit('nft.read', nftReadEvent);
 				}
 		} catch (err) {

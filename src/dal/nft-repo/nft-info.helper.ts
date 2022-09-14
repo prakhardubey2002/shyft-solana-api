@@ -3,16 +3,13 @@ import { NftDbResponse } from "src/modules/helper/remote-data-fetcher/dto/data-f
 import { NftInfoDocument } from "./nft-info.schema";
 
 export function getNftDbResponseFromNftInfo(r: NftInfoDocument): NftDbResponse {
-  let cachedImageUri = encodeURI(r.cached_image_uri);
-  if (cachedImageUri === 'undefined' || cachedImageUri === 'null') {
-    cachedImageUri = r.image_uri;
-  }
+
   const response = {
     name: r.name,
     symbol: r.symbol,
     royalty: r.royalty / 100,
     image_uri: r.image_uri,
-    cached_image_uri: cachedImageUri,
+    cached_image_uri: r.cached_image_uri ?? r.image_uri,
     metadata_uri: r.metadata_uri,
     description: r.description,
     mint: r.mint,

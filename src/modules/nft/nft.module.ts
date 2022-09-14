@@ -65,5 +65,6 @@ import { AccountModule } from '../account/account.module';
       useValue: new RavenInterceptor(),
     },
   ],
+  exports: [ReadNftService],
 })
 export class NftModule {}

@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UploadedFiles, UseInterceptors, Version } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  UploadedFiles,
+  UseInterceptors,
+  Version,
+} from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
@@ -12,23 +20,40 @@ import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class CreateNftDetachController {
-  constructor(private createNftDetachService: CreateNftDetachService, private storageService: StorageMetadataService) { }
+  constructor(
+    private createNftDetachService: CreateNftDetachService,
+    private storageService: StorageMetadataService,
+  ) {}
 
   @CreateNftDetachOpenApi()
   @Post('create_detach')
   @Version('1')
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'file', maxCount: 1 },
-    { name: 'data', maxCount: 1 },
-  ]))
-  async createNft(@UploadedFiles() files: { file: Express.Multer.File[], data?: Express.Multer.File[] }, @Body() createNftDetachDto: CreateNftDetachDto, @Req() request: any): Promise<any> {
-    const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
-    const image = uploadImage.uri;
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'data', maxCount: 1 },
+    ]),
+  )
+  async createNft(
+    @UploadedFiles()
+    files: { file: Express.Multer.File[]; data?: Express.Multer.File[] },
+    @Body() createNftDetachDto: CreateNftDetachDto,
+    @Req() request: any,
+  ): Promise<any> {
+    let image: string;
+    if (files.file) {
+      const uploadImage = await this.storageService.uploadToIPFS(
+        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
+      );
+      image = uploadImage.uri;
+    }
 
     let data: NftFile;
 
     if (files.data) {
-      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      const uploadFile = await this.storageService.uploadToIPFS(
+        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
+      );
       data = new NftFile(uploadFile.uri, files.data[0].mimetype);
     }
 
@@ -57,7 +82,9 @@ export class CreateNftDetachController {
       userId: request.id,
     };
 
-    const result = await this.createNftDetachService.mintNft(mintNftRequest);
+    const result = await this.createNftDetachService.createMasterNft(
+      mintNftRequest,
+    );
 
     return {
       success: true,

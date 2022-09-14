@@ -19,6 +19,8 @@ import {
 import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda, toPublicKey } from '@metaplex-foundation/js';
 import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { Utility } from 'src/common/utils/utils';
+import { NftCreationEvent } from 'src/modules/helper/db-sync/db.events';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 export interface CreateParams {
   network: WalletAdapterNetwork;
   name: string;
@@ -32,7 +34,8 @@ export interface CreateParams {
 
 @Injectable()
 export class CreateNftDetachService {
-  async mintNft(createParams: CreateParams): Promise<unknown> {
+  constructor(private eventEmitter: EventEmitter2) {}
+  async createMasterNft(createParams: CreateParams): Promise<unknown> {
     const { name, symbol, metadataUri, maxSupply, royalty, network, address } =
       createParams;
     if (!metadataUri) {
@@ -128,10 +131,23 @@ export class CreateNftDetachService {
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
-      const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+      const serializedTransaction = tx.serialize({
+        requireAllSignatures: false,
+        verifySignatures: false,
+      });
       const transactionBase64 = serializedTransaction.toString('base64');
 
-      return { encoded_transaction: transactionBase64, mint: mintKeypair.publicKey.toBase58() };
+      const nftCreatedEvent = new NftCreationEvent(
+        mintKeypair.publicKey.toBase58(),
+        network,
+        createParams.userId,
+      );
+      this.eventEmitter.emit('nft.created', nftCreatedEvent);
+
+      return {
+        encoded_transaction: transactionBase64,
+        mint: mintKeypair.publicKey.toBase58(),
+      };
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);

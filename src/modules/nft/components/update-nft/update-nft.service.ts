@@ -3,7 +3,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { NodeWallet, programs } from '@metaplex/js';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { NftUpdateEvent } from '../../../helper/db-sync/db.events';
+import { NftSyncEvent } from '../../../helper/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
@@ -97,7 +97,7 @@ export class UpdateNftService {
       const signedTransaction = await wallet.signTransaction(res)
       const result = await connection.sendRawTransaction(signedTransaction.serialize());
 
-      const nftUpdatedEvent = new NftUpdateEvent(token_address, network)
+      const nftUpdatedEvent = new NftSyncEvent(token_address, network)
       this.eventEmitter.emit('nft.updated', nftUpdatedEvent)
 
       return { txId: result };
@@ -167,6 +167,9 @@ export class UpdateNftService {
       tx.recentBlockhash = blockHash;
       const serializedTransaction = tx.serialize({ requireAllSignatures: false });
       const transactionBase64 = serializedTransaction.toString('base64');
+
+      const nftUpdatedEvent = new NftSyncEvent(token_address, network)
+      this.eventEmitter.emit('nft.updated', nftUpdatedEvent)
 
       return transactionBase64;
     } catch (error) {
