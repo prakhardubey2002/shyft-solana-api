@@ -20,15 +20,18 @@ export class AppService {
     return 'Welcome to explore Shyft APIs!';
   }
 
-  async getApiKey(getApiKeyDto: GetApiKeyDto): Promise<boolean> {
+  async getApiKey(getApiKeyDto: GetApiKeyDto): Promise<any> {
     try {
+      let api_key: string;
       let result = await this.userModel.findOne(getApiKeyDto);
       if (!result) {
-        const api_key = await nanoid();
+        api_key = await nanoid();
         result = await this.userModel.create({
           ...getApiKeyDto,
           api_key,
         });
+      } else {
+        api_key = result.api_key;
       }
       const destinationEmailAddess = result.email;
       const templateName = 'ApiKeyTemplate';
@@ -40,7 +43,7 @@ export class AppService {
         templateName,
         templateData,
       );
-      return true;
+      return { api_key };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

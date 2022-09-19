@@ -29,6 +29,9 @@ export class AppController {
       example: {
         success: true,
         message: 'API key sent successfully to your email.',
+        result: {
+          api_key: 'Pi3dU50L4p5F087o',
+        },
       },
     },
   })
@@ -37,10 +40,11 @@ export class AppController {
   @HttpCode(200)
   @Public()
   async getApiKey(@Body() getApiKeyDto: GetApiKeyDto): Promise<any> {
-    await this.appService.getApiKey(getApiKeyDto);
+    const result = await this.appService.getApiKey(getApiKeyDto);
     return {
       success: true,
       message: 'API key sent successfully to your email.',
+      result, 
     };
   }
 }

@@ -11,6 +11,18 @@ export class User {
   @Prop({ required: true })
   api_key: string;
 
+  @Prop({ required: false })
+  name: string;
+
+  @Prop({ required: false })
+  team_size: string;
+
+  @Prop({ required: false })
+  project_name: string;
+
+  @Prop({ required: false })
+  project_info: string;
+
   id: ObjectId;
 }
 
