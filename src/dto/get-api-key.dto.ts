@@ -22,7 +22,7 @@ export class GetApiKeyDto {
   @ApiProperty({
     title: 'project_name',
     description: 'Your project name',
-    example: 'ABC Project',
+    example: 'joy Ride Wallet',
   })
   @IsOptional()
   @Length(3, 30)
@@ -40,7 +40,7 @@ export class GetApiKeyDto {
   @ApiProperty({
     title: 'project_info',
     description: 'Your project info',
-    example: 'Write something about your project',
+    example: 'Tell something exciting about your project',
   })
   @IsOptional()
   @MaxLength(255)

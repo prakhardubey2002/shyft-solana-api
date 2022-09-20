@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
 import { AppService } from './app.service';
 import { Emailer } from './common/utils/emailer';
-import { User } from './dal/user.schema';
+import { User } from './dal/user-repo/user.schema';
 
 describe('AppService', () => {
   let service: AppService;

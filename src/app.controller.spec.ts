@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Emailer } from './common/utils/emailer';
-import { User } from './dal/user.schema';
+import { User } from './dal/user-repo/user.schema';
 
 describe('AppController', () => {
   let appController: AppController;

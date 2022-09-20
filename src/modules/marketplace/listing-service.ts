@@ -409,7 +409,6 @@ export class ListingService {
         network,
         marketplace_address,
       );
-      console.log(dataSet);
       const result = await Promise.all(
         dataSet.map(async (listing) => {
           const nft = await this.nftReadService.readNft({

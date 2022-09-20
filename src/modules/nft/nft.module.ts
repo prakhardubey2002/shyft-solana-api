@@ -11,7 +11,7 @@ import { BurnNftService } from './components/burn-nft/burn-nft.service';
 import { UpdateNftController } from './components/update-nft/update-nft.controller';
 import { UpdateNftService } from './components/update-nft/update-nft.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from 'src/dal/user.schema';
+import { User, UserSchema } from 'src/dal/user-repo/user.schema';
 import { StorageMetadataController } from './components/storage-metadata/storage-metadata.controller';
 import { StorageMetadataService } from './components/storage-metadata/storage-metadata.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';

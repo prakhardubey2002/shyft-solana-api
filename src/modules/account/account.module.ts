@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { RavenModule, RavenInterceptor } from 'nest-raven';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DataCacheModule } from '../data-cache/data-cache.module';
-import { User, UserSchema } from 'src/dal/user.schema';
+import { User, UserSchema } from 'src/dal/user-repo/user.schema';
 import { AccountController } from './account.controller';
 import { WalletService } from './account.service';
 import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
@@ -12,7 +12,10 @@ import { SignTransactionController } from './components/sign-transaction/sign-tr
 import { SendSolDetachService } from './components/send-sol-detach/send-sol-detach.service';
 import { SignTransactionService } from './components/sign-transaction/sign-transaction.service';
 import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
-import { SemiWalletSchema, SemiCustodialWallet } from 'src/dal/semi-wallet-repo/semi-wallet.schema';
+import {
+  SemiWalletSchema,
+  SemiCustodialWallet,
+} from 'src/dal/semi-wallet-repo/semi-wallet.schema';
 
 @Module({
   controllers: [
@@ -41,4 +44,4 @@ import { SemiWalletSchema, SemiCustodialWallet } from 'src/dal/semi-wallet-repo/
     },
   ],
 })
-export class AccountModule { }
+export class AccountModule {}

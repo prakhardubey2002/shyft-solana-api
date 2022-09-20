@@ -1,8 +1,23 @@
-import { Body, Controller, Get, HttpCode, Post, Version } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Post,
+  Put,
+  Version,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiOkResponse,
+  ApiExcludeEndpoint,
+} from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './decorators/public.decorators';
 import { GetApiKeyDto } from './dto/get-api-key.dto';
+import { WhiteListDomainsDto } from './dto/whitelist-domains.dto';
 
 @Controller()
 export class AppController {
@@ -44,7 +59,43 @@ export class AppController {
     return {
       success: true,
       message: 'API key sent successfully to your email.',
-      result, 
+      result,
+    };
+  }
+
+  @ApiExcludeEndpoint()
+  @Put('whitelist_domains')
+  @Version('1')
+  @HttpCode(200)
+  @Public()
+  async whiteListDomain(
+    @Body() whiteListDomainsDto: WhiteListDomainsDto,
+  ): Promise<any> {
+    console.log('domain whitelisting request received');
+    const result = await this.appService.whiteListDomain(whiteListDomainsDto);
+    return {
+      success: true,
+      message: 'domains successfully whitelisted',
+      result,
+    };
+  }
+
+  @ApiExcludeEndpoint()
+  @Put('remove_whitelist_domains')
+  @Version('1')
+  @HttpCode(200)
+  @Public()
+  async deleteWhiteListDomain(
+    @Body() whiteListDomainsDto: WhiteListDomainsDto,
+  ): Promise<any> {
+    console.log('remove whitelisted domains request received');
+    const result = await this.appService.deleteDomainFromWhiteList(
+      whiteListDomainsDto,
+    );
+    return {
+      success: true,
+      message: 'domain successfully removed from whitelist',
+      result,
     };
   }
 }

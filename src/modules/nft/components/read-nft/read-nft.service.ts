@@ -154,7 +154,6 @@ export class ReadNftService {
 
       const fetchNft = new FetchNftDto(network, token_address);
 
-      fetchFromDB ? console.log('fetching from db') : '';
       //Fetch from DB, if refresh is false
       const dbNftInfo = fetchFromDB
         ? await this.nftInfoAccessor.readNft({
@@ -175,11 +174,9 @@ export class ReadNftService {
       }
 
       if (dbNftInfo) {
-        console.log('db');
         return getNftDbResponseFromNftInfo(dbNftInfo);
       } else {
         //not available in DB, fetch from blockchain
-        console.log('bc');
         return (
           await this.remoteDataFetcher.fetchNftDetails(fetchNft)
         ).getNftDbResponse();

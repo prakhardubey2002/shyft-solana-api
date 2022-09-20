@@ -93,6 +93,8 @@ export const newProgramErrorFrom = (
       stack,
     );
     return obj;
+  } else if (error instanceof ProgramError) {
+    return error;
   } else {
     let errName = 'unknown';
     if (errorName !== undefined) {

@@ -12,6 +12,9 @@ export class User {
   api_key: string;
 
   @Prop({ required: false })
+  white_listed_domains: string[];
+
+  @Prop({ required: false })
   name: string;
 
   @Prop({ required: false })

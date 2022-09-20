@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from 'src/dal/user.schema';
+import { User, UserDocument } from 'src/dal/user-repo/user.schema';
 
 @Injectable()
 export class AuthService {
