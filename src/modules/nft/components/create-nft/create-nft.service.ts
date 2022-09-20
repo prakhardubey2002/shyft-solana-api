@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
 import { NodeWallet } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NftCreationEvent } from 'src/modules/helper/db-sync/db.events';
+import { NftCreationEvent } from 'src/modules/data-cache/db-sync/db.events';
 import { ObjectId } from 'mongoose';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';

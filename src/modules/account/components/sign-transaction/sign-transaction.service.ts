@@ -15,7 +15,9 @@ export class SignTransactionService {
       const connection = Utility.connectRpc(network);
       const feePayer = Keypair.fromSecretKey(decode(private_key));
       const wallet = new NodeWallet(feePayer);
-      const recoveredTransaction = Transaction.from(Buffer.from(encoded_transaction, 'base64'));
+      const recoveredTransaction = Transaction.from(
+        Buffer.from(encoded_transaction, 'base64'),
+      );
       const signedTx = await wallet.signTransaction(recoveredTransaction);
       const confirmTransaction = await connection.sendRawTransaction(
         signedTx.serialize(),
@@ -23,7 +25,7 @@ export class SignTransactionService {
       return confirmTransaction;
     } catch (error) {
       console.log(error);
-      throw newProgramErrorFrom(error, "sign_transaction_error");
+      throw newProgramErrorFrom(error, 'sign_transaction_error');
     }
   }
 }

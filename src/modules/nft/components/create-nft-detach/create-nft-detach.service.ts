@@ -29,7 +29,7 @@ import {
 import { Utility, ServiceCharge } from 'src/common/utils/utils';
 import { newProgramErrorFrom, ProgramError } from 'src/core/program-error';
 
-import { NftCreationEvent } from 'src/modules/helper/db-sync/db.events';
+import { NftCreationEvent } from 'src/modules/data-cache/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 export interface CreateParams {
   network: WalletAdapterNetwork;

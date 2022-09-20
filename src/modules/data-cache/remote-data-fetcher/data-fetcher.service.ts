@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { Connection, programs } from '@metaplex/js';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
@@ -14,14 +13,11 @@ import {
   FetchAllNftDto,
   NftData,
   FetchAllNftByCreatorDto,
-  NftDbResponse,
 } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { Account } from 'src/common/utils/account';
-import { NftDeleteEvent, NftCacheEvent } from '../db-sync/db.events';
+import { NftDeleteEvent } from '../db-sync/db.events';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
-import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
-import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 
 export interface RawMetaData {
   pubkey: PublicKey;

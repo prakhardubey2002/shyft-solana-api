@@ -6,10 +6,8 @@ import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
 import {
-  FetchNftDto,
   FetchAllNftDto,
   FetchAllNftByCreatorDto,
-  NftDbResponse,
 } from '../remote-data-fetcher/dto/data-fetcher.dto';
 import {
   NftCacheEvent,
@@ -20,9 +18,7 @@ import {
   NftReadInWalletEvent,
 } from './db.events';
 import * as fastq from 'fastq';
-import { queueAsPromised } from 'fastq'
-import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { queueAsPromised } from 'fastq';
 
 const afterNftCreationWaitTime_ms = 12000;
 const afterNftUpdateWaitTime_ms = 12000;
@@ -35,8 +31,15 @@ export class NFtDbSyncService {
     private nftInfoAccessor: NftInfoAccessor,
     private s3: S3UploaderService,
   ) {}
-  fetchNftQueue: queueAsPromised = fastq.promise<NFtDbSyncService, NftSyncEvent, NftInfo>(this, this.getNftDbDto, 100);
-  cacheNftQueue: queueAsPromised = fastq.promise<NFtDbSyncService, NftCacheEvent>(this, this.cacheNft, 10);
+  fetchNftQueue: queueAsPromised = fastq.promise<
+    NFtDbSyncService,
+    NftSyncEvent,
+    NftInfo
+  >(this, this.getNftDbDto, 100);
+  cacheNftQueue: queueAsPromised = fastq.promise<
+    NFtDbSyncService,
+    NftCacheEvent
+  >(this, this.cacheNft, 10);
 
   @OnEvent('nft.created', { async: true })
   async handleNftCreatedEvent(event: NftCreationEvent): Promise<any> {
@@ -59,7 +62,11 @@ export class NFtDbSyncService {
   private async syncAndCache(response: NftInfo) {
     const result = await this.nftInfoAccessor.updateNft(response);
 
-    const nftCacheEvent = new NftCacheEvent(result?.image_uri, result?.mint, result?.network);
+    const nftCacheEvent = new NftCacheEvent(
+      result?.image_uri,
+      result?.mint,
+      result?.network,
+    );
     this.eventEmitter.emit('nft.cache', nftCacheEvent);
   }
 
@@ -97,7 +104,9 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('all.nfts.read.by.creator', { async: true })
-  async handleAllNftReadByCreatorEvent(event: NftReadByCreatorEvent): Promise<any> {
+  async handleAllNftReadByCreatorEvent(
+    event: NftReadByCreatorEvent,
+  ): Promise<any> {
     try {
       let nfts: NftInfo[];
       if (event.nfts) {
@@ -105,8 +114,15 @@ export class NFtDbSyncService {
       } else {
         const defaultPage = 1;
         const defaultSize = 20;
-        const fetchAllNftDto = new FetchAllNftByCreatorDto(event.network, event.creator, defaultPage, defaultSize);
-        const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(fetchAllNftDto);
+        const fetchAllNftDto = new FetchAllNftByCreatorDto(
+          event.network,
+          event.creator,
+          defaultPage,
+          defaultSize,
+        );
+        const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(
+          fetchAllNftDto,
+        );
         nfts = chainNfts.nfts.map((nft) => nft.getNftInfoDto());
       }
       await this.nftInfoAccessor.updateManyNft(nfts);

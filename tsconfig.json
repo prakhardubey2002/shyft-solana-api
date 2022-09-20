@@ -12,7 +12,7 @@
     "baseUrl": "./",
     "paths": {
       "@solana/spl-token": [
-         "node_modules/@solana/spl-token/lib/types/index.d.ts"
+        "node_modules/@solana/spl-token/lib/types/index.d.ts"
       ],
     },
     "incremental": true,
@@ -23,5 +23,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

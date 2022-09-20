@@ -2,11 +2,11 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { RavenModule, RavenInterceptor } from 'nest-raven';
 import { MongooseModule } from '@nestjs/mongoose';
-import { DbModule } from '../helper/db.module';
+import { DataCacheModule } from '../data-cache/data-cache.module';
 import { User, UserSchema } from 'src/dal/user.schema';
 import { AccountController } from './account.controller';
 import { WalletService } from './account.service';
-import { RemoteDataFetcherService } from '../helper/remote-data-fetcher/data-fetcher.service';
+import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
 import { SendSolDetachController } from './components/send-sol-detach/send-sol-detach.controller';
 import { SignTransactionController } from './components/sign-transaction/sign-transaction.controller';
 import { SendSolDetachService } from './components/send-sol-detach/send-sol-detach.service';
@@ -26,7 +26,7 @@ import { SemiWalletSchema, SemiCustodialWallet } from 'src/dal/semi-wallet-repo/
     MongooseModule.forFeature([
       { name: SemiCustodialWallet.name, schema: SemiWalletSchema },
     ]),
-    DbModule,
+    DataCacheModule,
   ],
   exports: [SemiWalletAccessor, WalletService],
   providers: [

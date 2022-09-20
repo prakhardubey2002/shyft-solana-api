@@ -84,14 +84,30 @@ export class NftCacheEvent {
 }
 
 export class MarketplaceCreationEvent {
-  constructor(network: WalletAdapterNetwork, address: string, authority: string, currencyAddress: string, feePayer: string, feeReceipient: string, treasuryAddress: string, creator: string, transactionFee: number, currencySymbol: string, apiKeyId: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
+  constructor(
+    network: WalletAdapterNetwork,
+    address: string,
+    authority: string,
+    currencyAddress: string,
+    feePayer: string,
+    feeRecipientAccount: string,
+    feeRecipient: string,
+    treasuryAddress: string,
+    creator: string,
+    transactionFee: number,
+    currencySymbol: string,
+    apiKeyId: ObjectId,
+    canChangePrice?: boolean,
+    requireSignOff?: boolean,
+  ) {
     this.network = network;
     this.address = address;
     this.authority = authority;
     this.currencyAddress = currencyAddress;
     this.feePayer = feePayer;
     this.treasuryAddress = treasuryAddress;
-    this.feeReceipient = feeReceipient;
+    this.feeRecipient = feeRecipient;
+    this.feeRecipientAccount = feeRecipientAccount;
     this.creator = creator;
     this.transactionFee = transactionFee;
     this.apiKeyId = apiKeyId;
@@ -106,7 +122,8 @@ export class MarketplaceCreationEvent {
   currencySymbol: string;
   apiKeyId: ObjectId;
   feePayer: string;
-  feeReceipient: string;
+  feeRecipient: string;
+  feeRecipientAccount: string;
   treasuryAddress: string;
   creator: string;
   transactionFee: number;
@@ -115,7 +132,20 @@ export class MarketplaceCreationEvent {
 }
 
 export class UpdateMarketplaceEvent {
-  constructor(address: string, currencyAddress: string, currencySymbol: string, feePayer: string, feeRecipient: string, transactionFee: number, authority: string, creator?: string, apiKeyId?: ObjectId, canChangePrice?: boolean, requireSignOff?: boolean) {
+  constructor(
+    address: string,
+    currencyAddress: string,
+    currencySymbol: string,
+    feePayer: string,
+    feeRecipient: string,
+    feeRecipientAccount: string,
+    transactionFee: number,
+    authority: string,
+    creator?: string,
+    apiKeyId?: ObjectId,
+    canChangePrice?: boolean,
+    requireSignOff?: boolean,
+  ) {
     this.address = address;
     this.currencyAddress = currencyAddress;
     this.currencySymbol = currencySymbol;
@@ -123,11 +153,12 @@ export class UpdateMarketplaceEvent {
     this.feeRecipient = feeRecipient;
     this.transactionFee = transactionFee;
     this.authority = authority;
+    this.feeRecipientAccount = feeRecipientAccount;
     if (canChangePrice !== undefined) {
-      this.canChangeSalePrice = canChangePrice
+      this.canChangeSalePrice = canChangePrice;
     }
     if (requireSignOff !== undefined) {
-      this.requiresSignOff = requireSignOff
+      this.requiresSignOff = requireSignOff;
     }
     if (apiKeyId !== undefined) {
       this.apiKeyId = apiKeyId;
@@ -143,6 +174,7 @@ export class UpdateMarketplaceEvent {
   authority: string;
   feePayer: string;
   feeRecipient: string;
+  feeRecipientAccount: string;
   transactionFee: number;
   canChangeSalePrice: boolean;
   requiresSignOff: boolean;
@@ -151,7 +183,18 @@ export class UpdateMarketplaceEvent {
 }
 
 export class ListingCreatedEvent {
-  constructor(ts: string, mp: string, price: number, nft: string, seller: string, apiKeyId: ObjectId, network: WalletAdapterNetwork, receipt: string, createdAt: DateTime, symbol: string) {
+  constructor(
+    ts: string,
+    mp: string,
+    price: number,
+    nft: string,
+    seller: string,
+    apiKeyId: ObjectId,
+    network: WalletAdapterNetwork,
+    receipt: string,
+    createdAt: DateTime,
+    symbol: string,
+  ) {
     this.listState = ts;
     this.apiKeyId = apiKeyId;
     this.marketplaceAddress = mp;
@@ -177,7 +220,14 @@ export class ListingCreatedEvent {
 }
 
 export class ListingSoldEvent {
-  constructor(listState: string, buyerAddress: string, nftAddress: string, network: WalletAdapterNetwork, purchasedAt: DateTime, purchaseReceipt?: string) {
+  constructor(
+    listState: string,
+    buyerAddress: string,
+    nftAddress: string,
+    network: WalletAdapterNetwork,
+    purchasedAt: DateTime,
+    purchaseReceipt?: string,
+  ) {
     this.listState = listState;
     this.buyerAddress = buyerAddress;
     this.nftAddress = nftAddress;
@@ -209,20 +259,32 @@ export class ListingCancelledEvent {
 }
 
 export class MarketplaceInitiationEvent {
-  constructor(network: WalletAdapterNetwork, address: string, apiKeyId: ObjectId) {
+  constructor(
+    network: WalletAdapterNetwork,
+    address: string,
+    apiKeyId: ObjectId,
+    feeRecipient: string,
+  ) {
     this.network = network;
     this.address = address;
     this.apiKeyId = apiKeyId;
+    this.feeRecipient = feeRecipient;
   }
   network: WalletAdapterNetwork;
   address: string;
   apiKeyId: ObjectId;
+  feeRecipient: string;
 }
 
 export type MarketplaceUpdateInitiationEvent = MarketplaceInitiationEvent;
 
 export class ListingInitiationEvent {
-  constructor(network: WalletAdapterNetwork, listState: PublicKey, auctionHouse: PublicKey, apiKeyId: ObjectId) {
+  constructor(
+    network: WalletAdapterNetwork,
+    listState: PublicKey,
+    auctionHouse: PublicKey,
+    apiKeyId: ObjectId,
+  ) {
     this.network = network;
     this.listState = listState;
     this.apiKeyId = apiKeyId;
@@ -235,7 +297,12 @@ export class ListingInitiationEvent {
 }
 
 export class SaleInitiationEvent {
-  constructor(network: WalletAdapterNetwork, nftAddress: string, listState: PublicKey, purchaseReceipt: PublicKey) {
+  constructor(
+    network: WalletAdapterNetwork,
+    nftAddress: string,
+    listState: PublicKey,
+    purchaseReceipt: PublicKey,
+  ) {
     this.network = network;
     this.nftAddress = nftAddress;
     this.listState = listState;

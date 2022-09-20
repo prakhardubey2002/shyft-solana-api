@@ -30,7 +30,7 @@ import {
   ListingCancelledEvent,
   ListingCreatedEvent,
   ListingSoldEvent,
-} from '../helper/db-sync/db.events';
+} from '../data-cache/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GetListingsDto } from './dto/get-listings.dto';
 import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
@@ -48,8 +48,9 @@ import {
 import { newProgramErrorFrom } from 'src/core/program-error';
 import { Utility } from 'src/common/utils/utils';
 import { GetStatsDto } from './dto/get-stats.dto';
-import { RemoteDataFetcherService } from '../helper/remote-data-fetcher/data-fetcher.service';
+import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
 import { ReadNftService } from '../nft/components/read-nft/read-nft.service';
+import { Listing } from 'src/dal/listing-repo/listing.schema';
 
 class CreateListingServiceDto {
   apiKeyId: ObjectId;
@@ -227,61 +228,107 @@ export class ListingService {
     }
   }
 
-  async findListing(getListingDetailsDto: GetListingDetailsDto): Promise<any> {
+  async getListingDetail(
+    getListingDetailsDto: GetListingDetailsDto,
+  ): Promise<any> {
+    const {
+      network,
+      marketplace_address: mpAddress,
+      list_state: listState,
+    } = getListingDetailsDto;
     try {
-      const connection = Utility.connectRpc(getListingDetailsDto.network);
-      const metaplex = Metaplex.make(connection, {
-        cluster: getListingDetailsDto.network,
-      });
-      const auctionsClient = metaplex.auctions();
-      const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(
-          new PublicKey(getListingDetailsDto.marketplace_address),
-        )
-        .run();
-
-      const auctionHouseClient = auctionsClient.for(auctionHouse);
-      const listing = await auctionHouseClient
-        .findListingByAddress(toPublicKey(getListingDetailsDto.list_state))
-        .run();
-
-      const price =
-        listing.price.basisPoints.toNumber() /
-        Math.pow(10, listing.price.currency.decimals);
-      const currencySymbol = await Utility.token.getTokenSymbol(
-        getListingDetailsDto.network,
-        auctionHouse.treasuryMint.address.toBase58(),
-      );
-      const nftAddress = listing.asset.address.toBase58();
-      const nft = await this.nftReadService.readNft({
-        network: getListingDetailsDto.network,
-        token_address: nftAddress,
-      });
-
-      const result: ListingInfoResponseDto = {
-        network: getListingDetailsDto.network,
-        marketplace_address: listing.auctionHouse.address.toBase58(),
-        seller_address: listing.sellerAddress.toBase58(),
-        price: price,
-        nft_address: nftAddress,
-        nft,
-        list_state: listing.tradeStateAddress.toBase58(),
-        currency_symbol: currencySymbol,
-        created_at: new Date(listing.createdAt.toNumber() * 1000),
-      };
-      if (listing.receiptAddress != null) {
-        result.receipt = listing.receiptAddress.toBase58();
+      const dbListing = await this.listingRepo.getListing(network, listState);
+      if (dbListing === undefined) {
+        return await this.fetchFromBlockchain(network, mpAddress, listState);
+      } else {
+        return await this.fetchFromDb(network, dbListing);
       }
-      if (listing.purchaseReceiptAddress != null) {
-        result.purchase_receipt = listing.purchaseReceiptAddress.toBase58();
-      }
-      if (listing.canceledAt != null) {
-        result.cancelled_at = new Date(listing.canceledAt.toNumber() * 1000);
-      }
-      return result;
     } catch (error) {
       throw newProgramErrorFrom(error, 'get_listing_error');
     }
+  }
+
+  private async fetchFromDb(network, dbListing: Listing) {
+    const nft = await this.nftReadService.readNft({
+      network: network,
+      token_address: dbListing.nft_address,
+    });
+    const result: ListingInfoResponseDto = {
+      network: network,
+      marketplace_address: dbListing.marketplace_address,
+      seller_address: dbListing.seller_address,
+      price: dbListing.price,
+      nft_address: dbListing.nft_address,
+      nft: nft,
+      list_state: dbListing.list_state,
+      currency_symbol: dbListing.currency_symbol,
+      created_at: dbListing.created_at,
+    };
+    if (dbListing.receipt_address != null) {
+      result.receipt = dbListing.receipt_address;
+    }
+    if (dbListing.purchase_receipt_address != null) {
+      result.purchase_receipt = dbListing.purchase_receipt_address;
+    }
+    if (dbListing.cancelled_at != null) {
+      result.cancelled_at = new Date(dbListing.cancelled_at);
+    }
+    return result;
+  }
+
+  private async fetchFromBlockchain(
+    network,
+    mpAddress: string,
+    listState: string,
+  ): Promise<ListingInfoResponseDto> {
+    const connection = Utility.connectRpc(network);
+    const metaplex = Metaplex.make(connection, {
+      cluster: network,
+    });
+    const auctionsClient = metaplex.auctions();
+    const auctionHouse = await auctionsClient
+      .findAuctionHouseByAddress(new PublicKey(mpAddress))
+      .run();
+
+    const auctionHouseClient = auctionsClient.for(auctionHouse);
+    const listing = await auctionHouseClient
+      .findListingByAddress(toPublicKey(listState))
+      .run();
+
+    const price =
+      listing.price.basisPoints.toNumber() /
+      Math.pow(10, listing.price.currency.decimals);
+    const currencySymbol = await Utility.token.getTokenSymbol(
+      network,
+      auctionHouse.treasuryMint.address.toBase58(),
+    );
+    const nftAddress = listing.asset.address.toBase58();
+    const nft = await this.nftReadService.readNft({
+      network: network,
+      token_address: nftAddress,
+    });
+
+    const result: ListingInfoResponseDto = {
+      network: network,
+      marketplace_address: listing.auctionHouse.address.toBase58(),
+      seller_address: listing.sellerAddress.toBase58(),
+      price: price,
+      nft_address: nftAddress,
+      nft,
+      list_state: listing.tradeStateAddress.toBase58(),
+      currency_symbol: currencySymbol,
+      created_at: new Date(listing.createdAt.toNumber() * 1000),
+    };
+    if (listing.receiptAddress != null) {
+      result.receipt = listing.receiptAddress.toBase58();
+    }
+    if (listing.purchaseReceiptAddress != null) {
+      result.purchase_receipt = listing.purchaseReceiptAddress.toBase58();
+    }
+    if (listing.canceledAt != null) {
+      result.cancelled_at = new Date(listing.canceledAt.toNumber() * 1000);
+    }
+    return result;
   }
 
   async cancelListing(cancelListingDto: UnlistAttachedDto): Promise<any> {
@@ -362,6 +409,7 @@ export class ListingService {
         network,
         marketplace_address,
       );
+      console.log(dataSet);
       const result = await Promise.all(
         dataSet.map(async (listing) => {
           const nft = await this.nftReadService.readNft({

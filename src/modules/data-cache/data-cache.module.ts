@@ -39,4 +39,4 @@ import { S3UploaderService } from 'src/common/utils/s3-uploader';
   ],
   exports: [NftInfoAccessor, NFtDbSyncService, RemoteDataFetcherService, ListingDbSyncService],
 })
-export class DbModule { }
+export class DataCacheModule { }

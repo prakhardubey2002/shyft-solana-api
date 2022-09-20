@@ -11,7 +11,10 @@ import * as Sentry from '@sentry/node';
 import { configuration } from './common/configs/config';
 import { AppModule } from './app.module';
 import { ApiMetricAccessor } from './dal/api-repo/api-metric.accessor';
-import { HttpExceptionFilter, ProgramErrorFilter } from './filters/http-exception.filter';
+import {
+  HttpExceptionFilter,
+  ProgramErrorFilter,
+} from './filters/http-exception.filter';
 import { ApiMonitorService } from './modules/api-monitor/api.event-handeler';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthService } from './modules/auth/auth.service';

@@ -5,7 +5,10 @@ import {
   TOKEN_PROGRAM_ID,
   createInitializeMintInstruction,
 } from '@solana/spl-token';
-import { createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  createCreateMetadataAccountV2Instruction,
+  DataV2,
+} from '@metaplex-foundation/mpl-token-metadata';
 import {
   Keypair,
   PublicKey,
@@ -80,7 +83,8 @@ export class CreateTokenService {
         ),
       );
 
-      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      const blockHash = (await connection.getLatestBlockhash('finalized'))
+        .blockhash;
       createNewTokenTransaction.recentBlockhash = blockHash;
       createNewTokenTransaction.feePayer = feePayer.publicKey;
       createNewTokenTransaction.partialSign(mintKeypair);
@@ -94,7 +98,10 @@ export class CreateTokenService {
     }
   }
 
-  async createTokenDetach(createTokenDetachDto: CreateTokenDetachDto, uri: string): Promise<any> {
+  async createTokenDetach(
+    createTokenDetachDto: CreateTokenDetachDto,
+    uri: string,
+  ): Promise<any> {
     try {
       const { network, wallet, name, symbol, decimals } = createTokenDetachDto;
 
@@ -154,12 +161,16 @@ export class CreateTokenService {
         ),
       );
 
-      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      const blockHash = (await connection.getLatestBlockhash('finalized'))
+        .blockhash;
       createNewTokenTransaction.recentBlockhash = blockHash;
       createNewTokenTransaction.feePayer = addressPubKey;
       createNewTokenTransaction.partialSign(mintKeypair);
 
-      const serializedTransaction = createNewTokenTransaction.serialize({ requireAllSignatures: false, verifySignatures: false });
+      const serializedTransaction = createNewTokenTransaction.serialize({
+        requireAllSignatures: false,
+        verifySignatures: false,
+      });
       const transactionBase64 = serializedTransaction.toString('base64');
 
       return { encoded_transaction: transactionBase64, mint: mintKeypair.publicKey.toBase58() };

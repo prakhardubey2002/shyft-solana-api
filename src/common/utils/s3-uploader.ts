@@ -1,12 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { S3Client, DeleteObjectCommand, S3, HeadObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import * as mime from 'mime';
 
 import { configuration } from '../configs/config';
 import { Utility } from './utils';
 
-const { awsAccessKeyId, awsSecretAccessKey, awsRegion, sesApiVersion, s3Bucket } = configuration();
+const {
+  awsAccessKeyId,
+  awsSecretAccessKey,
+  awsRegion,
+  sesApiVersion,
+  s3Bucket,
+} = configuration();
 
 const client = new S3Client({
   region: awsRegion,
@@ -69,7 +78,7 @@ export class S3UploaderService {
       return response;
     } catch (error) {
       console.error(error);
-      throw new Error('Delete operation failed')
+      throw new Error('Delete operation failed');
     }
   }
 }

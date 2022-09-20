@@ -5,7 +5,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { BurnNftDto } from './dto/burn-nft.dto';
-import { NftDeleteEvent } from '../../../helper/db-sync/db.events';
+import { NftDeleteEvent } from '../../../data-cache/db-sync/db.events';
 import { Utility } from 'src/common/utils/utils';
 
 @Injectable()

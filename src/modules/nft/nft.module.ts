@@ -15,7 +15,7 @@ import { User, UserSchema } from 'src/dal/user.schema';
 import { StorageMetadataController } from './components/storage-metadata/storage-metadata.controller';
 import { StorageMetadataService } from './components/storage-metadata/storage-metadata.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { DbModule } from '../helper/db.module';
+import { DataCacheModule } from '../data-cache/data-cache.module';
 import { SearchNftcontroller } from './components/search-nft/search-nft.controller';
 import { SearchNftService } from './components/search-nft/search-nft.service';
 import { TransferNftService } from './components/transfer-nft/transfer-nft.service';
@@ -45,7 +45,7 @@ import { AccountModule } from '../account/account.module';
     RavenModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     EventEmitterModule.forRoot(),
-    DbModule,
+    DataCacheModule,
     AccountModule,
   ],
   providers: [

@@ -6,7 +6,7 @@ import {
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
 import { BurnNftDetachDto } from './dto/burn-nft-detach.dto';
-import { NftDeleteEvent } from '../../../helper/db-sync/db.events';
+import { NftDeleteEvent } from '../../../data-cache/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Utility } from 'src/common/utils/utils';
 

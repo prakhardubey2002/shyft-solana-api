@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NftInfo, NftInfoDocument } from './nft-info.schema';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 @Injectable()
 export class NftInfoAccessor {
-  constructor(@InjectModel(NftInfo.name) public NftInfoDataModel: Model<NftInfoDocument>) { }
+  constructor(
+    @InjectModel(NftInfo.name) public NftInfoDataModel: Model<NftInfoDocument>,
+  ) {}
 
   public async insert(data: NftInfo): Promise<any> {
     try {
@@ -30,7 +33,10 @@ export class NftInfoAccessor {
   public async updateNft(data: NftInfo): Promise<NftInfoDocument> {
     try {
       const filter = { mint: data?.mint, network: data?.network };
-      const result = await this.NftInfoDataModel.findOneAndUpdate(filter, data, {
+      const result = await this.NftInfoDataModel.findOneAndUpdate(
+        filter,
+        data,
+        {
           upsert: true,
           new: true,
         },
@@ -45,7 +51,9 @@ export class NftInfoAccessor {
   public async findOne(filter: object): Promise<NftInfoDocument> {
     try {
       if (filter) {
-        const result = await this.NftInfoDataModel.findOne(filter).sort({ updated_at: 'desc' });
+        const result = await this.NftInfoDataModel.findOne(filter).sort({
+          updated_at: 'desc',
+        });
         return result;
       }
     } catch (err) {
@@ -64,7 +72,11 @@ export class NftInfoAccessor {
     }
   }
 
-  public async find(filter: object, page?: number, size?: number): Promise<NftInfoDocument[]> {
+  public async find(
+    filter: object,
+    page?: number,
+    size?: number,
+  ): Promise<NftInfoDocument[]> {
     try {
       let result: NftInfoDocument[];
       if (page && size) {
@@ -73,7 +85,9 @@ export class NftInfoAccessor {
           .limit(size)
           .skip((page - 1) * size);
       } else {
-        result = await this.NftInfoDataModel.find(filter).sort({ updated_at: 'desc' });
+        result = await this.NftInfoDataModel.find(filter).sort({
+          updated_at: 'desc',
+        });
       }
       return result;
     } catch (err) {
@@ -108,6 +122,17 @@ export class NftInfoAccessor {
 
   public async deleteNft(filter: object): Promise<any> {
     const result = await this.NftInfoDataModel.deleteOne(filter);
+    return result;
+  }
+
+  public async updateNftOwner(
+    network: WalletAdapterNetwork,
+    nftAddress: string,
+    buyerAddress: string,
+  ): Promise<any> {
+    const filter = { network: network, mint: nftAddress };
+    const update = { owner: buyerAddress };
+    const result = await this.NftInfoDataModel.updateOne(filter, update);
     return result;
   }
 }

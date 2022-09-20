@@ -11,8 +11,8 @@ import { SendSolDto } from './dto/send-sol.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { RemoteDataFetcherService } from '../helper/remote-data-fetcher/data-fetcher.service';
-import { FetchAllNftDto } from '../helper/remote-data-fetcher/dto/data-fetcher.dto';
+import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
+import { FetchAllNftDto } from '../data-cache/remote-data-fetcher/dto/data-fetcher.dto';
 import {
   getAllDomains,
   performReverseLookup,

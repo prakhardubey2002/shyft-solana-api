@@ -13,8 +13,8 @@ import { Blob } from 'nft.storage';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { UpdateDetachOpenApi, UpdateOpenApi } from './open-api';
-import { RemoteDataFetcherService } from 'src/modules/helper/remote-data-fetcher/data-fetcher.service';
-import { FetchNftDto } from 'src/modules/helper/remote-data-fetcher/dto/data-fetcher.dto';
+import { RemoteDataFetcherService } from 'src/modules/data-cache/remote-data-fetcher/data-fetcher.service';
+import { FetchNftDto } from 'src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
 

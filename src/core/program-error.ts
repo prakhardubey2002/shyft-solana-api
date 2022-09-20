@@ -33,8 +33,8 @@ export class ProgramError extends Error {
       message: this.message,
       detail: this.detail,
       where: this.where,
-      stack: this.stack,
       params: this.params,
+      stack: this.stack,
     });
     console.log(logStr);
     return logStr;
@@ -82,6 +82,7 @@ export const newProgramErrorFrom = (
     const errMsg = error.message;
     const errDetails = error.title + ' ' + error.problem + ' ' + error.solution;
     const errName = error.key;
+    const stack = error.cause?.stack ?? '';
     const obj = new ProgramError(
       errName,
       HttpStatus.BAD_REQUEST,
@@ -89,6 +90,7 @@ export const newProgramErrorFrom = (
       errDetails,
       error.source,
       { logs: error.logs },
+      stack,
     );
     return obj;
   } else {
