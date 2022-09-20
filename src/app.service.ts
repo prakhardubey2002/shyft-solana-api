@@ -23,7 +23,7 @@ export class AppService {
   async getApiKey(getApiKeyDto: GetApiKeyDto): Promise<any> {
     try {
       let api_key: string;
-      let result = await this.userModel.findOne(getApiKeyDto);
+      let result = await this.userModel.findOne({ email: getApiKeyDto.email });
       if (!result) {
         api_key = await nanoid();
         result = await this.userModel.create({
@@ -45,6 +45,8 @@ export class AppService {
       );
       return { api_key };
     } catch (error) {
+      console.log(error);
+
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
