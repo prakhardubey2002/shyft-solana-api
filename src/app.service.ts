@@ -59,7 +59,10 @@ export class AppService {
     try {
       const { api_key: apiKey } = dto;
       const whDomains = dto.getDomainList();
-      await this.userRepo.whilteListDomains(apiKey, whDomains);
+      const result = await this.userRepo.whilteListDomains(apiKey, whDomains);
+      return {
+        whitelist_domains: result,
+      };
     } catch (error) {
       throw newProgramErrorFrom(error, 'whitelisting_domains_error');
     }
@@ -69,7 +72,13 @@ export class AppService {
     try {
       const { api_key: apiKey } = dto;
       const rmDomains = dto.getDomainList();
-      await this.userRepo.removeWhiteListedDomain(apiKey, rmDomains);
+      const result = await this.userRepo.removeWhiteListedDomain(
+        apiKey,
+        rmDomains,
+      );
+      return {
+        whitelist_domains: result,
+      };
     } catch (error) {
       throw newProgramErrorFrom(error, 'un_whitelisting_domains_error');
     }

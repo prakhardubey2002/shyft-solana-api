@@ -28,8 +28,8 @@ export class UserRepo {
       const update = {
         white_listed_domains: exisitingDomains,
       };
-      const result = await this.UserModel.updateOne(filter, update);
-      return result;
+      await this.UserModel.updateOne(filter, update);
+      return exisitingDomains;
     } catch (err) {
       throw new Error(err);
     }
@@ -58,8 +58,8 @@ export class UserRepo {
       const update = {
         white_listed_domains: remainingDomains,
       };
-      const result = await this.UserModel.updateOne(filter, update);
-      return result;
+      await this.UserModel.updateOne(filter, update);
+      return remainingDomains;
     } catch (err) {
       throw new Error(err);
     }
