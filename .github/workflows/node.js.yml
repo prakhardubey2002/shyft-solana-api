@@ -53,8 +53,8 @@ jobs:
         ENV_SOL_MAINNET_BETA: ${{ secrets.SOL_MAINNET_BETA }}
         ENV_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         ENV_SOL_FALLBACK_MAINNET_BETA: ${{ secrets.SOL_FALLBACK_MAINNET_BETA }}
-        MP_TIMER_EXPIRATION: ${{secrets.MP_TIMER_EXPIRATION}}
-        MP_TIMER_INTERVAL: ${{secrets.MP_TIMER_INTERVAL}}
+        ENV_MP_TIMER_EXPIRATION: ${{secrets.MP_TIMER_EXPIRATION}}
+        ENV_MP_TIMER_INTERVAL: ${{secrets.MP_TIMER_INTERVAL}}
 
     - name: Build and Test
       run: |
@@ -103,8 +103,8 @@ jobs:
         ENV_SOL_MAINNET_BETA: ${{ secrets.SOL_MAINNET_BETA }}
         ENV_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         ENV_SOL_FALLBACK_MAINNET_BETA: ${{ secrets.SOL_FALLBACK_MAINNET_BETA }}
-        MP_TIMER_EXPIRATION: ${{secrets.MP_TIMER_EXPIRATION}}
-        MP_TIMER_INTERVAL: ${{secrets.MP_TIMER_INTERVAL}}
+        ENV_MP_TIMER_EXPIRATION: ${{secrets.MP_TIMER_EXPIRATION}}
+        ENV_MP_TIMER_INTERVAL: ${{secrets.MP_TIMER_INTERVAL}}
 
 
     - name: Build

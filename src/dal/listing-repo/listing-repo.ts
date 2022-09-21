@@ -22,8 +22,6 @@ export class ListingRepo {
       const result = await this.ListingModel.updateOne(filter, data, {
         upsert: true,
       });
-      console.log('List data inserted in db', data);
-      console.log(result);
       return result;
     } catch (err) {
       throw new Error(err);
