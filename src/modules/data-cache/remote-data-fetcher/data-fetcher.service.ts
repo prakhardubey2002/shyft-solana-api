@@ -124,7 +124,7 @@ export class RemoteDataFetcherService {
       const connection = Utility.connectRpc(network);
       if (!walletAddress) {
         throw new HttpException(
-          'Please provide any public or private key',
+          'Incorrect Wallet Address',
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -137,23 +137,38 @@ export class RemoteDataFetcherService {
   }
 
   async fetchAllNftDetails(fetchAllNftDto: FetchAllNftDto): Promise<NftData[]> {
-    let nfts = await this.fetchAllNfts(fetchAllNftDto);
-    //Filter based on updateAuthority if any
-    if (fetchAllNftDto.updateAuthority) {
-      nfts = nfts.filter((nft) => {
-        return nft.updateAuthority === fetchAllNftDto.updateAuthority;
-      });
+    try {
+      let onChainNfts = await this.fetchAllNfts(fetchAllNftDto);
+      //Filter based on updateAuthority if any
+      if (fetchAllNftDto.updateAuthority) {
+        onChainNfts = onChainNfts.filter((nft) => {
+          return nft.updateAuthority === fetchAllNftDto.updateAuthority;
+        });
+      }
+      const nfts = await this.addOffChainDataAndOwner(
+        onChainNfts,
+        fetchAllNftDto.walletAddress,
+      );
+      return nfts;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
+  }
 
+  async addOffChainDataAndOwner(
+    onChainNfts: MetadataData[],
+    walletAddress: string,
+  ): Promise<NftData[]> {
     const result: NftData[] = [];
 
     //Run all offchain requests parallely instead of one by one
     const promises: Promise<NftData>[] = [];
-    for (const oncd of nfts) {
+    for (const oncd of onChainNfts) {
       try {
         promises.push(Utility.request(oncd.data.uri));
         //No need to fetch owner, we have the wallet Id
-        const owner = fetchAllNftDto.walletAddress;
+        const owner = walletAddress;
         result.push(new NftData(oncd, null, owner));
       } catch (error) {
         //Ignore off chain data that cant be fetched or is taking too long.

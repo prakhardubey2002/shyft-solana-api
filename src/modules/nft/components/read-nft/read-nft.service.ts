@@ -5,70 +5,126 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   NftReadByCreatorEvent,
   NftSyncEvent,
-  NftReadInWalletEvent,
+  NftWalletSyncEvent,
+  SaveNftsInDbEvent,
 } from '../../../data-cache/db-sync/db.events';
 import { RemoteDataFetcherService } from '../../../data-cache/remote-data-fetcher/data-fetcher.service';
 import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
 import {
   FetchAllNftByCreatorDto,
-  FetchAllNftDto,
   FetchNftDto,
   NftDbResponse,
 } from '../../../data-cache/remote-data-fetcher/dto/data-fetcher.dto';
 import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
 import { Utility } from 'src/common/utils/utils';
+import { ErrorCode } from 'src/common/utils/error-codes';
+import { configuration } from 'src/common/configs/config';
+import { newProgramErrorFrom } from 'src/core/program-error';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WalletDbSyncService } from 'src/modules/data-cache/db-sync/wallet-db-sync.service';
+
+const WALLET_SYNC_TIME_INTERVAL = parseInt(
+  configuration().walletSyncTimeInterval,
+);
 
 @Injectable()
 export class ReadNftService {
   constructor(
     private remoteDataFetcher: RemoteDataFetcherService,
     private nftInfoAccessor: NftInfoAccessor,
+    private walletSyncService: WalletDbSyncService,
     private eventEmitter: EventEmitter2,
   ) {}
 
   async readAllNfts(readAllNftDto: ReadAllNftDto): Promise<any> {
     try {
-      const { network, address, update_authority } = readAllNftDto;
-
-      //If refresh is not present in query string, we fetch from DB
-      const fetchFromDB = readAllNftDto.refresh === undefined;
-
-      const fetchAllNft = new FetchAllNftDto(
+      const {
         network,
-        address,
-        update_authority,
-      );
-      const dbFilter = { owner: address, network: network };
+        address: walletAddress,
+        update_authority: updateAuthority,
+      } = readAllNftDto;
 
-      if (update_authority) {
-        dbFilter['update_authority'] = update_authority;
-      }
-
-      const dbNftInfo = fetchFromDB
-        ? await this.nftInfoAccessor.find(dbFilter)
-        : false;
-
-      const nftReadInWalletEvent = new NftReadInWalletEvent(
-        address,
-        network,
-        update_authority,
-      );
-      this.eventEmitter.emit('all.nfts.read', nftReadInWalletEvent);
-
-      if (dbNftInfo && dbNftInfo.length) {
-        return dbNftInfo.map((nft) => {
-          return getNftDbResponseFromNftInfo(nft);
-        });
-      } else {
-        //not available in DB, fetch from blockchain
-        const chainNfts = await this.remoteDataFetcher.fetchAllNftDetails(
-          fetchAllNft,
+      const sinceLastWalletSyncSec =
+        await this.walletSyncService.getTimeElapsedUntilLastSyncSec(
+          network,
+          walletAddress,
         );
-        return chainNfts?.map((nft) => nft.getNftDbResponse());
+      console.log('time elapsed since last sync: ', sinceLastWalletSyncSec);
+
+      const isFetchFromDB =
+        readAllNftDto.refresh === undefined &&
+        sinceLastWalletSyncSec != ErrorCode.RECORD_NOT_FOUND;
+
+      if (isFetchFromDB) {
+        const isWalletResyncNeeded =
+          sinceLastWalletSyncSec > WALLET_SYNC_TIME_INTERVAL;
+
+        const response = await this.readNftsFromDB(
+          network,
+          walletAddress,
+          updateAuthority,
+          isWalletResyncNeeded,
+        );
+        return response;
       }
+
+      const response = await this.readNftsFromChain(
+        walletAddress,
+        network,
+        updateAuthority,
+      );
+      return response;
     } catch (error) {
-      throw new HttpException(error.message, error.status);
+      throw newProgramErrorFrom(error, 'read_all_nft_error');
     }
+  }
+
+  private async readNftsFromChain(
+    walletAddress: string,
+    network: WalletAdapterNetwork,
+    updateAuthority: string,
+  ): Promise<NftDbResponse[]> {
+    console.log('reading from chain');
+    const nftDataList = await this.remoteDataFetcher.fetchAllNftDetails({
+      walletAddress: walletAddress,
+      network: network,
+      updateAuthority: updateAuthority,
+    });
+
+    this.eventEmitter.emit(
+      'save.wallet.nfts',
+      new SaveNftsInDbEvent(network, walletAddress, nftDataList),
+    );
+    const response = nftDataList?.map((nft) => nft.getNftDbResponse());
+    return response;
+  }
+
+  private async readNftsFromDB(
+    network: WalletAdapterNetwork,
+    walletAddress: string,
+    updateAuthority: string,
+    isWalletResyncNeeded: boolean,
+  ): Promise<NftDbResponse[]> {
+    console.log('resync needed: ', isWalletResyncNeeded);
+    console.log('reading from DB');
+    const dbNftInfos =
+      await this.nftInfoAccessor.findNftsByOwnerAndUpdateAuthority(
+        network,
+        walletAddress,
+        updateAuthority,
+      );
+
+    if (isWalletResyncNeeded) {
+      const nftWalletReadEvent = new NftWalletSyncEvent(
+        network,
+        walletAddress,
+        updateAuthority,
+        dbNftInfos,
+      );
+      this.eventEmitter.emit('resync.wallet.nfts', nftWalletReadEvent);
+    }
+    const response = dbNftInfos.map((nft) => getNftDbResponseFromNftInfo(nft));
+    return response;
   }
 
   async readAllNftsByCreator(

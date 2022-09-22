@@ -13,18 +13,31 @@ import { Listing, ListingSchema } from 'src/dal/listing-repo/listing.schema';
 import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
 import { MarketplaceDbSyncService } from './db-sync/marketplace-db-sync';
 import { MarketplaceRepo } from 'src/dal/marketplace-repo/marketplace-repo';
-import { Marketplace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketplace.schema';
+import {
+  Marketplace,
+  MarketPlaceSchema,
+} from 'src/dal/marketplace-repo/marketplace.schema';
 import { S3UploaderService } from 'src/common/utils/s3-uploader';
+import { WalletAccessor } from 'src/dal/wallet-repo/wallet.accessor';
+import { Wallet, WalletSchema } from 'src/dal/wallet-repo/wallet.schema';
+import { WalletDbSyncService } from './db-sync/wallet-db-sync.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: NftInfo.name, schema: NftInfoSchema }, { name: Listing.name, schema: ListingSchema }, { name: Marketplace.name, schema: MarketPlaceSchema }]),
+    MongooseModule.forFeature([
+      { name: NftInfo.name, schema: NftInfoSchema },
+      { name: Wallet.name, schema: WalletSchema },
+      { name: Listing.name, schema: ListingSchema },
+      { name: Marketplace.name, schema: MarketPlaceSchema },
+    ]),
     HttpModule,
     EventEmitterModule.forRoot(),
     RavenModule,
   ],
   providers: [
     NftInfoAccessor,
+    WalletAccessor,
+    WalletDbSyncService,
     NFtDbSyncService,
     RemoteDataFetcherService,
     ListingDbSyncService,
@@ -37,6 +50,13 @@ import { S3UploaderService } from 'src/common/utils/s3-uploader';
       useValue: new RavenInterceptor(),
     },
   ],
-  exports: [NftInfoAccessor, NFtDbSyncService, RemoteDataFetcherService, ListingDbSyncService],
+  exports: [
+    NftInfoAccessor,
+    WalletAccessor,
+    WalletDbSyncService,
+    NFtDbSyncService,
+    RemoteDataFetcherService,
+    ListingDbSyncService,
+  ],
 })
 export class DataCacheModule { }

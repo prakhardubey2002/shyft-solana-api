@@ -3,7 +3,6 @@ import { NftDbResponse } from "src/modules/data-cache/remote-data-fetcher/dto/da
 import { NftInfoDocument } from "./nft-info.schema";
 
 export function getNftDbResponseFromNftInfo(r: NftInfoDocument): NftDbResponse {
-
   const response = {
     name: r.name,
     symbol: r.symbol,
@@ -23,9 +22,12 @@ export function getNftDbResponseFromNftInfo(r: NftInfoDocument): NftDbResponse {
   if (isObject(r.attributes)) {
     const keys = Object.keys(r.attributes);
     for (const key of keys) {
-      response.attributes_array.push({ trait_type: key, value: r.attributes[key] })
+      response.attributes_array.push({
+        trait_type: key,
+        value: r.attributes[key],
+      });
     }
   }
-  
+
   return response;
 }

@@ -3,6 +3,7 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { PublicKey } from '@solana/web3.js';
 import { ObjectId } from 'mongoose';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
+import { NftData } from '../remote-data-fetcher/dto/data-fetcher.dto';
 
 export class NftCreationEvent {
   constructor(
@@ -20,20 +21,41 @@ export class NftCreationEvent {
   apiKeyId: ObjectId;
 }
 
-export class NftReadInWalletEvent {
+export class NftWalletSyncEvent {
   constructor(
-    walletAddress: string,
     network: WalletAdapterNetwork,
+    walletAddress: string,
     updateAuthority: string,
+    dbNfts: NftInfo[],
   ) {
     this.walletAddress = walletAddress;
     this.network = network;
     this.updateAuthority = updateAuthority;
+    this.dbNfts = dbNfts;
   }
 
+  syncAll: boolean;
+  syncDelete: boolean;
+  dbNfts: NftInfo[];
   updateAuthority: string;
   walletAddress: string;
   network: WalletAdapterNetwork;
+}
+
+export class SaveNftsInDbEvent {
+  constructor(
+    network: WalletAdapterNetwork,
+    walletAddress: string,
+    nfts: NftData[],
+  ) {
+    this.network = network;
+    this.walletAddress = walletAddress;
+    this.nfts = nfts;
+  }
+
+  network: WalletAdapterNetwork;
+  walletAddress: string;
+  nfts: NftData[];
 }
 
 export class NftReadByCreatorEvent {

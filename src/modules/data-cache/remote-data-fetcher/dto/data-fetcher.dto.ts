@@ -197,8 +197,12 @@ export class NftData {
         ))
       : {};
 
-    if (this.offChainMetadata?.attributes?.length) {
+    if (
+      Array.isArray(this.offChainMetadata?.attributes) &&
+      this.offChainMetadata?.attributes?.length > 0
+    ) {
       nftDbDto.attributes = {};
+
       this.offChainMetadata?.attributes?.map((trait) => {
         if (trait?.trait_type && trait?.value) {
           nftDbDto.attributes[trait?.trait_type] = trait?.value;

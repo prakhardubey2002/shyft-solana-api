@@ -96,6 +96,18 @@ export class NftInfoAccessor {
     return [];
   }
 
+  public async findNftsByOwnerAndUpdateAuthority(
+    network: WalletAdapterNetwork,
+    owner: string,
+    updateAuthority?: string,
+  ): Promise<NftInfoDocument[]> {
+    const filter = { owner: owner, network: network };
+    if (updateAuthority !== undefined) {
+      filter['update_authority'] = updateAuthority;
+    }
+    return await this.NftInfoDataModel.find(filter).sort({updated_at: 'desc'});
+  }
+
   public async count(filter: object): Promise<number> {
     try {
       const result = await this.NftInfoDataModel.count(filter);
@@ -108,21 +120,47 @@ export class NftInfoAccessor {
 
   public async updateManyNft(nfts: NftInfo[]): Promise<any> {
     try {
-      await Promise.all(
-        nfts?.map(async (nft) => {
-          const filter = { mint: nft.mint };
-          await this.NftInfoDataModel.updateOne(filter, nft, { upsert: true });
-        }),
-      );
+      const ops = [];
+      nfts?.map(async (nft) => {
+        const filter = { mint: nft.mint, network: nft.network };
+        ops.push({ updateOne: { filter: filter, update: nft, upsert: true } });
+      });
+      await this.NftInfoDataModel.bulkWrite(ops);
     } catch (err) {
       console.log(err);
     }
     return null;
   }
 
-  public async deleteNft(filter: object): Promise<any> {
-    const result = await this.NftInfoDataModel.deleteOne(filter);
-    return result;
+  public async deleteManyNfts(
+    nft_addresess: string[],
+    network: WalletAdapterNetwork,
+  ): Promise<any> {
+    try {
+      const ops = [];
+      nft_addresess?.map(async (nft_addr) => {
+        const filter = { mint: nft_addr, network: network };
+        ops.push({ deleteOne: { filter: filter }});
+      });
+      console.log('nfts deleted: ', ops);
+      return await this.NftInfoDataModel.bulkWrite(ops);
+    } catch (error) {
+      console.error(error);
+    }
+    return null;
+  }
+
+  public async deleteNft(
+    nft_addr: string,
+    network: WalletAdapterNetwork,
+  ): Promise<any> {
+    if (nft_addr && network) {
+      const result = await this.NftInfoDataModel.deleteOne({
+        mint: nft_addr,
+        network: network,
+      });
+      return result;
+    }
   }
 
   public async updateNftOwner(

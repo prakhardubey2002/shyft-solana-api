@@ -203,10 +203,7 @@ export const Utility = {
 
   getElapsedTimeSec: function (date: Date): number {
     try {
-      const diff =
-        (new Date(Date.now()).getTime() -
-          new Date(date?.toUTCString()).getTime()) /
-        1000;
+      const diff = Math.abs((new Date().getTime() - date.getTime()) / 1000);
       return diff;
     } catch (error) {
       console.log(error);
