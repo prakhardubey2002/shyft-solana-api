@@ -108,6 +108,8 @@ export class MarketplaceDbSyncService {
       const err = newProgramErrorFrom(error);
       if (!err.name.includes('account_not_found')) {
         err.log();
+      } else {
+        console.log('mp not created, address: ', event.address);
       }
     }
   }
@@ -131,6 +133,7 @@ export class MarketplaceDbSyncService {
         event.address,
       );
       if (onChainMarketplace.isEqual(dbMp)) {
+        console.log('mp not updated, address: ', event.address);
         return;
       }
       await this.marketplaceRepo.updateMarketplace(onChainMarketplace);
