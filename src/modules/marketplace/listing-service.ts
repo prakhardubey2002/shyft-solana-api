@@ -29,6 +29,7 @@ import { GetListingDetailsDto } from './dto/get-listing-details.dto';
 import {
   ListingCancelledEvent,
   ListingCreatedEvent,
+  ListingInitiationEvent,
   ListingSoldEvent,
 } from '../data-cache/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -238,7 +239,7 @@ export class ListingService {
     } = getListingDetailsDto;
     try {
       const dbListing = await this.listingRepo.getListing(network, listState);
-      if (dbListing === undefined) {
+      if (dbListing) {
         return await this.fetchFromBlockchain(network, mpAddress, listState);
       } else {
         return await this.fetchFromDb(network, dbListing);
@@ -328,6 +329,17 @@ export class ListingService {
     if (listing.canceledAt != null) {
       result.cancelled_at = new Date(listing.canceledAt.toNumber() * 1000);
     }
+
+    const listingInitiationEvent = new ListingInitiationEvent(
+      network,
+      listing.tradeStateAddress,
+      auctionHouse.address,
+      null,
+    );
+    this.eventEmitter.emit(
+      'listing.creation.initiated',
+      listingInitiationEvent,
+    );
     return result;
   }
 

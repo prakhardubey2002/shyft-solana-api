@@ -115,6 +115,7 @@ export class Marketplace {
 
   //improve the logic for treasury_withdrawal_destination_owner
   public isEqual(mpDoc: MarketplaceDocument): boolean {
+    if (!mpDoc) return false;
     if (
       this.network != mpDoc.network ||
       this.address != mpDoc.address ||
