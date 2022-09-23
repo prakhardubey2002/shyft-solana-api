@@ -239,7 +239,7 @@ export class ListingService {
     } = getListingDetailsDto;
     try {
       const dbListing = await this.listingRepo.getListing(network, listState);
-      if (dbListing) {
+      if (!dbListing) {
         return await this.fetchFromBlockchain(network, mpAddress, listState);
       } else {
         return await this.fetchFromDb(network, dbListing);
