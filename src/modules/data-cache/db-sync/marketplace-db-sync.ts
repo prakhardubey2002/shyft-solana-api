@@ -93,7 +93,7 @@ export class MarketplaceDbSyncService {
     event: MarketplaceInitiationEvent,
   ): Promise<any> {
     const handleMpCreation = this.validateMarketplaceCreation.bind(this);
-    Timer.setTimer(handleMpCreation, event, MP_TIMER_INTERVAL, MP_TIMER_EXPIRY);
+    Timer.setTimer(handleMpCreation, event, MP_TIMER_EXPIRY, MP_TIMER_INTERVAL);
   }
 
   private async validateMarketplaceCreation(
@@ -119,7 +119,7 @@ export class MarketplaceDbSyncService {
     event: MarketplaceUpdateInitiationEvent,
   ): Promise<any> {
     const handleMpUpdation = this.validateMarketplaceUpdation.bind(this);
-    Timer.setTimer(handleMpUpdation, event, MP_TIMER_INTERVAL, MP_TIMER_EXPIRY);
+    Timer.setTimer(handleMpUpdation, event, MP_TIMER_EXPIRY, MP_TIMER_INTERVAL);
   }
 
   private async validateMarketplaceUpdation(

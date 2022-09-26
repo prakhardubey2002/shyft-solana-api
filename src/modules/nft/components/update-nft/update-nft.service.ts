@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { NodeWallet, programs } from '@metaplex/js';
 import { Creator, Metadata, } from '@metaplex-foundation/mpl-token-metadata-depricated';
@@ -75,14 +75,12 @@ export class UpdateNftService {
         share: 100,
       }))
 
-      const newAuthority = new_update_authority ? new_update_authority : update_authority;
-
       const res = new programs.metadata.UpdateMetadataV2({
         recentBlockhash: (await connection.getLatestBlockhash('finalized')).blockhash,
         feePayer: wallet.publicKey
       }, {
         metadata: pda,
-        updateAuthority: new PublicKey(newAuthority),
+        updateAuthority: new PublicKey(update_authority),
         newUpdateAuthority: new_update_authority ? new PublicKey(new_update_authority): undefined,
         metadataData: new programs.metadata.DataV2({
           name: name,
@@ -105,8 +103,7 @@ export class UpdateNftService {
 
       return { txId: result };
     } catch (error) {
-
-      throw new HttpException(error.message, error.status);
+      throw newProgramErrorFrom(error, 'update_nft_error');
     }
   }
 

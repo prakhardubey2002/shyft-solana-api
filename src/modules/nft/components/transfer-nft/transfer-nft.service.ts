@@ -1,6 +1,6 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { clusterApiUrl, PublicKey, Transaction } from '@solana/web3.js';
-import { Connection, NodeWallet } from '@metaplex/js';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { NodeWallet } from '@metaplex/js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { TransferNftDto, TransferNftDetachDto } from './dto/transfer.dto';
 import {
@@ -11,30 +11,46 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { UpdateNftService } from '../update-nft/update-nft.service';
-import { Metaplex } from '@metaplex-foundation/js';
-import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { Utility } from 'src/common/utils/utils';
-
+import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
+import {
+  NftSyncEvent,
+  NftWaitSyncEvent,
+} from 'src/modules/data-cache/db-sync/db.events';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 @Injectable()
 export class TransferNftService {
-  constructor(private updateNftService: UpdateNftService) { }
+  constructor(
+    private updateNftService: UpdateNftService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async transferNft(transferNftDto: TransferNftDto): Promise<any> {
     try {
       const {
         network,
-        from_address: fromAdress,
         transfer_authority,
+        from_address: fromAddress,
       } = transferNftDto;
-      const tokenAddress = new PublicKey(transferNftDto.token_address);
       const toAddress = new PublicKey(transferNftDto.to_address);
+      const tokenAddress = new PublicKey(transferNftDto.token_address);
+      // generate wallet
+      const fromKeypair = AccountUtils.getKeypair(fromAddress);
+      const wallet = new NodeWallet(fromKeypair);
 
       const connection = Utility.connectRpc(network);
 
-      // generate wallet
-      const fromKeypair = AccountUtils.getKeypair(fromAdress);
-      const wallet = new NodeWallet(fromKeypair);
+      const tx = new Transaction();
+      if (transfer_authority) {
+        const updateAuthorityChangeInstruction =
+          await Utility.nft.getNftAuthorityUpdateInstruction(
+            connection,
+            tokenAddress,
+            fromKeypair.publicKey,
+            toAddress,
+          );
+        tx.add(updateAuthorityChangeInstruction);
+      }
 
       // Find token accounts
       const fromAccount = await getOrCreateAssociatedTokenAccount(
@@ -46,56 +62,43 @@ export class TransferNftService {
       const toAccount = await getOrCreateAssociatedTokenAccount(
         connection,
         fromKeypair,
-        tokenAddress,
+        new PublicKey(tokenAddress),
         toAddress,
       );
 
-      // Create transfer instruction
-      const ix = createTransferCheckedInstruction(
-        fromAccount.address,
-        tokenAddress,
-        toAccount.address,
-        fromKeypair.publicKey,
-        1,
-        0,
+      tx.add(
+        createTransferCheckedInstruction(
+          fromAccount.address,
+          tokenAddress,
+          toAccount.address,
+          fromKeypair.publicKey,
+          1,
+          0,
+        ),
       );
-      const tx = new Transaction().add(ix);
       tx.feePayer = fromKeypair.publicKey;
       tx.recentBlockhash = (
         await connection.getLatestBlockhash('finalized')
       ).blockhash;
 
-      // Sign and send it
       const signedTx = await wallet.signTransaction(tx);
       const transferTxId = await connection.sendRawTransaction(
         signedTx.serialize(),
       );
 
-      const isSuccessful = await connection.confirmTransaction(transferTxId);
+      await connection.confirmTransaction(transferTxId).catch((r) => {
+        throw newProgramError(
+          'txn_confirmation_error',
+          HttpStatus.GATEWAY_TIMEOUT,
+          'failed to confirm the txn',
+        );
+      });
+      const nftReadEvent = new NftSyncEvent(tokenAddress.toBase58(), network);
+      this.eventEmitter.emit('nft.read', nftReadEvent);
 
-      //Now update the authority
-      let updateTxId;
-      if (isSuccessful.value.err === null && transfer_authority) {
-        //Update Authority
-        const metaplex = Metaplex.make(connection);
-        const nft = await metaplex.nfts().findByMint(tokenAddress);
-        updateTxId = await this.updateNftService.updateNft(nft.uri, {
-          is_mutable: nft.isMutable,
-          name: nft.name,
-          network,
-          primary_sale_happened: nft.primarySaleHappened,
-          royalty: nft.sellerFeeBasisPoints,
-          symbol: nft.symbol,
-          token_address: nft.mint.toBase58(),
-          update_authority: nft.updateAuthority.toBase58(),
-          new_update_authority: toAddress.toBase58(),
-          private_key: fromAdress,
-        });
-      }
-      return { updateTxId: updateTxId?.txId ?? 'update_authority not transfered', transferTxId: transferTxId };
+      return { transferTxId: transferTxId };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message || error, error.status);
+      throw newProgramErrorFrom(error, 'transfer_nft_error');
     }
   }
 
@@ -108,9 +111,21 @@ export class TransferNftService {
       } = transferNftDto;
       const tokenAddressPubKey = new PublicKey(transferNftDto.token_address);
       const toAddressPubKey = new PublicKey(transferNftDto.to_address);
-
       const connection = Utility.connectRpc(network);
       const fromAddressPubKey = new PublicKey(fromAdress);
+
+      const tx: Transaction = new Transaction();
+
+      if (transfer_authority) {
+        const updateAuthorityChangeInstruction =
+          await Utility.nft.getNftAuthorityUpdateInstruction(
+            connection,
+            tokenAddressPubKey,
+            fromAddressPubKey,
+            toAddressPubKey,
+          );
+        tx.add(updateAuthorityChangeInstruction);
+      }
 
       // Find user token account
       const fromAccount = await getAssociatedTokenAddress(
@@ -121,7 +136,6 @@ export class TransferNftService {
         ASSOCIATED_TOKEN_PROGRAM_ID,
       );
 
-      const tx: Transaction = new Transaction();
       // create associatedTokenAccount if not exist
       const { associatedAccountAddress: toAccount, createTx } =
         await Utility.account.getOrCreateAsscociatedAccountTx(
@@ -146,48 +160,27 @@ export class TransferNftService {
         ),
       );
 
-      if (transfer_authority) {
-        const metaplex = Metaplex.make(connection);
-        const nft = await metaplex.nfts().findByMint(tokenAddressPubKey);
-        const pda = await Metadata.getPDA(tokenAddressPubKey);
-
-        tx.add(
-          createUpdateMetadataAccountV2Instruction(
-            {
-              metadata: pda,
-              updateAuthority: toAddressPubKey,
-            },
-            {
-              updateMetadataAccountArgsV2: {
-                data: {
-                  name: nft.name,
-                  symbol: nft.symbol,
-                  uri: nft.uri,
-                  sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
-                  creators: nft.creators,
-                  collection: nft.collection,
-                  uses: nft.uses,
-                } as DataV2,
-                updateAuthority: toAddressPubKey,
-                primarySaleHappened: nft.primarySaleHappened,
-                isMutable: nft.isMutable,
-              },
-            },
-          ),
-        );
-      }
-
       tx.feePayer = fromAddressPubKey;
       tx.recentBlockhash = (
         await connection.getLatestBlockhash('finalized')
       ).blockhash;
 
-      const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+      const serializedTransaction = tx.serialize({
+        requireAllSignatures: false,
+        verifySignatures: false,
+      });
       const transactionBase64 = serializedTransaction.toString('base64');
+
+      const nftReadEvent = new NftWaitSyncEvent(
+        network,
+        tokenAddressPubKey.toBase58(),
+        25000,
+      );
+      this.eventEmitter.emit('nft.transfered', nftReadEvent);
+
       return { encoded_transaction: transactionBase64 };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message || error, error.status);
+      throw newProgramErrorFrom(error, 'transfer_nft_error');
     }
   }
 }

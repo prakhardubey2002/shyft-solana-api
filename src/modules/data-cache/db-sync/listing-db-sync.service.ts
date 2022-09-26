@@ -102,8 +102,8 @@ export class ListingDbSyncService {
     Timer.setTimer(
       syncListing,
       event,
-      LISTING_TIMER_INTERVAL,
       LISTING_TIMER_EXPIRY,
+      LISTING_TIMER_INTERVAL,
     );
   }
 
@@ -115,8 +115,8 @@ export class ListingDbSyncService {
     Timer.setTimer(
       syncCancellation,
       event,
-      LISTING_TIMER_INTERVAL,
       LISTING_TIMER_EXPIRY,
+      LISTING_TIMER_INTERVAL,
     );
   }
 
@@ -126,8 +126,8 @@ export class ListingDbSyncService {
     Timer.setTimer(
       saleInitiation,
       event,
-      LISTING_TIMER_INTERVAL,
       LISTING_TIMER_EXPIRY,
+      LISTING_TIMER_INTERVAL,
     );
   }
 

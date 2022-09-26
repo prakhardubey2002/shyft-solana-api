@@ -17,12 +17,14 @@ import {
   NftSyncEvent,
   NftWalletSyncEvent,
   SaveNftsInDbEvent,
+  NftWaitSyncEvent,
 } from './db.events';
 import * as fastq from 'fastq';
 import { queueAsPromised } from 'fastq';
 import { WalletDbSyncService } from './wallet-db-sync.service';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
+import { Timer } from 'src/common/utils/timer';
 
 const afterNftCreationWaitTime_ms = 12000;
 const afterNftUpdateWaitTime_ms = 12000;
@@ -73,6 +75,12 @@ export class NFtDbSyncService {
       result?.network,
     );
     this.eventEmitter.emit('nft.cache', nftCacheEvent);
+  }
+
+  @OnEvent('nft.transfered')
+  async handleNftTransferEvent(event: NftWaitSyncEvent): Promise<any> {
+    const handler = this.syncNftData.bind(this);
+    Timer.setTimer(handler, event, event.waitTime);
   }
 
   @OnEvent('nft.read', { async: true })

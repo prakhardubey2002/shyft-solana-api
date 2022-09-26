@@ -77,6 +77,7 @@ export const newProgramError = (
 export const newProgramErrorFrom = (
   error: Error,
   errorName?: string,
+  errorMessage?: string,
 ): ProgramError => {
   if (error instanceof MetaplexError) {
     const errMsg = error.message;
@@ -96,18 +97,19 @@ export const newProgramErrorFrom = (
   } else if (error instanceof ProgramError) {
     return error;
   } else {
-    let errName = 'unknown';
-    if (errorName !== undefined) {
-      errName = errorName;
-    }
-    return new ProgramError(
-      errName,
+    const pE = new ProgramError(
+      'unknown',
       HttpStatus.EXPECTATION_FAILED,
       error.message,
-      '',
-      '',
-      {},
-      error.stack,
     );
+
+    if (errorName) {
+      pE.name = errorName;
+    }
+    if (errorMessage) {
+      pE.message = errorMessage;
+    }
+    pE.stack = error.stack;
+    return pE;
   }
 };

@@ -37,6 +37,10 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenListProvider } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
+import {
+  createUpdateMetadataAccountV2Instruction,
+  DataV2,
+} from '@metaplex-foundation/mpl-token-metadata';
 
 const endpoint = {
   http: {
@@ -479,6 +483,74 @@ export const Utility = {
     getImgCdnUrl: function (key: string) {
       const cdnUrl = `https://${configuration().s3Bucket}/${key}`;
       return cdnUrl;
+    },
+  },
+
+  nft: {
+    getNftAuthorityUpdateInstruction: async (
+      connection: Connection,
+      tokenAddress: PublicKey,
+      nftOwnerAddress: PublicKey,
+      newUpdateAuthority: PublicKey,
+    ): Promise<TransactionInstruction> => {
+      try {
+        const nft = await getNftToUpdate();
+        const pda = await Metadata.getPDA(tokenAddress);
+        return createUpdateMetadataAccountV2Instruction(
+          {
+            metadata: pda,
+            updateAuthority: nft.updateAuthorityAddress,
+          },
+          {
+            updateMetadataAccountArgsV2: {
+              data: {
+                name: nft.name,
+                symbol: nft.symbol,
+                uri: nft.uri,
+                sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
+                creators: nft.creators,
+                collection: nft.collection,
+                uses: nft.uses,
+              } as DataV2,
+              updateAuthority: newUpdateAuthority,
+              primarySaleHappened: nft.primarySaleHappened,
+              isMutable: nft.isMutable,
+            },
+          },
+        );
+      } catch (err) {
+        throw newProgramErrorFrom(err);
+      }
+
+      async function getNftToUpdate() {
+        const nft = await getNft();
+        isUpdateAccess(nft);
+        return nft;
+      }
+
+      function isUpdateAccess(nft: any) {
+        const isUpdateAccess =
+          nftOwnerAddress.toBase58() === nft.updateAuthorityAddress.toBase58();
+        if (!isUpdateAccess) {
+          throw newProgramError(
+            'no_update_authority',
+            HttpStatus.FORBIDDEN,
+            'NFT owner does not have the update authority needed to update NFT',
+            '',
+            '',
+            {
+              nftUpdateAuthority: nft.updateAuthorityAddress,
+              nftOwnerAddress: nftOwnerAddress,
+            },
+          );
+        }
+      }
+
+      async function getNft() {
+        const metaplex = Metaplex.make(connection);
+        const nft = await metaplex.nfts().findByMint(tokenAddress).run();
+        return nft;
+      }
     },
   },
 };

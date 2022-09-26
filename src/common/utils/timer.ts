@@ -11,12 +11,19 @@ export class Timer {
   public static setTimer(
     callback: (argObject: any, date: Date) => void,
     argObject: any,
-    timerInterval: number,
     timerExpiry: number,
+    timerInterval?: number,
   ) {
     const date = new Date();
-    const timerId = setInterval(callback, timerInterval, argObject, date);
-    Timer.timeMap.set(date, timerId);
-    setTimeout(() => clearInterval(timerId), timerExpiry);
+    let timerId;
+    if (timerInterval) {
+      timerId = setInterval(callback, timerInterval, argObject, date);
+      Timer.timeMap.set(date, timerId);
+      setTimeout(() => clearInterval(timerId), timerExpiry);
+    } else {
+      setTimeout(() => {
+        callback(argObject, date);
+      }, timerExpiry);
+    }
   }
 }

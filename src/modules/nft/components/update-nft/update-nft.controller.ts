@@ -46,40 +46,55 @@ export class UpdateNftController {
     private updateNftService: UpdateNftService,
     private storageService: StorageMetadataService,
     private dataFetcher: RemoteDataFetcherService,
-  ) { }
+  ) {}
 
   @UpdateOpenApi()
   @Post('update')
   @Version('1')
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'file', maxCount: 1 },
-    { name: 'data', maxCount: 1 },
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'data', maxCount: 1 },
+    ]),
+  )
   async update(
-    @UploadedFiles() files: { file?: Express.Multer.File[], data?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { file?: Express.Multer.File[]; data?: Express.Multer.File[] },
     @Body() updateNftDto: UpdateNftDto,
   ): Promise<any> {
-    const nftInfo = (await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDto.network, updateNftDto.token_address))).getNftInfoDto();
+    const nftInfo = (
+      await this.dataFetcher.fetchNft(
+        new FetchNftDto(updateNftDto.network, updateNftDto.token_address),
+      )
+    ).getNftInfoDto();
     let image = nftInfo.image_uri;
     let data: NftFile;
     if (files?.file) {
-      const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
+      const uploadImage = await this.storageService.uploadToIPFS(
+        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
+      );
       image = uploadImage.uri;
     }
 
     if (files?.data) {
-      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      const uploadFile = await this.storageService.uploadToIPFS(
+        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
+      );
       data = new NftFile(uploadFile.uri, files.data[0].mimetype);
     }
 
     const createParams = {
       network: updateNftDto.network,
-      creator: AccountUtils.getKeypair(updateNftDto.private_key).publicKey.toBase58(),
+      creator: AccountUtils.getKeypair(
+        updateNftDto.private_key,
+      ).publicKey.toBase58(),
       image,
       name: updateNftDto.name ?? nftInfo.name,
       description: updateNftDto.description ?? nftInfo.description,
       symbol: updateNftDto.symbol ?? nftInfo.symbol,
-      attributes: updateNftDto.attributes ? transformAttributes(updateNftDto.attributes) : transformAttributes(nftInfo.attributes),
+      attributes: updateNftDto.attributes
+        ? transformAttributes(updateNftDto.attributes)
+        : transformAttributes(nftInfo.attributes),
       royalty: updateNftDto.royalty ?? nftInfo.royalty,
       share: 100,
       external_url: nftInfo.external_url,
@@ -88,6 +103,8 @@ export class UpdateNftController {
 
     const { uri } = await this.storageService.prepareNFTMetadata(createParams);
 
+    //Code Smell: Difficult to understand what are values of 2nd function input argument.
+    //Solution: Use a ServiceDto to pass information from controller to service function (updateNft).
     const res = await this.updateNftService.updateNft(uri, {
       ...updateNftDto,
       ...createParams,
@@ -106,24 +123,38 @@ export class UpdateNftController {
   @UpdateDetachOpenApi()
   @Post('update_detach')
   @Version('1')
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'file', maxCount: 1 },
-    { name: 'data', maxCount: 1 },
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'data', maxCount: 1 },
+    ]),
+  )
   async updateDetach(
-    @UploadedFiles() files: { file: Express.Multer.File[], data?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { file: Express.Multer.File[]; data?: Express.Multer.File[] },
     @Body() updateNftDetachDto: UpdateNftDetachDto,
   ): Promise<any> {
-    const nftInfo = (await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDetachDto.network, updateNftDetachDto.token_address))).getNftInfoDto();
+    const nftInfo = (
+      await this.dataFetcher.fetchNft(
+        new FetchNftDto(
+          updateNftDetachDto.network,
+          updateNftDetachDto.token_address,
+        ),
+      )
+    ).getNftInfoDto();
     let image = nftInfo.image_uri;
     let data: NftFile;
     if (files?.file) {
-      const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
+      const uploadImage = await this.storageService.uploadToIPFS(
+        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
+      );
       image = uploadImage.uri;
     }
 
     if (files?.data) {
-      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      const uploadFile = await this.storageService.uploadToIPFS(
+        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
+      );
       data = new NftFile(uploadFile.uri, files.data[0].mimetype);
     }
 
@@ -134,7 +165,9 @@ export class UpdateNftController {
       name: updateNftDetachDto.name ?? nftInfo.name,
       description: updateNftDetachDto.description ?? nftInfo.description,
       symbol: updateNftDetachDto.symbol ?? nftInfo.symbol,
-      attributes: updateNftDetachDto.attributes ? transformAttributes(updateNftDetachDto.attributes) : transformAttributes(nftInfo.attributes),
+      attributes: updateNftDetachDto.attributes
+        ? transformAttributes(updateNftDetachDto.attributes)
+        : transformAttributes(nftInfo.attributes),
       royalty: updateNftDetachDto.royalty ?? nftInfo.royalty,
       share: 100,
       external_url: nftInfo.external_url,
