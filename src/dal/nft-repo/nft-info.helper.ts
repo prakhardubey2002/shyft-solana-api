@@ -1,8 +1,8 @@
 import { isObject } from "class-validator";
 import { NftDbResponse } from "src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto";
-import { NftInfoDocument } from "./nft-info.schema";
+import { NftInfo } from "./nft-info.schema";
 
-export function getNftDbResponseFromNftInfo(r: NftInfoDocument): NftDbResponse {
+export function getNftDbResponseFromNftInfo(r: NftInfo): NftDbResponse {
   const response = {
     name: r.name,
     symbol: r.symbol,

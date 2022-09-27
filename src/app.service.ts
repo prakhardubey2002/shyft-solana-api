@@ -7,10 +7,9 @@ import { GetApiKeyDto } from './dto/get-api-key.dto';
 import { Emailer } from './common/utils/emailer';
 import { WhiteListDomainsDto } from './dto/whitelist-domains.dto';
 import { UserRepo } from './dal/user-repo/user-repo';
-import { newProgramError, newProgramErrorFrom } from './core/program-error';
+import { newProgramErrorFrom } from './core/program-error';
 
-const alphabet =
-  '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
+const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
 const nanoid = customAlphabet(alphabet, 16);
 
 @Injectable()
@@ -42,11 +41,7 @@ export class AppService {
       const templateData = {
         apiKey: result.api_key,
       };
-      await this.emailer.sendEmail(
-        destinationEmailAddess,
-        templateName,
-        templateData,
-      );
+      await this.emailer.sendEmail(destinationEmailAddess, templateName, templateData);
       return { api_key };
     } catch (error) {
       console.log(error);
@@ -72,10 +67,7 @@ export class AppService {
     try {
       const { api_key: apiKey } = dto;
       const rmDomains = dto.getDomainList();
-      const result = await this.userRepo.removeWhiteListedDomain(
-        apiKey,
-        rmDomains,
-      );
+      const result = await this.userRepo.removeWhiteListedDomain(apiKey, rmDomains);
       return {
         whitelist_domains: result,
       };

@@ -1,15 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
-import {
-  AuctionHouse,
-  findMetadataPda,
-  Metaplex,
-  toPublicKey,
-} from '@metaplex-foundation/js';
-import {
-  createTransferCheckedInstruction,
-  getMint,
-  Mint,
-} from '@solana/spl-token';
+import { AuctionHouse, findMetadataPda, Metaplex, toPublicKey } from '@metaplex-foundation/js';
+import { createTransferCheckedInstruction, getMint, Mint } from '@solana/spl-token';
 import axios from 'axios';
 import {
   clusterApiUrl,
@@ -37,10 +28,7 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenListProvider } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
-import {
-  createUpdateMetadataAccountV2Instruction,
-  DataV2,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 
 const endpoint = {
   http: {
@@ -97,15 +85,10 @@ async function fetchInfoFromMeta(connection: Connection, mintAddress: string) {
   }
 }
 
-async function fetchInfoFromSplRegistry(
-  network: WalletAdapterNetwork,
-  mintAddress: string,
-) {
+async function fetchInfoFromSplRegistry(network: WalletAdapterNetwork, mintAddress: string) {
   const tokens = await new TokenListProvider().resolve();
   const tokenInfoList = tokens.filterByClusterSlug(network).getList();
-  const tokenData = tokenInfoList.find(
-    (token) => token.address === mintAddress,
-  );
+  const tokenData = tokenInfoList.find((token) => token.address === mintAddress);
 
   return {
     name: tokenData?.name,
@@ -163,10 +146,7 @@ export const Utility = {
     }
   },
 
-  downloadFile: async function (
-    fileUrl: string,
-    timeout = 15000,
-  ): Promise<{ data: any; contentType: string }> {
+  downloadFile: async function (fileUrl: string, timeout = 15000): Promise<{ data: any; contentType: string }> {
     try {
       if (isValidUrl(fileUrl)) {
         const { data, headers } = await axios.get(fileUrl, {
@@ -216,10 +196,7 @@ export const Utility = {
   },
 
   transaction: {
-    getMemoTx: function (
-      publicKey: PublicKey,
-      message: string,
-    ): TransactionInstruction {
+    getMemoTx: function (publicKey: PublicKey, message: string): TransactionInstruction {
       return new TransactionInstruction({
         keys: [{ pubkey: publicKey, isSigner: true, isWritable: true }],
         data: Buffer.from(message, 'utf-8'),
@@ -247,8 +224,7 @@ export const Utility = {
           return {
             name: metaInfo?.name ?? registryInfo?.name ?? '',
             symbol: metaInfo?.symbol ?? registryInfo?.symbol ?? '',
-            description:
-              metaInfo?.description ?? registryInfo?.description ?? '',
+            description: metaInfo?.description ?? registryInfo?.description ?? '',
             image: metaInfo?.image ?? registryInfo?.image ?? '',
             address: mint.address?.toBase58(),
             mint_authority: mint?.mintAuthority?.toBase58(),
@@ -260,19 +236,12 @@ export const Utility = {
       }
     },
 
-    getTokenSymbol: async function (
-      network: WalletAdapterNetwork,
-      tokenAddress: string,
-    ): Promise<string> {
+    getTokenSymbol: async function (network: WalletAdapterNetwork, tokenAddress: string): Promise<string> {
       let symbol = '';
       try {
         const connection = new Connection(clusterApiUrl(network), 'confirmed');
         const tokenInfo = await getMint(connection, toPublicKey(tokenAddress));
-        const tokenResp = await Utility.token.getTokenInfo(
-          connection,
-          network,
-          tokenInfo,
-        );
+        const tokenResp = await Utility.token.getTokenInfo(connection, network, tokenInfo);
         symbol = tokenResp.symbol;
       } catch (err) {
         newProgramErrorFrom(err, 'get_token_symbol_error').log();
@@ -357,9 +326,7 @@ export const Utility = {
       const connection = new Connection(clusterApiUrl(network), 'confirmed');
       const metaplex = Metaplex.make(connection, { cluster: network });
       const auctionsClient = metaplex.auctions();
-      const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(auctionHouseAddress)
-        .run();
+      const auctionHouse = await auctionsClient.findAuctionHouseByAddress(auctionHouseAddress).run();
       return auctionHouse;
     },
   },
@@ -392,15 +359,13 @@ export const Utility = {
       let account: Account;
       let transaction: Transaction;
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         account = await getAccount(connection, associatedToken);
       } catch (error: unknown) {
         // TokenAccountNotFoundError can be possible if the associated address has already received some lamports,
         // becoming a system account. Assuming program derived addressing is safe, this is the only case for the
         // TokenInvalidAccountOwnerError in this code path.
-        if (
-          error instanceof TokenAccountNotFoundError ||
-          error instanceof TokenInvalidAccountOwnerError
-        ) {
+        if (error instanceof TokenAccountNotFoundError || error instanceof TokenInvalidAccountOwnerError) {
           // As this isn't atomic, it's possible others can create associated accounts meanwhile.
           try {
             transaction = new Transaction().add(
@@ -529,8 +494,7 @@ export const Utility = {
       }
 
       function isUpdateAccess(nft: any) {
-        const isUpdateAccess =
-          nftOwnerAddress.toBase58() === nft.updateAuthorityAddress.toBase58();
+        const isUpdateAccess = nftOwnerAddress.toBase58() === nft.updateAuthorityAddress.toBase58();
         if (!isUpdateAccess) {
           throw newProgramError(
             'no_update_authority',

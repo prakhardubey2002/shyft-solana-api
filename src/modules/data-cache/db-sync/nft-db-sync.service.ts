@@ -5,10 +5,7 @@ import { Utility } from 'src/common/utils/utils';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
-import {
-  FetchAllNftDto,
-  FetchAllNftByCreatorDto,
-} from '../remote-data-fetcher/dto/data-fetcher.dto';
+import { FetchAllNftDto, FetchAllNftByCreatorDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
 import {
   NftCacheEvent,
   NftCreationEvent,
@@ -38,18 +35,15 @@ export class NFtDbSyncService {
     private walletDbSyncSvc: WalletDbSyncService,
     private s3: S3UploaderService,
   ) {}
-  fetchNftQueue: queueAsPromised = fastq.promise<
-    NFtDbSyncService,
-    NftSyncEvent,
-    NftInfo
-  >(this, this.getNftDbDto, 100);
-  cacheNftQueue: queueAsPromised = fastq.promise<
-    NFtDbSyncService,
-    NftCacheEvent
-  >(this, this.cacheNft, 10);
+  fetchNftQueue: queueAsPromised = fastq.promise<NFtDbSyncService, NftSyncEvent, NftInfo>(
+    this,
+    this.getNftInfoDto,
+    100,
+  );
+  cacheNftQueue: queueAsPromised = fastq.promise<NFtDbSyncService, NftCacheEvent>(this, this.cacheNft, 10);
 
   @OnEvent('nft.created', { async: true })
-  async handleNftCreatedEvent(event: NftCreationEvent): Promise<any> {
+  private async handleNftCreatedEvent(event: NftCreationEvent): Promise<any> {
     try {
       // it takes some time to newly created data on blockchain to be available for read
       setTimeout(async () => {
@@ -66,15 +60,18 @@ export class NFtDbSyncService {
     }
   }
 
+  @OnEvent('save.nft.db', { async: true })
   private async syncAndCache(response: NftInfo) {
-    const result = await this.nftDbAccessor.updateNft(response);
+    try {
+      const result = await this.nftDbAccessor.updateNft(response);
 
-    const nftCacheEvent = new NftCacheEvent(
-      result?.image_uri,
-      result?.mint,
-      result?.network,
-    );
-    this.eventEmitter.emit('nft.cache', nftCacheEvent);
+      if (result) {
+        const nftCacheEvent = new NftCacheEvent(result?.image_uri, result?.mint, result?.network);
+        this.eventEmitter.emit('nft.cache', nftCacheEvent);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   @OnEvent('nft.transfered')
@@ -84,7 +81,7 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('nft.read', { async: true })
-  async handleNftReadEvent(event: NftSyncEvent): Promise<any> {
+  private async handleNftReadEvent(event: NftSyncEvent): Promise<any> {
     try {
       await this.syncNftData(event);
     } catch (err) {
@@ -93,14 +90,11 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('resync.wallet.nfts', { async: true })
-  async handleWalletNftSyncEvent(event: NftWalletSyncEvent): Promise<any> {
+  private async handleWalletNftSyncEvent(event: NftWalletSyncEvent): Promise<any> {
     try {
       console.log('resyncing wallet nfts');
       await this.syncWalletNfts(event);
-      await this.walletDbSyncSvc.saveWalletInDB(
-        event.network,
-        event.walletAddress,
-      );
+      await this.walletDbSyncSvc.saveWalletInDB(event.network, event.walletAddress);
     } catch (err) {
       console.error(err);
     }
@@ -110,11 +104,7 @@ export class NFtDbSyncService {
   async syncWalletNfts(event: NftWalletSyncEvent) {
     try {
       const onChainNfts = await this.remoteDataFetcher.fetchAllNfts(
-        new FetchAllNftDto(
-          event.network,
-          event.walletAddress,
-          event.updateAuthority,
-        ),
+        new FetchAllNftDto(event.network, event.walletAddress, event.updateAuthority),
       );
       //Db Nfts
       const dbNfts = event?.dbNfts;
@@ -124,12 +114,7 @@ export class NFtDbSyncService {
       await this.syncDeletedWalletNfts(onChainNfts, dbNfts, event.network);
 
       //Add new Wallet NFTs to DB
-      await this.syncNewWalletNfts(
-        onChainNfts,
-        dbNfts,
-        event.network,
-        event.walletAddress,
-      );
+      await this.syncNewWalletNfts(onChainNfts, dbNfts, event.network, event.walletAddress);
 
       return onChainNfts;
     } catch (error) {
@@ -152,22 +137,13 @@ export class NFtDbSyncService {
         : true;
     });
     if (nftsToAdd.length) {
-      const nfts = await this.remoteDataFetcher.addOffChainDataAndOwner(
-        nftsToAdd,
-        wallet,
-      );
-      await this.saveWalletNftsInDb(
-        new SaveNftsInDbEvent(network, wallet, nfts),
-      );
+      const nfts = await this.remoteDataFetcher.addOffChainDataAndOwner(nftsToAdd, wallet);
+      await this.saveWalletNftsInDb(new SaveNftsInDbEvent(network, wallet, nfts));
     }
     console.log('new NFTs added ', nftsToAdd.length);
   }
 
-  async syncDeletedWalletNfts(
-    onChainNfts: MetadataData[],
-    dbNfts: NftInfo[],
-    network: WalletAdapterNetwork,
-  ) {
+  async syncDeletedWalletNfts(onChainNfts: MetadataData[], dbNfts: NftInfo[], network: WalletAdapterNetwork) {
     //Get their diff and figure out which nfts we need to delete
     const nftsToDel = dbNfts.filter((value) => {
       return onChainNfts.some((dbNft) => {
@@ -187,12 +163,9 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('save.wallet.nfts', { async: true })
-  async handleWalletNftSave(event: SaveNftsInDbEvent): Promise<any> {
+  private async handleWalletNftSave(event: SaveNftsInDbEvent): Promise<any> {
     await this.saveWalletNftsInDb(event);
-    await this.walletDbSyncSvc.saveWalletInDB(
-      event.network,
-      event.walletAddress,
-    );
+    await this.walletDbSyncSvc.saveWalletInDB(event.network, event.walletAddress);
   }
 
   private async saveWalletNftsInDb(event: SaveNftsInDbEvent) {
@@ -221,15 +194,9 @@ export class NFtDbSyncService {
     }
   }
 
-  async clearDeletedNftsFromDb(
-    nft_addresses: string[],
-    network: WalletAdapterNetwork,
-  ) {
+  async clearDeletedNftsFromDb(nft_addresses: string[], network: WalletAdapterNetwork) {
     try {
-      const res = await this.nftDbAccessor.deleteManyNfts(
-        nft_addresses,
-        network,
-      );
+      const res = await this.nftDbAccessor.deleteManyNfts(nft_addresses, network);
       console.log(res);
     } catch (error) {
       console.error(error);
@@ -237,9 +204,7 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('all.nfts.read.by.creator', { async: true })
-  async handleAllNftReadByCreatorEvent(
-    event: NftReadByCreatorEvent,
-  ): Promise<any> {
+  async handleAllNftReadByCreatorEvent(event: NftReadByCreatorEvent): Promise<any> {
     try {
       let nfts: NftInfo[];
       if (event.nfts) {
@@ -247,15 +212,8 @@ export class NFtDbSyncService {
       } else {
         const defaultPage = 1;
         const defaultSize = 20;
-        const fetchAllNftDto = new FetchAllNftByCreatorDto(
-          event.network,
-          event.creator,
-          defaultPage,
-          defaultSize,
-        );
-        const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(
-          fetchAllNftDto,
-        );
+        const fetchAllNftDto = new FetchAllNftByCreatorDto(event.network, event.creator, defaultPage, defaultSize);
+        const chainNfts = await this.remoteDataFetcher.fetchAllNftsByCreator(fetchAllNftDto);
         nfts = chainNfts.nfts.map((nft) => nft.getNftInfoDto());
       }
       await this.nftDbAccessor.updateManyNft(nfts);
@@ -265,7 +223,7 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('nft.updated', { async: true })
-  async handleUpdateNftEvent(event: NftSyncEvent): Promise<any> {
+  private async handleUpdateNftEvent(event: NftSyncEvent): Promise<any> {
     try {
       setTimeout(async () => {
         try {
@@ -280,12 +238,9 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('nft.deleted', { async: true })
-  async handleDeleteNftEvent(event: NftDeleteEvent) {
+  private async handleDeleteNftEvent(event: NftDeleteEvent) {
     try {
-      const result = await this.nftDbAccessor.deleteNft(
-        event.tokenAddress,
-        event.network,
-      );
+      const result = await this.nftDbAccessor.deleteNft(event.tokenAddress, event.network);
       return result;
     } catch (err) {
       console.error(err);
@@ -293,7 +248,7 @@ export class NFtDbSyncService {
   }
 
   @OnEvent('nft.cache', { async: true })
-  async cacheNftEvent(event: NftCacheEvent): Promise<any> {
+  private async cacheNftEvent(event: NftCacheEvent): Promise<any> {
     try {
       await this.cacheNftQueue.push(event);
     } catch (error) {
@@ -320,11 +275,7 @@ export class NFtDbSyncService {
         const response = await Utility.downloadFile(event.metadataImageUri);
         if (response?.data && response?.contentType) {
           console.log('uploading data');
-          cdnUrl = await this.s3.upload(
-            event.metadataImageUri,
-            response.data,
-            response.contentType,
-          );
+          cdnUrl = await this.s3.upload(event.metadataImageUri, response.data, response.contentType);
         }
       }
       //Save encoded URI in DB
@@ -352,7 +303,7 @@ export class NFtDbSyncService {
     }
   }
 
-  private async getNftDbDto(event: NftSyncEvent): Promise<NftInfo> {
+  async getNftInfoDto(event: NftSyncEvent): Promise<NftInfo> {
     try {
       const nftData = await this.remoteDataFetcher.fetchNftDetails(event);
       const nftDbDto = nftData.getNftInfoDto();
