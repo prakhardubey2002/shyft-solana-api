@@ -11,11 +11,7 @@ import {
 } from '@metaplex-foundation/js';
 import { NodeWallet } from '@metaplex/js';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import {
-  PublicKey,
-  SYSVAR_INSTRUCTIONS_PUBKEY,
-  Transaction,
-} from '@solana/web3.js';
+import { PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { BuyAttachedDto } from './dto/buy-listed.dto';
 import { UnlistAttachedDto } from './dto/cancel-listing.dto';
@@ -68,21 +64,15 @@ export class ListingService {
   ) {}
   async createListing(createListDto: CreateListingServiceDto): Promise<any> {
     try {
-      const sellerKp = AccountUtils.getKeypair(
-        createListDto.createListingParams.private_key,
-      );
+      const sellerKp = AccountUtils.getKeypair(createListDto.createListingParams.private_key);
       const wallet = new NodeWallet(sellerKp);
-      const connection = Utility.connectRpc(
-        createListDto.createListingParams.network,
-      );
+      const connection = Utility.connectRpc(createListDto.createListingParams.network);
       const metaplex = Metaplex.make(connection, {
         cluster: createListDto.createListingParams.network,
       }).use(keypairIdentity(sellerKp));
       const auctionsClient = metaplex.auctions();
       const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(
-          new PublicKey(createListDto.createListingParams.marketplace_address),
-        )
+        .findAuctionHouseByAddress(new PublicKey(createListDto.createListingParams.marketplace_address))
         .run();
 
       const auctionCurrency = auctionHouse.treasuryMint;
@@ -94,15 +84,10 @@ export class ListingService {
         .for(auctionHouse)
         .list({
           seller: wallet.publicKey,
-          mintAccount: new PublicKey(
-            createListDto.createListingParams.nft_address,
-          ),
+          mintAccount: new PublicKey(createListDto.createListingParams.nft_address),
           price: {
             currency: auctionCurrency.currency,
-            basisPoints: toBigNumber(
-              createListDto.createListingParams.price *
-                Math.pow(10, auctionCurrency.decimals),
-            ),
+            basisPoints: toBigNumber(createListDto.createListingParams.price * Math.pow(10, auctionCurrency.decimals)),
           },
           printReceipt: true,
           bookkeeper: wallet.payer,
@@ -175,9 +160,7 @@ export class ListingService {
       );
 
       const auctionHouseClient = auctionsClient.for(auctionHouse);
-      const listing = await auctionHouseClient
-        .findListingByAddress(sellerTradeState)
-        .run();
+      const listing = await auctionHouseClient.findListingByAddress(sellerTradeState).run();
 
       const { bid } = await auctionHouseClient
         .bid({
@@ -229,14 +212,8 @@ export class ListingService {
     }
   }
 
-  async getListingDetail(
-    getListingDetailsDto: GetListingDetailsDto,
-  ): Promise<any> {
-    const {
-      network,
-      marketplace_address: mpAddress,
-      list_state: listState,
-    } = getListingDetailsDto;
+  async getListingDetail(getListingDetailsDto: GetListingDetailsDto): Promise<any> {
+    const { network, marketplace_address: mpAddress, list_state: listState } = getListingDetailsDto;
     try {
       const dbListing = await this.listingRepo.getListing(network, listState);
       if (!dbListing) {
@@ -277,32 +254,19 @@ export class ListingService {
     return result;
   }
 
-  private async fetchFromBlockchain(
-    network,
-    mpAddress: string,
-    listState: string,
-  ): Promise<ListingInfoResponseDto> {
+  private async fetchFromBlockchain(network, mpAddress: string, listState: string): Promise<ListingInfoResponseDto> {
     const connection = Utility.connectRpc(network);
     const metaplex = Metaplex.make(connection, {
       cluster: network,
     });
     const auctionsClient = metaplex.auctions();
-    const auctionHouse = await auctionsClient
-      .findAuctionHouseByAddress(new PublicKey(mpAddress))
-      .run();
+    const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(mpAddress)).run();
 
     const auctionHouseClient = auctionsClient.for(auctionHouse);
-    const listing = await auctionHouseClient
-      .findListingByAddress(toPublicKey(listState))
-      .run();
+    const listing = await auctionHouseClient.findListingByAddress(toPublicKey(listState)).run();
 
-    const price =
-      listing.price.basisPoints.toNumber() /
-      Math.pow(10, listing.price.currency.decimals);
-    const currencySymbol = await Utility.token.getTokenSymbol(
-      network,
-      auctionHouse.treasuryMint.address.toBase58(),
-    );
+    const price = listing.price.basisPoints.toNumber() / Math.pow(10, listing.price.currency.decimals);
+    const currencySymbol = await Utility.token.getTokenSymbol(network, auctionHouse.treasuryMint.address.toBase58());
     const nftAddress = listing.asset.address.toBase58();
     const nft = await this.nftReadService.readNft({
       network: network,
@@ -336,10 +300,7 @@ export class ListingService {
       auctionHouse.address,
       null,
     );
-    this.eventEmitter.emit(
-      'listing.creation.initiated',
-      listingInitiationEvent,
-    );
+    this.eventEmitter.emit('listing.creation.initiated', listingInitiationEvent);
     return result;
   }
 
@@ -353,15 +314,11 @@ export class ListingService {
       }).use(keypairIdentity(sellerKp));
       const auctionsClient = metaplex.auctions();
       const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(
-          new PublicKey(cancelListingDto.marketplace_address),
-        )
+        .findAuctionHouseByAddress(new PublicKey(cancelListingDto.marketplace_address))
         .run();
 
       const auctionHouseClient = auctionsClient.for(auctionHouse);
-      const listing = await auctionHouseClient
-        .findListingByAddress(toPublicKey(cancelListingDto.list_state))
-        .run();
+      const listing = await auctionHouseClient.findListingByAddress(toPublicKey(cancelListingDto.list_state)).run();
 
       const accounts: CancelInstructionAccounts = {
         wallet: listing.sellerAddress,
@@ -381,19 +338,14 @@ export class ListingService {
       };
 
       const cancelInstruction = createCancelInstruction(accounts, args);
-      const cancelListingReceiptInstruction =
-        createCancelListingReceiptInstruction({
-          receipt: listing.receiptAddress as Pda,
-          instruction: SYSVAR_INSTRUCTIONS_PUBKEY,
-        });
+      const cancelListingReceiptInstruction = createCancelListingReceiptInstruction({
+        receipt: listing.receiptAddress as Pda,
+        instruction: SYSVAR_INSTRUCTIONS_PUBKEY,
+      });
 
-      const txt = new Transaction()
-        .add(cancelInstruction)
-        .add(cancelListingReceiptInstruction);
+      const txt = new Transaction().add(cancelInstruction).add(cancelListingReceiptInstruction);
       txt.feePayer = wallet.publicKey;
-      txt.recentBlockhash = (
-        await connection.getLatestBlockhash('finalized')
-      ).blockhash;
+      txt.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const signedTx = await wallet.signTransaction(txt);
       const txId = await connection.sendRawTransaction(signedTx.serialize());
 
@@ -412,15 +364,10 @@ export class ListingService {
     }
   }
 
-  async getActiveListings(
-    getListingDto: GetListingsDto,
-  ): Promise<ActiveListingsResultDto[]> {
+  async getActiveListings(getListingDto: GetListingsDto): Promise<ActiveListingsResultDto[]> {
     try {
       const { network, marketplace_address } = getListingDto;
-      const dataSet = await this.listingRepo.getActiveListings(
-        network,
-        marketplace_address,
-      );
+      const dataSet = await this.listingRepo.getActiveListings(network, marketplace_address);
       const result = await Promise.all(
         dataSet.map(async (listing) => {
           const nft = await this.nftReadService.readNft({
@@ -470,9 +417,7 @@ export class ListingService {
     }
   }
 
-  async getSellerListings(
-    getListingDto: GetSellerListingsDto,
-  ): Promise<SellerListingsDto[]> {
+  async getSellerListings(getListingDto: GetSellerListingsDto): Promise<SellerListingsDto[]> {
     try {
       const dataSet = await this.listingRepo.getSellerListings(
         getListingDto.network,
@@ -503,9 +448,7 @@ export class ListingService {
     }
   }
 
-  async getPurchases(
-    getPurchasesDto: GetPurchasesDto,
-  ): Promise<PurchasesDto[]> {
+  async getPurchases(getPurchasesDto: GetPurchasesDto): Promise<PurchasesDto[]> {
     try {
       const dataSet = await this.listingRepo.getOrders(
         getPurchasesDto.network,
@@ -534,24 +477,10 @@ export class ListingService {
 
   async stats(getStatsDto: GetStatsDto): Promise<any> {
     try {
-      const { start_date, end_date } = getStatsDto;
-      if (end_date && end_date < start_date) {
-        throw new Error('invalid_date_input');
-      }
       const result = await this.listingRepo.stats(getStatsDto);
       return result;
     } catch (err) {
-      if ((err.message = 'invalid_date_input')) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: 'start_date should not be greater than end_date',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw newProgramErrorFrom(err, 'no_data_found');
-      }
+      throw newProgramErrorFrom(err, 'no_data_found');
     }
   }
 }

@@ -12,9 +12,7 @@ const { minDateOnSearch } = configuration();
 
 @Injectable()
 export class ListingRepo {
-  constructor(
-    @InjectModel(Listing.name) public ListingModel: Model<ListingDocument>,
-  ) {}
+  constructor(@InjectModel(Listing.name) public ListingModel: Model<ListingDocument>) {}
 
   public async insert(data: Listing): Promise<any> {
     try {
@@ -50,11 +48,7 @@ export class ListingRepo {
     }
   }
 
-  async updateCancelledAt(
-    network: WalletAdapterNetwork,
-    listState: string,
-    cancelTime: Date,
-  ): Promise<any> {
+  async updateCancelledAt(network: WalletAdapterNetwork, listState: string, cancelTime: Date): Promise<any> {
     try {
       const filter = { network: network, list_state: listState };
       const update = { cancelled_at: cancelTime };
@@ -65,10 +59,7 @@ export class ListingRepo {
     }
   }
 
-  async getListing(
-    network: WalletAdapterNetwork,
-    listState: string,
-  ): Promise<ListingDbDto> {
+  async getListing(network: WalletAdapterNetwork, listState: string): Promise<ListingDbDto> {
     try {
       const filter = { network: network, list_state: listState };
       const result = await this.ListingModel.findOne(filter);
@@ -78,16 +69,10 @@ export class ListingRepo {
     }
   }
 
-  async getActiveListings(
-    network: WalletAdapterNetwork,
-    marketPlaceAddress: string,
-  ): Promise<ListingDocument[]> {
+  async getActiveListings(network: WalletAdapterNetwork, marketPlaceAddress: string): Promise<ListingDocument[]> {
     try {
       const filter = {
-        $or: [
-          { cancelled_at: { $exists: false } },
-          { cancelled_at: { $eq: null } },
-        ],
+        $or: [{ cancelled_at: { $exists: false } }, { cancelled_at: { $eq: null } }],
         network: network,
         marketplace_address: marketPlaceAddress,
         purchased_at: { $exists: false },
@@ -142,9 +127,7 @@ export class ListingRepo {
       end_date = end_date ?? new Date();
       // add a day to the date, cause mongoose not feching today's data if date query added
       end_date.setDate(end_date.getDate() + 1);
-      const createdAtQuery = start_date
-        ? { $gte: start_date, $lte: end_date }
-        : { $ne: null };
+      const createdAtQuery = start_date ? { $gte: start_date, $lte: end_date } : { $ne: null };
 
       const salesDetail = await this.ListingModel.aggregate([
         {

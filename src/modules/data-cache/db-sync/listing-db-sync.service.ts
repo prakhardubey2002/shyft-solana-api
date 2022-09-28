@@ -68,67 +68,38 @@ export class ListingDbSyncService {
         event.purchasedAt,
         event.purchaseReceipt,
       );
-      await this.nftInfoAccessor.updateNftOwner(
-        event.network,
-        event.nftAddress,
-        event.buyerAddress,
-      );
+      await this.nftInfoAccessor.updateNftOwner(event.network, event.nftAddress, event.buyerAddress);
     } catch (err) {
       newProgramErrorFrom(err, 'listing_db_mark_sold').log();
     }
   }
 
   @OnEvent('listing.cancelled', { async: true })
-  async handleListingCancelledEvent(
-    event: ListingCancelledEvent,
-  ): Promise<any> {
+  async handleListingCancelledEvent(event: ListingCancelledEvent): Promise<any> {
     try {
       const cancelTime = new Date(event.cancelledAt);
-      await this.listingRepo.updateCancelledAt(
-        event.network,
-        event.listState,
-        cancelTime,
-      );
+      await this.listingRepo.updateCancelledAt(event.network, event.listState, cancelTime);
     } catch (err) {
       newProgramErrorFrom(err, 'listing_db_mark_cancelled').log();
     }
   }
 
   @OnEvent('listing.creation.initiated', { async: true })
-  async handleListingCreationInitiationEvent(
-    event: ListingInitiationEvent,
-  ): Promise<any> {
+  async handleListingCreationInitiationEvent(event: ListingInitiationEvent): Promise<any> {
     const syncListing = this.syncListingCreation.bind(this);
-    Timer.setTimer(
-      syncListing,
-      event,
-      LISTING_TIMER_EXPIRY,
-      LISTING_TIMER_INTERVAL,
-    );
+    Timer.setTimer(syncListing, event, LISTING_TIMER_EXPIRY, LISTING_TIMER_INTERVAL);
   }
 
   @OnEvent('listing.unlist.initiated', { async: true })
-  async handleUnlistInitiationEvent(
-    event: UnlistInitiationEvent,
-  ): Promise<any> {
+  async handleUnlistInitiationEvent(event: UnlistInitiationEvent): Promise<any> {
     const syncCancellation = this.syncListingCancellation.bind(this);
-    Timer.setTimer(
-      syncCancellation,
-      event,
-      LISTING_TIMER_EXPIRY,
-      LISTING_TIMER_INTERVAL,
-    );
+    Timer.setTimer(syncCancellation, event, LISTING_TIMER_EXPIRY, LISTING_TIMER_INTERVAL);
   }
 
   @OnEvent('listing.sale.initiated', { async: true })
   async handleSaleInitiationEvent(event: SaleInitiationEvent): Promise<any> {
     const saleInitiation = this.syncSaleInitiation.bind(this);
-    Timer.setTimer(
-      saleInitiation,
-      event,
-      LISTING_TIMER_EXPIRY,
-      LISTING_TIMER_INTERVAL,
-    );
+    Timer.setTimer(saleInitiation, event, LISTING_TIMER_EXPIRY, LISTING_TIMER_INTERVAL);
   }
 
   private async syncListingCreation(event: ListingInitiationEvent, date: Date) {
@@ -136,21 +107,14 @@ export class ListingDbSyncService {
       const connection = Utility.connectRpc(event.network);
       const metaplex = Metaplex.make(connection, { cluster: event.network });
       const auctionsClient = metaplex.auctions();
-      const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(event.auctionHouseAddress)
-        .run();
-      const listing = await auctionsClient
-        .for(auctionHouse)
-        .findListingByAddress(event.listState)
-        .run();
+      const auctionHouse = await auctionsClient.findAuctionHouseByAddress(event.auctionHouseAddress).run();
+      const listing = await auctionsClient.for(auctionHouse).findListingByAddress(event.listState).run();
 
       if (listing.canceledAt != null) {
         return;
       }
 
-      const price =
-        listing.price.basisPoints.toNumber() /
-        Math.pow(10, listing.price.currency.decimals);
+      const price = listing.price.basisPoints.toNumber() / Math.pow(10, listing.price.currency.decimals);
       const currencySymbol = await Utility.token.getTokenSymbol(
         event.network,
         auctionHouse.treasuryMint.address.toBase58(),
@@ -177,35 +141,21 @@ export class ListingDbSyncService {
       if (!err.name.includes('account_not_found')) {
         err.log();
       } else {
-        console.log(
-          'listing not created, listState: ',
-          event.listState.toBase58(),
-        );
+        console.log('listing not created, listState: ', event.listState.toBase58());
       }
     }
   }
 
-  private async syncListingCancellation(
-    event: UnlistInitiationEvent,
-    date: Date,
-  ) {
+  private async syncListingCancellation(event: UnlistInitiationEvent, date: Date) {
     const receiptAddress = findListingReceiptPda(event.listState);
     const connection = Utility.connectRpc(event.network);
     const metaplex = Metaplex.make(connection);
-    const account = toListingReceiptAccount(
-      await metaplex.rpc().getAccount(receiptAddress),
-    );
+    const account = toListingReceiptAccount(await metaplex.rpc().getAccount(receiptAddress));
     let cancelledAt;
     console.log('checking listing cancellation');
     if (account.data.canceledAt != null) {
-      cancelledAt = new Date(
-        toDateTime(account.data.canceledAt).toNumber() * 1000,
-      );
-      this.listingRepo.updateCancelledAt(
-        event.network,
-        event.listState.toBase58(),
-        cancelledAt,
-      );
+      cancelledAt = new Date(toDateTime(account.data.canceledAt).toNumber() * 1000);
+      this.listingRepo.updateCancelledAt(event.network, event.listState.toBase58(), cancelledAt);
       console.log('listing cancelled');
       Timer.clearTimer(date);
     }
@@ -215,31 +165,17 @@ export class ListingDbSyncService {
     try {
       const connection = Utility.connectRpc(event.network);
       const metaplex = Metaplex.make(connection);
-      const receiptAddress = findPurchaseReceiptPda(
-        event.listState,
-        event.bidState,
-      );
-      const account = toPurchaseReceiptAccount(
-        await metaplex.rpc().getAccount(receiptAddress),
-      );
+      const receiptAddress = findPurchaseReceiptPda(event.listState, event.bidState);
+      const account = toPurchaseReceiptAccount(await metaplex.rpc().getAccount(receiptAddress));
 
       if (account != null) {
         const createdAt = toDateTime(account.data.createdAt);
         const buyer = account.data.buyer.toBase58();
         const purchaseReceipt = account.publicKey.toBase58();
-        this.listingRepo.markSold(
-          event.network,
-          event.listState.toBase58(),
-          buyer,
-          createdAt,
-          purchaseReceipt,
-        );
+        this.listingRepo.markSold(event.network, event.listState.toBase58(), buyer, createdAt, purchaseReceipt);
 
-        await this.nftInfoAccessor.updateNftOwner(
-          event.network,
-          event.nftAddress,
-          buyer,
-        );
+        await this.nftInfoAccessor.updateNftOwner(event.network, event.nftAddress, buyer);
+        // put the code to
         console.log('listing purchased');
         Timer.clearTimer(date);
       }
@@ -248,18 +184,12 @@ export class ListingDbSyncService {
       if (!err.name.includes('account_not_found')) {
         err.log();
       } else {
-        console.log(
-          'listing not bought, listState: ',
-          event.listState.toBase58(),
-        );
+        console.log('listing not bought, listState: ', event.listState.toBase58());
       }
     }
   }
 
-  async triggerNftSync(
-    network: WalletAdapterNetwork,
-    nftAddress: string,
-  ): Promise<any> {
+  async triggerNftSync(network: WalletAdapterNetwork, nftAddress: string): Promise<any> {
     const nftReadEvent = new NftSyncEvent(nftAddress, network);
     this.eventEmitter.emit('nft.read', nftReadEvent);
   }

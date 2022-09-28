@@ -1,13 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Req,
-  Version,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Req, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
+import { newProgramError } from 'src/core/program-error';
 import { BuyAttachedDto as BuyAttachedDto } from './dto/buy-listed.dto';
 import { UnlistAttachedDto } from './dto/cancel-listing.dto';
 import { ListAttachedDto } from './dto/create-list.dto';
@@ -45,10 +38,7 @@ import {
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('marketplace')
 export class CreateMarketplaceController {
-  constructor(
-    private marketplaceService: MarketplaceService,
-    private listingService: ListingService,
-  ) {}
+  constructor(private marketplaceService: MarketplaceService, private listingService: ListingService) {}
 
   @Post('create')
   @CreateMpAttachedOpenApi()
@@ -74,9 +64,7 @@ export class CreateMarketplaceController {
   @Post('withdraw_fee')
   @WithdrawAttachedOpenApi()
   @Version('0')
-  async withdrawFees(
-    @Body() withdrawFeeDto: WithdrawFeeAttachedDto,
-  ): Promise<any> {
+  async withdrawFees(@Body() withdrawFeeDto: WithdrawFeeAttachedDto): Promise<any> {
     console.log('withdraw fee request received');
     const result = await this.marketplaceService.withdrawFee(withdrawFeeDto);
     return {
@@ -89,10 +77,7 @@ export class CreateMarketplaceController {
   @Post('update')
   @UpdateMpAttachedOpenApi()
   @Version('0')
-  async update(
-    @Body() updateMpDto: UpdateMarketplaceAttachedDto,
-    @Req() request: any,
-  ): Promise<any> {
+  async update(@Body() updateMpDto: UpdateMarketplaceAttachedDto, @Req() request: any): Promise<any> {
     console.log('update marketplace request received');
     const serviceDto: UpdateMpSerivceDto = {
       apiKeyId: request.id,
@@ -108,13 +93,9 @@ export class CreateMarketplaceController {
 
   @Get('treasury_balance')
   @Version('1')
-  async getTreasuryBalance(
-    @Query() getTreasuryBalance: GetTreasuryBalanceDto,
-  ): Promise<any> {
+  async getTreasuryBalance(@Query() getTreasuryBalance: GetTreasuryBalanceDto): Promise<any> {
     console.log('get treasury balance request received');
-    const result = await this.marketplaceService.getTreasuryBalance(
-      getTreasuryBalance,
-    );
+    const result = await this.marketplaceService.getTreasuryBalance(getTreasuryBalance);
     return {
       success: true,
       message: 'treasury balance fetched successfully',
@@ -125,10 +106,7 @@ export class CreateMarketplaceController {
   @Post('list')
   @CreateListingAttachedOpenApi()
   @Version('0')
-  async list(
-    @Body() createListingDto: ListAttachedDto,
-    @Req() request: any,
-  ): Promise<any> {
+  async list(@Body() createListingDto: ListAttachedDto, @Req() request: any): Promise<any> {
     console.log('listing creation request received');
 
     const result = await this.listingService.createListing({
@@ -171,10 +149,7 @@ export class CreateMarketplaceController {
   @Get('my_markets')
   @MyMarketsOpenApi()
   @Version('1')
-  async getMarketplace(
-    @Query() getMpDto: GetMarketplacesDto,
-    @Req() request: any,
-  ): Promise<any> {
+  async getMarketplace(@Query() getMpDto: GetMarketplacesDto, @Req() request: any): Promise<any> {
     console.log('market places fetch request received.');
     const result = await this.marketplaceService.getMarketplaces({
       network: getMpDto.network,
@@ -193,9 +168,7 @@ export class CreateMarketplaceController {
   @Version('1')
   async findMarketplace(@Query() findMarketplaceDto: FindMarketplaceDto) {
     console.log('find marketplace request received');
-    const result = await this.marketplaceService.findMarketplace(
-      findMarketplaceDto,
-    );
+    const result = await this.marketplaceService.findMarketplace(findMarketplaceDto);
     return {
       success: true,
       message: 'Marketplace found successfully',
@@ -206,13 +179,9 @@ export class CreateMarketplaceController {
   @Get('list_details')
   @ListDetailsOpenApi()
   @Version('1')
-  async findListing(
-    @Query() getListingDetailsDto: GetListingDetailsDto,
-  ): Promise<any> {
+  async findListing(@Query() getListingDetailsDto: GetListingDetailsDto): Promise<any> {
     console.log('getListingDetails request received');
-    const result = await this.listingService.getListingDetail(
-      getListingDetailsDto,
-    );
+    const result = await this.listingService.getListingDetail(getListingDetailsDto);
     return {
       success: true,
       message: 'Listing details fetched successfully',
@@ -223,9 +192,7 @@ export class CreateMarketplaceController {
   @Get('active_listings')
   @ActiveListingsOpenApi()
   @Version('1')
-  async getActiveListingInMarketPlace(
-    @Query() getListingDto: GetListingsDto,
-  ): Promise<any> {
+  async getActiveListingInMarketPlace(@Query() getListingDto: GetListingsDto): Promise<any> {
     console.log('get activeListings request received');
     const result = await this.listingService.getActiveListings(getListingDto);
     return {
@@ -238,9 +205,7 @@ export class CreateMarketplaceController {
   @Get('active_sellers')
   @ActiveSellersOpenApi()
   @Version('1')
-  async getActiveSellersInMarketPlace(
-    @Query() getListingDto: GetListingsDto,
-  ): Promise<any> {
+  async getActiveSellersInMarketPlace(@Query() getListingDto: GetListingsDto): Promise<any> {
     console.log('get active sellers in market request received');
     const result = await this.listingService.getActiveSellers(getListingDto);
     return {
@@ -253,9 +218,7 @@ export class CreateMarketplaceController {
   @Get('seller_listings')
   @SellerListingsOpenApi()
   @Version('1')
-  async getSellerListingsInMarketPlace(
-    @Query() getListingDto: GetSellerListingsDto,
-  ): Promise<any> {
+  async getSellerListingsInMarketPlace(@Query() getListingDto: GetSellerListingsDto): Promise<any> {
     console.log('get active listings of a seller in market request received');
     const result = await this.listingService.getSellerListings(getListingDto);
     return {
@@ -282,11 +245,28 @@ export class CreateMarketplaceController {
   @StatsOpenApi()
   @Version('1')
   async stats(@Query() getStatsDto: GetStatsDto): Promise<any> {
-    const result = await this.listingService.stats(getStatsDto);
-    return {
-      success: true,
-      message: 'Marketplace stats fetched successfully',
-      result,
-    };
+    try {
+      const { start_date, end_date } = getStatsDto;
+      if (end_date && start_date > end_date) {
+        throw newProgramError(
+          'invalid_date_input',
+          HttpStatus.BAD_REQUEST,
+          'end_date should be greater than start_date',
+          '',
+          'stats_api_controller',
+          {
+            input: getStatsDto,
+          },
+        );
+      }
+      const result = await this.listingService.stats(getStatsDto);
+      return {
+        success: true,
+        message: 'Marketplace stats fetched successfully',
+        result,
+      };
+    } catch (err) {
+      throw err;
+    }
   }
 }

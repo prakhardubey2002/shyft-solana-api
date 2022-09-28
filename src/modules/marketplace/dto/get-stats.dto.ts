@@ -1,14 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { Transform } from 'class-transformer';
-import {
-  IsDate,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxDate,
-  MinDate,
-} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsDate, IsNotEmpty, IsOptional, IsString, MaxDate, MinDate } from 'class-validator';
 import { configuration } from 'src/common/configs/config';
 
 const { minDateOnSearch } = configuration();
@@ -41,12 +34,17 @@ export class GetStatsDto {
   })
   @IsOptional()
   @IsDate()
-  @MinDate(new Date(minDateOnSearch))
-  @MaxDate(new Date())
+  @Type(() => Date)
   @Transform(({ value }) => {
-    if (new Date(value) < new Date(minDateOnSearch)) {
+    const now = new Date();
+    if (now < new Date(minDateOnSearch)) {
       return new Date(minDateOnSearch);
     }
+
+    if (value > now) {
+      return new Date();
+    }
+
     return new Date(value);
   })
   readonly start_date: Date;
@@ -59,12 +57,17 @@ export class GetStatsDto {
   })
   @IsOptional()
   @IsDate()
-  @MinDate(new Date(minDateOnSearch))
-  @MaxDate(new Date())
+  @Type(() => Date)
   @Transform(({ value }) => {
-    if (new Date(value) < new Date(minDateOnSearch)) {
+    const now = new Date();
+    if (now < new Date(minDateOnSearch)) {
       return new Date(minDateOnSearch);
     }
+
+    if (value > now) {
+      return new Date();
+    }
+
     return new Date(value);
   })
   readonly end_date?: Date;
