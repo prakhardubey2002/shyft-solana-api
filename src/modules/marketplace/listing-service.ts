@@ -10,7 +10,7 @@ import {
   Pda,
 } from '@metaplex-foundation/js';
 import { NodeWallet } from '@metaplex/js';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { BuyAttachedDto } from './dto/buy-listed.dto';
@@ -424,24 +424,31 @@ export class ListingService {
         getListingDto.marketplace_address,
         getListingDto.seller_address,
       );
-      const result = dataSet.map((listing) => {
-        const acl: SellerListingsDto = {
-          network: listing.network,
-          marketplace_address: listing.marketplace_address,
-          seller_address: listing.seller_address,
-          price: listing.price,
-          nft_address: listing.nft_address,
-          currency_symbol: listing.currency_symbol,
-          buyer_address: listing.buyer_address,
-          created_at: listing.created_at,
-          list_state: listing.list_state,
-          purchased_at: listing.purchased_at,
-          purchase_receipt: listing.purchase_receipt_address,
-          receipt: listing.receipt_address,
-          cancelled_at: listing.cancelled_at,
-        };
-        return acl;
-      });
+      const result = await Promise.all(
+        dataSet.map(async (listing) => {
+          const nft = await this.nftReadService.readNft({
+            network: getListingDto.network,
+            token_address: listing.nft_address,
+          });
+          const acl: SellerListingsDto = {
+            network: listing.network,
+            marketplace_address: listing.marketplace_address,
+            seller_address: listing.seller_address,
+            price: listing.price,
+            nft_address: listing.nft_address,
+            nft,
+            currency_symbol: listing.currency_symbol,
+            buyer_address: listing.buyer_address,
+            created_at: listing.created_at,
+            list_state: listing.list_state,
+            purchased_at: listing.purchased_at,
+            purchase_receipt: listing.purchase_receipt_address,
+            receipt: listing.receipt_address,
+            cancelled_at: listing.cancelled_at,
+          };
+          return acl;
+        }),
+      );
       return result;
     } catch (err) {
       throw newProgramErrorFrom(err, 'get_seller_listings_error');
