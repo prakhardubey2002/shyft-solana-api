@@ -126,7 +126,7 @@ export class PrintNftEditionDetachDto {
 
   @ApiPropertyOptional({
     name: 'service_charge',
-    description: 'You can charge some token/sol while creating nft',
+    description: 'You can charge some token/sol for minting nft',
     type: 'string',
     example: {
       receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',

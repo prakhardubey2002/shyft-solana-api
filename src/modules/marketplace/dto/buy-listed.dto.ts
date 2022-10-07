@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ServiceCharge } from 'src/common/utils/utils';
 
 export class BuyAttachedDto {
   @ApiProperty({
@@ -16,8 +17,7 @@ export class BuyAttachedDto {
     title: 'private_key',
     type: String,
     description: "Buyer wallet's private key",
-    example:
-      '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
+    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
   @IsString()
@@ -26,8 +26,7 @@ export class BuyAttachedDto {
   @ApiProperty({
     title: "Seller's Wallet Address",
     type: String,
-    description:
-      'address of the seller wallet, who has listed the NFT for sale',
+    description: 'address of the seller wallet, who has listed the NFT for sale',
     example: 'GE4kh5FsCDWeJfqLsKx7zC9ijkqKpCuYQxh8FYBiTJe',
   })
   @IsNotEmpty()
@@ -88,8 +87,7 @@ export class BuyDto {
   @ApiProperty({
     title: "Seller's Wallet Address",
     type: String,
-    description:
-      'address of the seller wallet, who has listed the NFT for sale',
+    description: 'address of the seller wallet, who has listed the NFT for sale',
     example: 'GE4kh5FsCDWeJfqLsKx7zC9ijkqKpCuYQxh8FYBiTJe',
   })
   @IsNotEmpty()
@@ -125,4 +123,17 @@ export class BuyDto {
   @IsNotEmpty()
   @IsString()
   readonly nft_address: string;
+
+  @ApiPropertyOptional({
+    name: 'service_charge',
+    description: 'You can charge some token/sol while buying nft',
+    type: 'string',
+    example: {
+      receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+      token: 'DjMA5cCK95X333t7SgkpsG5vC9wMk7u9JV4w8qipvFE8',
+      amount: 0.01,
+    },
+  })
+  @IsOptional()
+  service_charge?: ServiceCharge;
 }

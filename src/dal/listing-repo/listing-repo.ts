@@ -48,6 +48,25 @@ export class ListingRepo {
     }
   }
 
+  public async markSoldWithoutReceipt(
+    network: WalletAdapterNetwork,
+    listState: string,
+    buyer: string,
+    purchasedAt: Date,
+  ): Promise<any> {
+    try {
+      const filter = { network: network, list_state: listState };
+      const update = {
+        buyer_address: buyer,
+        purchased_at: purchasedAt,
+      };
+      const result = await this.ListingModel.updateOne(filter, update);
+      return result;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
   async updateCancelledAt(network: WalletAdapterNetwork, listState: string, cancelTime: Date): Promise<any> {
     try {
       const filter = { network: network, list_state: listState };

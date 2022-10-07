@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ServiceCharge } from 'src/common/utils/utils';
 
 export class ListAttachedDto {
   @ApiProperty({
@@ -46,8 +47,7 @@ export class ListAttachedDto {
     title: 'private_key',
     type: String,
     description: "Seller wallet's private key",
-    example:
-      '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
+    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
   @IsString()
@@ -103,4 +103,17 @@ export class ListDto {
   @IsNotEmpty()
   @IsString()
   readonly seller_wallet: string;
+
+  @ApiPropertyOptional({
+    name: 'service_charge',
+    description: 'You can charge some token/sol while listing nft for sale',
+    type: 'string',
+    example: {
+      receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+      token: 'DjMA5cCK95X333t7SgkpsG5vC9wMk7u9JV4w8qipvFE8',
+      amount: 0.01,
+    },
+  })
+  @IsOptional()
+  service_charge?: ServiceCharge;
 }

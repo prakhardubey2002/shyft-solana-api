@@ -17,7 +17,7 @@ export class CreateNftDetachDto {
   @ApiProperty({
     title: 'wallet',
     type: String,
-    description: 'Creator\'s wallet\'s address',
+    description: "Creator's wallet's address",
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
@@ -100,10 +100,11 @@ export class CreateNftDetachDto {
   })
   @IsOptional()
   @IsNumber()
-  @Transform(({ value }) => {
-    value = Math.max(0, Math.min(value, 100));
-    value = value * 100; // since 100 = 1%
-    return value;
+  @Transform(
+    ({ value }) => {
+      value = Math.max(0, Math.min(value, 100));
+      value = value * 100; // since 100 = 1%
+      return value;
     },
     { toClassOnly: true },
   )
@@ -128,7 +129,7 @@ export class CreateNftDetachDto {
 
   @ApiPropertyOptional({
     name: 'service_charge',
-    description: 'You can charge some token/sol while creating nft',
+    description: 'You can charge some token/sol for creating nft',
     type: 'string',
     example: {
       receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',

@@ -6,11 +6,7 @@ import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { NftData } from '../remote-data-fetcher/dto/data-fetcher.dto';
 
 export class NftCreationEvent {
-  constructor(
-    tokenAddress: string,
-    network: WalletAdapterNetwork,
-    apiKeyId: ObjectId,
-  ) {
+  constructor(tokenAddress: string, network: WalletAdapterNetwork, apiKeyId: ObjectId) {
     this.tokenAddress = tokenAddress;
     this.network = network;
     this.apiKeyId = apiKeyId;
@@ -22,12 +18,7 @@ export class NftCreationEvent {
 }
 
 export class NftWalletSyncEvent {
-  constructor(
-    network: WalletAdapterNetwork,
-    walletAddress: string,
-    updateAuthority: string,
-    dbNfts: NftInfo[],
-  ) {
+  constructor(network: WalletAdapterNetwork, walletAddress: string, updateAuthority: string, dbNfts: NftInfo[]) {
     this.walletAddress = walletAddress;
     this.network = network;
     this.updateAuthority = updateAuthority;
@@ -43,11 +34,7 @@ export class NftWalletSyncEvent {
 }
 
 export class SaveNftsInDbEvent {
-  constructor(
-    network: WalletAdapterNetwork,
-    walletAddress: string,
-    nfts: NftData[],
-  ) {
+  constructor(network: WalletAdapterNetwork, walletAddress: string, nfts: NftData[]) {
     this.network = network;
     this.walletAddress = walletAddress;
     this.nfts = nfts;
@@ -59,11 +46,7 @@ export class SaveNftsInDbEvent {
 }
 
 export class NftReadByCreatorEvent {
-  constructor(
-    creator_wallet_address: string,
-    network: WalletAdapterNetwork,
-    nfts?: NftInfo[],
-  ) {
+  constructor(creator_wallet_address: string, network: WalletAdapterNetwork, nfts?: NftInfo[]) {
     this.creator = creator_wallet_address;
     this.network = network;
     this.nfts = nfts;
@@ -94,11 +77,7 @@ export class NftSyncEvent {
 }
 
 export class NftWaitSyncEvent extends NftSyncEvent {
-  constructor(
-    network: WalletAdapterNetwork,
-    tokenAddress: string,
-    waitTime: number,
-  ) {
+  constructor(network: WalletAdapterNetwork, tokenAddress: string, waitTime: number) {
     super(tokenAddress, network);
     this.waitTime = waitTime;
   }
@@ -293,12 +272,7 @@ export class ListingCancelledEvent {
 }
 
 export class MarketplaceInitiationEvent {
-  constructor(
-    network: WalletAdapterNetwork,
-    address: string,
-    apiKeyId: ObjectId,
-    feeRecipient: string,
-  ) {
+  constructor(network: WalletAdapterNetwork, address: string, apiKeyId: ObjectId, feeRecipient: string) {
     this.network = network;
     this.address = address;
     this.apiKeyId = apiKeyId;
@@ -313,12 +287,7 @@ export class MarketplaceInitiationEvent {
 export type MarketplaceUpdateInitiationEvent = MarketplaceInitiationEvent;
 
 export class ListingInitiationEvent {
-  constructor(
-    network: WalletAdapterNetwork,
-    listState: PublicKey,
-    auctionHouse: PublicKey,
-    apiKeyId: ObjectId,
-  ) {
+  constructor(network: WalletAdapterNetwork, listState: PublicKey, auctionHouse: PublicKey, apiKeyId: ObjectId) {
     this.network = network;
     this.listState = listState;
     this.apiKeyId = apiKeyId;
@@ -334,18 +303,34 @@ export class SaleInitiationEvent {
   constructor(
     network: WalletAdapterNetwork,
     nftAddress: string,
-    listState: PublicKey,
-    purchaseReceipt: PublicKey,
+    sellerTradeState: PublicKey,
+    buyerTradeState: PublicKey,
   ) {
     this.network = network;
     this.nftAddress = nftAddress;
-    this.listState = listState;
-    this.bidState = purchaseReceipt;
+    this.sellerTradeState = sellerTradeState;
+    this.buyerTradeState = buyerTradeState;
   }
   network: WalletAdapterNetwork;
   nftAddress: string;
-  bidState: PublicKey;
-  listState: PublicKey;
+  buyerTradeState: PublicKey;
+  sellerTradeState: PublicKey;
+}
+
+export class SaleInitWithServiceChargeEvent extends SaleInitiationEvent {
+  constructor(
+    network: WalletAdapterNetwork,
+    nftAddress: string,
+    sellerTradeState: PublicKey,
+    buyerTradeState: PublicKey,
+    buyer: PublicKey,
+  ) {
+    super(network, nftAddress, sellerTradeState, buyerTradeState);
+    this.purchasedAt = new Date();
+    this.buyer = buyer;
+  }
+  purchasedAt: Date;
+  buyer: PublicKey;
 }
 
 export class UnlistInitiationEvent {

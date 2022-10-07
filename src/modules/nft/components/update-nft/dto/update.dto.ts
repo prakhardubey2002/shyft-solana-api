@@ -17,7 +17,7 @@ export class UpdateNftDto {
   @ApiProperty({
     title: 'private_key',
     type: String,
-    description: 'NFT holder\'s wallet\'s private key',
+    description: "NFT holder's wallet's private key",
     example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
@@ -95,11 +95,12 @@ export class UpdateNftDto {
     example: '100',
   })
   @IsNumber()
-  @Transform(({ value }) => {
-    value = Math.max(0, Math.min(value, 100));
-    value = value * 100; // since 100 = 1%
-    return value;
-  },
+  @Transform(
+    ({ value }) => {
+      value = Math.max(0, Math.min(value, 100));
+      value = value * 100; // since 100 = 1%
+      return value;
+    },
     { toClassOnly: true },
   )
   @IsOptional()
@@ -137,7 +138,7 @@ export class UpdateNftDetachDto {
   @ApiProperty({
     title: 'wallet',
     type: String,
-    description: 'NFT holder\'s wallet\'s address',
+    description: "NFT holder's wallet's address",
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
@@ -205,11 +206,12 @@ export class UpdateNftDetachDto {
     example: '100',
   })
   @IsNumber()
-  @Transform(({ value }) => {
-    value = Math.max(0, Math.min(value, 100));
-    value = value * 100; // since 100 = 1%
-    return value;
-  },
+  @Transform(
+    ({ value }) => {
+      value = Math.max(0, Math.min(value, 100));
+      value = value * 100; // since 100 = 1%
+      return value;
+    },
     { toClassOnly: true },
   )
   @IsOptional()
@@ -235,7 +237,7 @@ export class UpdateNftDetachDto {
 
   @ApiPropertyOptional({
     name: 'service_charge',
-    description: 'You can charge some token/sol while creating nft',
+    description: 'You can charge some token/sol for updating nft',
     type: 'string',
     example: {
       receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
