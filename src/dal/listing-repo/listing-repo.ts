@@ -26,6 +26,26 @@ export class ListingRepo {
     }
   }
 
+  public async isListed(
+    network: WalletAdapterNetwork,
+    marketPlaceAddress: string,
+    nftAddress: string,
+  ): Promise<boolean> {
+    try {
+      const activeListingFilter = {
+        $or: [{ cancelled_at: { $exists: false } }, { cancelled_at: { $eq: null } }],
+        network: network,
+        marketPlace_address: marketPlaceAddress,
+        nft_address: nftAddress,
+        purchased_at: { $exists: false },
+      };
+      const result = await this.ListingModel.exists(activeListingFilter);
+      return Boolean(result?._id);
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
   public async markSold(
     network: WalletAdapterNetwork,
     listState: string,

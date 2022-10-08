@@ -43,6 +43,7 @@ import { PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from '@solana/web3
 import { ObjectId } from 'mongoose';
 import { Utility } from 'src/common/utils/utils';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
+import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
 import {
   ListingInitiationEvent,
   SaleInitiationEvent,
@@ -61,29 +62,33 @@ class CreateListingServiceDto {
 
 @Injectable()
 export class ListingDetachedService {
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(private eventEmitter: EventEmitter2, private listingRepo: ListingRepo) {}
   async createListing(createListDto: CreateListingServiceDto): Promise<any> {
     try {
-      const connection = Utility.connectRpc(createListDto.params.network);
-      const seller = toPublicKey(createListDto.params.seller_wallet);
+      const { network, marketplace_address, nft_address, seller_wallet, price } = createListDto.params;
+      const isAlreadyListed = await this.listingRepo.isListed(network, marketplace_address, nft_address);
+      if (isAlreadyListed)
+        throw newProgramError(
+          'detached_listing_creation_error',
+          HttpStatus.FORBIDDEN,
+          'NFT, ' + nft_address + ' already listed in this marketplace, ' + marketplace_address,
+        );
+
+      const connection = Utility.connectRpc(network);
+      const seller = toPublicKey(seller_wallet);
 
       const metaplex = Metaplex.make(connection, {
-        cluster: createListDto.params.network,
+        cluster: network,
       });
       const auctionsClient = metaplex.auctions();
-      const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(toPublicKey(createListDto.params.marketplace_address))
-        .run();
+      const auctionHouse = await auctionsClient.findAuctionHouseByAddress(toPublicKey(marketplace_address)).run();
 
-      const mintAccount = toPublicKey(createListDto.params.nft_address);
+      const mintAccount = toPublicKey(nft_address);
       const tokenAccount = findAssociatedTokenAccountPda(mintAccount, seller);
       const metadata = findMetadataPda(mintAccount);
 
       const auctionCurrency = auctionHouse.treasuryMint;
-      const offerPrice = amount(
-        toBigNumber(createListDto.params.price * Math.pow(10, auctionCurrency.decimals)),
-        auctionCurrency.currency,
-      );
+      const offerPrice = amount(toBigNumber(price * Math.pow(10, auctionCurrency.decimals)), auctionCurrency.currency);
       const sellerTradeState = findAuctionHouseTradeStatePda(
         auctionHouse.address,
         seller,
@@ -159,23 +164,20 @@ export class ListingDetachedService {
       console.log('create existing txn size', serializedTransaction.length);
       const transactionBase64 = serializedTransaction.toString('base64');
 
-      const currencySymbol = await Utility.token.getTokenSymbol(
-        createListDto.params.network,
-        auctionHouse.treasuryMint.address.toBase58(),
-      );
+      const currencySymbol = await Utility.token.getTokenSymbol(network, auctionHouse.treasuryMint.address.toBase58());
       const resp: DetachedCreateListingResponseDto = {
-        network: createListDto.params.network,
-        marketplace_address: createListDto.params.marketplace_address,
+        network: network,
+        marketplace_address: marketplace_address,
         seller_address: seller.toBase58(),
-        price: createListDto.params.price,
-        nft_address: createListDto.params.nft_address,
+        price: price,
+        nft_address: nft_address,
         list_state: sellerTradeState.toBase58(),
         currency_symbol: currencySymbol,
         encoded_transaction: transactionBase64,
       };
 
       const listingInitiationEvent = new ListingInitiationEvent(
-        createListDto.params.network,
+        network,
         sellerTradeState,
         auctionHouse.address,
         createListDto.apiKeyId,
