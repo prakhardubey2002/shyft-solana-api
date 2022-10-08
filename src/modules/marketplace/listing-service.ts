@@ -395,7 +395,6 @@ export class ListingService {
           }
         }),
       );
-      console.log(result.length);
       return result;
     } catch (err) {
       throw newProgramErrorFrom(err, 'get_active_listings_error');
