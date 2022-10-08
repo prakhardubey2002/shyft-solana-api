@@ -10,6 +10,7 @@ import { Utility } from 'src/common/utils/utils';
 import { Account } from 'src/common/utils/account';
 import { NftDeleteEvent } from '../db-sync/db.events';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
+import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
 
 export interface RawMetaData {
   pubkey: PublicKey;
@@ -187,7 +188,7 @@ export class RemoteDataFetcherService {
 
       return nftData;
     } catch (error) {
-      throw new HttpException(error.message, error.status);
+      throw error;
     }
   }
 
@@ -223,9 +224,19 @@ export class RemoteDataFetcherService {
         this.eventEmitter.emit('nft.deleted', delEvent);
       }
 
-      throw new HttpException(`NFT not found on ${network}`, HttpStatus.NOT_FOUND);
+      throw newProgramError(
+        'NFt_not_found_error',
+        HttpStatus.NOT_FOUND,
+        `NFT ${tokenAddress} not found on ${network}`,
+        '',
+        'data-fetcher.fetchNft',
+        {
+          nft_address: fetchNftDto.tokenAddress,
+          network: fetchNftDto.network,
+        },
+      );
     } catch (error) {
-      throw new HttpException(error.message, error.status);
+      throw newProgramErrorFrom(error);
     }
   }
 

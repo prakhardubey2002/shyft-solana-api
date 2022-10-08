@@ -22,9 +22,7 @@ export class MarketplaceDbSyncService {
   constructor(private marketplaceRepo: MarketplaceRepo) {}
 
   @OnEvent('marketplace.created', { async: true })
-  async handleMarketplaceCreationEvent(
-    event: MarketplaceCreationEvent,
-  ): Promise<any> {
+  async handleMarketplaceCreationEvent(event: MarketplaceCreationEvent): Promise<any> {
     const marketplace = new Marketplace(
       event.apiKeyId,
       event.network,
@@ -57,16 +55,13 @@ export class MarketplaceDbSyncService {
   }
 
   @OnEvent('marketplace.updated', { async: true })
-  async handleMarketplaceUpdateEvent(
-    event: UpdateMarketplaceEvent,
-  ): Promise<any> {
+  async handleMarketplaceUpdateEvent(event: UpdateMarketplaceEvent): Promise<any> {
     const updatedMarketplace = new Marketplace();
     updatedMarketplace.address = event.address;
     updatedMarketplace.currency_address = event.currencyAddress;
     updatedMarketplace.currency_symbol = event.currencySymbol;
     updatedMarketplace.fee_payer = event.feePayer;
-    updatedMarketplace.treasury_withdrawal_destination_owner =
-      event.feeRecipient;
+    updatedMarketplace.treasury_withdrawal_destination_owner = event.feeRecipient;
     updatedMarketplace.transaction_fee = event.transactionFee;
     updatedMarketplace.can_change_sale_price = event.canChangeSalePrice;
     updatedMarketplace.requires_sign_off = event.requiresSignOff;
@@ -89,17 +84,12 @@ export class MarketplaceDbSyncService {
   }
 
   @OnEvent('marketplace.creation.initiated', { async: true })
-  async handleMarketplaceCreationInitiatedEvent(
-    event: MarketplaceInitiationEvent,
-  ): Promise<any> {
+  async handleMarketplaceCreationInitiatedEvent(event: MarketplaceInitiationEvent): Promise<any> {
     const handleMpCreation = this.validateMarketplaceCreation.bind(this);
     Timer.setTimer(handleMpCreation, event, MP_TIMER_EXPIRY, MP_TIMER_INTERVAL);
   }
 
-  private async validateMarketplaceCreation(
-    event: MarketplaceInitiationEvent,
-    date: Date,
-  ) {
+  private async validateMarketplaceCreation(event: MarketplaceInitiationEvent, date: Date) {
     try {
       const marketplace = await createDbMpObject(event);
       await this.marketplaceRepo.insert(marketplace);
@@ -115,23 +105,15 @@ export class MarketplaceDbSyncService {
   }
 
   @OnEvent('marketplace.update.initiated', { async: true })
-  async handleMarketplaceUpdateInitiatedEvent(
-    event: MarketplaceUpdateInitiationEvent,
-  ): Promise<any> {
+  async handleMarketplaceUpdateInitiatedEvent(event: MarketplaceUpdateInitiationEvent): Promise<any> {
     const handleMpUpdation = this.validateMarketplaceUpdation.bind(this);
     Timer.setTimer(handleMpUpdation, event, MP_TIMER_EXPIRY, MP_TIMER_INTERVAL);
   }
 
-  private async validateMarketplaceUpdation(
-    event: MarketplaceUpdateInitiationEvent,
-    date: Date,
-  ) {
+  private async validateMarketplaceUpdation(event: MarketplaceUpdateInitiationEvent, date: Date) {
     try {
       const onChainMarketplace = await createDbMpObject(event);
-      const dbMp = await this.marketplaceRepo.getMarketplacesByAddress(
-        event.network,
-        event.address,
-      );
+      const dbMp = await this.marketplaceRepo.getMarketplacesByAddress(event.network, event.address);
       if (onChainMarketplace.isEqual(dbMp)) {
         console.log('mp not updated, address: ', event.address);
         return;
@@ -147,13 +129,8 @@ export class MarketplaceDbSyncService {
   }
 }
 
-async function createDbMpObject(
-  event: MarketplaceInitiationEvent,
-): Promise<Marketplace> {
-  const auctionHouse = await Utility.auctionHouse.findAuctionHouse(
-    event.network,
-    toPublicKey(event.address),
-  );
+async function createDbMpObject(event: MarketplaceInitiationEvent): Promise<Marketplace> {
+  const auctionHouse = await Utility.auctionHouse.findAuctionHouse(event.network, toPublicKey(event.address));
   const currencySymbol = await Utility.token.getTokenSymbol(
     event.network,
     auctionHouse.treasuryMint.address.toBase58(),

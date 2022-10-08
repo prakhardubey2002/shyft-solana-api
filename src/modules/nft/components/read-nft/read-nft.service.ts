@@ -163,7 +163,7 @@ export class ReadNftService {
         return await this.readAndSyncNftFromChain(tokenAddress, network);
       }
     } catch (error) {
-      throw new HttpException(error.message, error.status);
+      throw error;
     }
   }
 

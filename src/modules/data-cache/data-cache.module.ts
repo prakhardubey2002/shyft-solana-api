@@ -13,10 +13,7 @@ import { Listing, ListingSchema } from 'src/dal/listing-repo/listing.schema';
 import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
 import { MarketplaceDbSyncService } from './db-sync/marketplace-db-sync';
 import { MarketplaceRepo } from 'src/dal/marketplace-repo/marketplace-repo';
-import {
-  Marketplace,
-  MarketPlaceSchema,
-} from 'src/dal/marketplace-repo/marketplace.schema';
+import { Marketplace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketplace.schema';
 import { S3UploaderService } from 'src/common/utils/s3-uploader';
 import { WalletAccessor } from 'src/dal/wallet-repo/wallet.accessor';
 import { Wallet, WalletSchema } from 'src/dal/wallet-repo/wallet.schema';
@@ -59,4 +56,4 @@ import { WalletDbSyncService } from './db-sync/wallet-db-sync.service';
     ListingDbSyncService,
   ],
 })
-export class DataCacheModule { }
+export class DataCacheModule {}

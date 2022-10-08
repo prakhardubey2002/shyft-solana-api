@@ -10,7 +10,7 @@ import {
   Pda,
 } from '@metaplex-foundation/js';
 import { NodeWallet } from '@metaplex/js';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from '@solana/web3.js';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { BuyAttachedDto } from './dto/buy-listed.dto';
@@ -42,7 +42,7 @@ import {
   ListingCreationResponseDto,
   ListingInfoResponseDto,
 } from './response-dto/responses.dto';
-import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
+import { newProgramErrorFrom } from 'src/core/program-error';
 import { Utility } from 'src/common/utils/utils';
 import { GetStatsDto } from './dto/get-stats.dto';
 import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
@@ -64,34 +64,30 @@ export class ListingService {
   ) {}
   async createListing(createListDto: CreateListingServiceDto): Promise<any> {
     try {
-      const { network, marketplace_address, nft_address, private_key, price } = createListDto.createListingParams;
-      const isAlreadyListed = await this.listingRepo.isListed(network, marketplace_address, nft_address);
-      if (isAlreadyListed)
-        throw newProgramError(
-          'detached_listing_creation_error',
-          HttpStatus.FORBIDDEN,
-          'NFT, ' + nft_address + ' already listed in this marketplace, ' + marketplace_address,
-        );
-
-      const sellerKp = AccountUtils.getKeypair(private_key);
+      const sellerKp = AccountUtils.getKeypair(createListDto.createListingParams.private_key);
       const wallet = new NodeWallet(sellerKp);
-      const connection = Utility.connectRpc(network);
+      const connection = Utility.connectRpc(createListDto.createListingParams.network);
       const metaplex = Metaplex.make(connection, {
-        cluster: network,
+        cluster: createListDto.createListingParams.network,
       }).use(keypairIdentity(sellerKp));
       const auctionsClient = metaplex.auctions();
-      const auctionHouse = await auctionsClient.findAuctionHouseByAddress(new PublicKey(marketplace_address)).run();
+      const auctionHouse = await auctionsClient
+        .findAuctionHouseByAddress(new PublicKey(createListDto.createListingParams.marketplace_address))
+        .run();
 
       const auctionCurrency = auctionHouse.treasuryMint;
-      const currencySymbol = await Utility.token.getTokenSymbol(network, auctionHouse.treasuryMint.address.toBase58());
+      const currencySymbol = await Utility.token.getTokenSymbol(
+        createListDto.createListingParams.network,
+        auctionHouse.treasuryMint.address.toBase58(),
+      );
       const { listing } = await auctionsClient
         .for(auctionHouse)
         .list({
           seller: wallet.publicKey,
-          mintAccount: new PublicKey(nft_address),
+          mintAccount: new PublicKey(createListDto.createListingParams.nft_address),
           price: {
             currency: auctionCurrency.currency,
-            basisPoints: toBigNumber(price * Math.pow(10, auctionCurrency.decimals)),
+            basisPoints: toBigNumber(createListDto.createListingParams.price * Math.pow(10, auctionCurrency.decimals)),
           },
           printReceipt: true,
           bookkeeper: wallet.payer,
@@ -101,11 +97,11 @@ export class ListingService {
       const listingCreatedEvent = new ListingCreatedEvent(
         listing.tradeStateAddress.toBase58(),
         listing.auctionHouse.address.toBase58(),
-        price,
+        createListDto.createListingParams.price,
         listing.asset.address.toBase58(),
         listing.sellerAddress.toBase58(),
         createListDto.apiKeyId,
-        network,
+        createListDto.createListingParams.network,
         listing.receiptAddress.toBase58(),
         listing.createdAt,
         currencySymbol,
@@ -113,10 +109,10 @@ export class ListingService {
       this.eventEmitter.emit('listing.created', listingCreatedEvent);
 
       const result: ListingCreationResponseDto = {
-        network: network,
+        network: createListDto.createListingParams.network,
         marketplace_address: listing.auctionHouse.address.toBase58(),
         seller_address: listing.sellerAddress.toBase58(),
-        price: price,
+        price: createListDto.createListingParams.price,
         nft_address: listing.asset.address.toBase58(),
         list_state: listing.tradeStateAddress.toBase58(),
         currency_symbol: currencySymbol,
@@ -374,27 +370,32 @@ export class ListingService {
       const dataSet = await this.listingRepo.getActiveListings(network, marketplace_address);
       const result = await Promise.all(
         dataSet.map(async (listing) => {
-          const nft = await this.nftReadService.readNft({
-            network: network,
-            token_address: listing.nft_address,
-          });
-          const acl: ActiveListingsResultDto = {
-            network: listing.network,
-            marketplace_address: listing.marketplace_address,
-            seller_address: listing.seller_address,
-            price: listing.price,
-            currency_symbol: listing.currency_symbol,
-            nft_address: listing.nft_address,
-            nft,
-            list_state: listing.list_state,
-            created_at: listing.created_at,
-          };
-          if (listing.receipt_address != null) {
-            acl.receipt = listing.receipt_address;
+          try {
+            const nft = await this.nftReadService.readNft({
+              network: network,
+              token_address: listing.nft_address,
+            });
+            const acl: ActiveListingsResultDto = {
+              network: listing.network,
+              marketplace_address: listing.marketplace_address,
+              seller_address: listing.seller_address,
+              price: listing.price,
+              currency_symbol: listing.currency_symbol,
+              nft_address: listing.nft_address,
+              nft,
+              list_state: listing.list_state,
+              created_at: listing.created_at,
+            };
+            if (listing.receipt_address != null) {
+              acl.receipt = listing.receipt_address;
+            }
+            return acl;
+          } catch (err) {
+            newProgramErrorFrom(err).log();
           }
-          return acl;
         }),
       );
+      console.log(result.length);
       return result;
     } catch (err) {
       throw newProgramErrorFrom(err, 'get_active_listings_error');
@@ -430,27 +431,31 @@ export class ListingService {
       );
       const result = await Promise.all(
         dataSet.map(async (listing) => {
-          const nft = await this.nftReadService.readNft({
-            network: getListingDto.network,
-            token_address: listing.nft_address,
-          });
-          const acl: SellerListingsDto = {
-            network: listing.network,
-            marketplace_address: listing.marketplace_address,
-            seller_address: listing.seller_address,
-            price: listing.price,
-            nft_address: listing.nft_address,
-            nft,
-            currency_symbol: listing.currency_symbol,
-            buyer_address: listing.buyer_address,
-            created_at: listing.created_at,
-            list_state: listing.list_state,
-            purchased_at: listing.purchased_at,
-            purchase_receipt: listing.purchase_receipt_address,
-            receipt: listing.receipt_address,
-            cancelled_at: listing.cancelled_at,
-          };
-          return acl;
+          try {
+            const nft = await this.nftReadService.readNft({
+              network: getListingDto.network,
+              token_address: listing.nft_address,
+            });
+            const acl: SellerListingsDto = {
+              network: listing.network,
+              marketplace_address: listing.marketplace_address,
+              seller_address: listing.seller_address,
+              price: listing.price,
+              nft_address: listing.nft_address,
+              nft,
+              currency_symbol: listing.currency_symbol,
+              buyer_address: listing.buyer_address,
+              created_at: listing.created_at,
+              list_state: listing.list_state,
+              purchased_at: listing.purchased_at,
+              purchase_receipt: listing.purchase_receipt_address,
+              receipt: listing.receipt_address,
+              cancelled_at: listing.cancelled_at,
+            };
+            return acl;
+          } catch (err) {
+            newProgramErrorFrom(err).log();
+          }
         }),
       );
       return result;

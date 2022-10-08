@@ -21,6 +21,7 @@ import {
   ListingCreatedEvent,
   ListingInitiationEvent,
   ListingSoldEvent,
+  NftDeleteEvent,
   NftSyncEvent,
   SaleInitiationEvent,
   SaleInitWithServiceChargeEvent,
@@ -82,6 +83,16 @@ export class ListingDbSyncService {
       await this.listingRepo.updateCancelledAt(event.network, event.listState, cancelTime);
     } catch (err) {
       newProgramErrorFrom(err, 'listing_db_mark_cancelled').log();
+    }
+  }
+
+  //@OnEvent('nft.deleted', { async: true })
+  private async handleDeleteNftEvent(event: NftDeleteEvent) {
+    try {
+      const result = await this.listingRepo.removeListingsForNft(event.network, event.tokenAddress);
+      return result;
+    } catch (err) {
+      console.error(err);
     }
   }
 

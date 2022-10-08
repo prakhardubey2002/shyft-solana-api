@@ -26,6 +26,16 @@ export class ListingRepo {
     }
   }
 
+  public async removeListingsForNft(network: WalletAdapterNetwork, nftAddress: string): Promise<any> {
+    const filter = { network: network, nft_address: nftAddress };
+    try {
+      const result = await this.ListingModel.deleteMany(filter);
+      return result;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
   public async isListed(
     network: WalletAdapterNetwork,
     marketPlaceAddress: string,

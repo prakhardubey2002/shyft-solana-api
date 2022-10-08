@@ -13,8 +13,7 @@ export class WhiteListDomainsDto {
 
   @ApiProperty({
     title: 'domains',
-    description:
-      'A comma separated list of domins, that needs to be added to/removed from whitelisting',
+    description: 'A comma separated list of domins, that needs to be added to/removed from whitelisting',
     example: 'https://shyft.to, http://shyfter.to',
     type: String,
   })
