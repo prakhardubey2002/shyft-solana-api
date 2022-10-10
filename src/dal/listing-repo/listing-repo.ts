@@ -45,7 +45,7 @@ export class ListingRepo {
       const activeListingFilter = {
         $or: [{ cancelled_at: { $exists: false } }, { cancelled_at: { $eq: null } }],
         network: network,
-        marketPlace_address: marketPlaceAddress,
+        marketplace_address: marketPlaceAddress,
         nft_address: nftAddress,
         purchased_at: { $exists: false },
       };
