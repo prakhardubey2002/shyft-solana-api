@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
+import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { NodeWallet } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NftCreationEvent } from 'src/modules/data-cache/db-sync/db.events';
 import { ObjectId } from 'mongoose';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { createCreateMasterEditionV3Instruction, createCreateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  createCreateMasterEditionV3Instruction,
+  createCreateMetadataAccountV2Instruction,
+  DataV2,
+} from '@metaplex-foundation/mpl-token-metadata';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
@@ -16,7 +20,12 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda, ProgramError } from '@metaplex-foundation/js';
+import {
+  findAssociatedTokenAccountPda,
+  findMasterEditionV2Pda,
+  findMetadataPda,
+  ProgramError,
+} from '@metaplex-foundation/js';
 import { Utility, ServiceCharge } from 'src/common/utils/utils';
 import { newProgramErrorFrom } from 'src/core/program-error';
 
@@ -29,15 +38,17 @@ export interface CreateParams {
   maxSupply: number;
   royalty: number;
   userId: ObjectId;
+  nftReceiver?: string;
   serviceCharge?: ServiceCharge;
 }
 
 @Injectable()
 export class CreateNftService {
-  constructor(private eventEmitter: EventEmitter2) { }
+  constructor(private eventEmitter: EventEmitter2) {}
 
   async createMasterNft(createParams: CreateParams): Promise<unknown> {
-    const { name, symbol, metadataUri, royalty, maxSupply, network, privateKey, serviceCharge } = createParams;
+    const { name, symbol, metadataUri, royalty, maxSupply, network, privateKey, nftReceiver, serviceCharge } =
+      createParams;
     if (!metadataUri) {
       throw new Error('No metadata URI');
     }
@@ -45,6 +56,7 @@ export class CreateNftService {
       const connection = Utility.connectRpc(network);
       const feePayer = AccountUtils.getKeypair(privateKey);
       const wallet = new NodeWallet(feePayer);
+      const receiverPubKey = nftReceiver ? new PublicKey(nftReceiver) : wallet.publicKey;
       const mintRent = await getMinimumBalanceForRentExemptMint(connection);
       const mintKeypair = Keypair.generate();
 
@@ -53,7 +65,7 @@ export class CreateNftService {
 
       const associatedToken = findAssociatedTokenAccountPda(
         mintKeypair.publicKey,
-        feePayer.publicKey,
+        receiverPubKey,
         TOKEN_PROGRAM_ID,
         ASSOCIATED_TOKEN_PROGRAM_ID,
       );
@@ -92,17 +104,12 @@ export class CreateNftService {
         createAssociatedTokenAccountInstruction(
           feePayer.publicKey,
           associatedToken,
-          feePayer.publicKey,
+          receiverPubKey,
           mintKeypair.publicKey,
           TOKEN_PROGRAM_ID,
           ASSOCIATED_TOKEN_PROGRAM_ID,
         ),
-        createMintToInstruction(
-          mintKeypair.publicKey,
-          associatedToken,
-          feePayer.publicKey,
-          1,
-        ),
+        createMintToInstruction(mintKeypair.publicKey, associatedToken, feePayer.publicKey, 1),
         createCreateMetadataAccountV2Instruction(
           {
             metadata: metadataPda,
@@ -128,12 +135,11 @@ export class CreateNftService {
         ),
       );
 
-      if(serviceCharge) {
-        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, feePayer.publicKey);        
+      if (serviceCharge) {
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, feePayer.publicKey);
       }
 
-      const blockHash = (await connection.getLatestBlockhash('finalized'))
-        .blockhash;
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
       tx.feePayer = feePayer.publicKey;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
@@ -141,7 +147,11 @@ export class CreateNftService {
       const signedTx = await wallet.signTransaction(tx);
       const txId = await connection.sendRawTransaction(signedTx.serialize());
 
-      const nftCreationEvent = new NftCreationEvent(mintKeypair.publicKey.toBase58(), createParams.network, createParams.userId);
+      const nftCreationEvent = new NftCreationEvent(
+        mintKeypair.publicKey.toBase58(),
+        createParams.network,
+        createParams.userId,
+      );
       this.eventEmitter.emit('nft.created', nftCreationEvent);
       return {
         txId,

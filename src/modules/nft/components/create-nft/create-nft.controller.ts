@@ -13,26 +13,36 @@ import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class CreateNftController {
-  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService) { }
+  constructor(private createNftService: CreateNftService, private storageService: StorageMetadataService) {}
 
   @CreateOpenApi()
   @Post('create')
   @Version('1')
-  @UseInterceptors(FileFieldsInterceptor([
+  @UseInterceptors(
+    FileFieldsInterceptor([
       { name: 'file', maxCount: 1 },
       { name: 'data', maxCount: 1 },
-  ]))
-  async createNft(@UploadedFiles() files: { file: Express.Multer.File[], data?: Express.Multer.File[] }, @Body() createNftDto: CreateNftDto, @Req() request: any): Promise<any> {
+    ]),
+  )
+  async createNft(
+    @UploadedFiles() files: { file: Express.Multer.File[]; data?: Express.Multer.File[] },
+    @Body() createNftDto: CreateNftDto,
+    @Req() request: any,
+  ): Promise<any> {
     let image: string;
     if (files.file) {
-      const uploadImage = await this.storageService.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
+      const uploadImage = await this.storageService.uploadToIPFS(
+        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
+      );
       image = uploadImage.uri;
     }
 
     let data: NftFile;
 
     if (files.data) {
-      const uploadFile = await this.storageService.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      const uploadFile = await this.storageService.uploadToIPFS(
+        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
+      );
       data = new NftFile(uploadFile.uri, files.data[0].mimetype);
     }
 
@@ -60,6 +70,7 @@ export class CreateNftController {
       maxSupply: createNftDto.max_supply,
       userId: request.id,
       serviceCharge: createNftDto?.service_charge,
+      nftReceiver: createNftDto?.nft_receiver,
     };
 
     const nft = await this.createNftService.createMasterNft(mintNftRequest);

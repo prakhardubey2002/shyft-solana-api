@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  UploadedFiles,
-  UseInterceptors,
-  Version,
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, UploadedFiles, UseInterceptors, Version } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Blob } from 'nft.storage';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
@@ -20,10 +12,7 @@ import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class CreateNftDetachController {
-  constructor(
-    private createNftDetachService: CreateNftDetachService,
-    private storageService: StorageMetadataService,
-  ) {}
+  constructor(private createNftDetachService: CreateNftDetachService, private storageService: StorageMetadataService) {}
 
   @CreateNftDetachOpenApi()
   @Post('create_detach')
@@ -80,12 +69,11 @@ export class CreateNftDetachController {
       maxSupply: createNftDetachDto.max_supply,
       royalty: createNftDetachDto.royalty ?? 0,
       userId: request.id,
+      nftReceiver: createNftDetachDto?.nft_receiver,
       serviceCharge: createNftDetachDto?.service_charge,
     };
 
-    const result = await this.createNftDetachService.createMasterNft(
-      mintNftRequest,
-    );
+    const result = await this.createNftDetachService.createMasterNft(mintNftRequest);
 
     return {
       success: true,

@@ -17,7 +17,7 @@ export class CreateNftDto {
   @ApiProperty({
     title: 'private_key',
     type: String,
-    description: 'Creator\'s wallet\'s private key',
+    description: "Creator's wallet's private key",
     example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
@@ -93,17 +93,18 @@ export class CreateNftDto {
   readonly max_supply: number;
 
   @ApiProperty({
-    title: 'Royalty',
+    title: 'royalty',
     type: Number,
     description: 'NFT royalty on secondary sales, between 0 - 100, default 0',
     example: '5',
   })
   @IsOptional()
   @IsNumber()
-  @Transform(({ value }) => {
-    value = Math.max(0, Math.min(value, 100));
-    value = value * 100; // since 100 = 1%
-    return value;
+  @Transform(
+    ({ value }) => {
+      value = Math.max(0, Math.min(value, 100));
+      value = value * 100; // since 100 = 1%
+      return value;
     },
     { toClassOnly: true },
   )
@@ -112,7 +113,7 @@ export class CreateNftDto {
   @ApiProperty({
     name: 'file',
     description: 'Image that you would want to turn into nft',
-    type: 'string',
+    type: String,
     format: 'binary',
   })
   file: string;
@@ -120,16 +121,25 @@ export class CreateNftDto {
   @ApiPropertyOptional({
     name: 'data',
     description: 'Image/pdf/doc/video or any file that you would want to turn into nft',
-    type: 'string',
+    type: String,
     format: 'binary',
   })
   @IsOptional()
   data?: string;
 
   @ApiPropertyOptional({
+    name: 'nft_receiver',
+    description: 'To whom wallet you want to mint the NFT',
+    type: String,
+    example: '3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf',
+  })
+  @IsOptional()
+  nft_receiver?: string;
+
+  @ApiPropertyOptional({
     name: 'service_charge',
     description: 'You can charge some token/sol while creating nft',
-    type: 'string',
+    type: String,
     example: {
       receiver: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
       token: 'DjMA5cCK95X333t7SgkpsG5vC9wMk7u9JV4w8qipvFE8',

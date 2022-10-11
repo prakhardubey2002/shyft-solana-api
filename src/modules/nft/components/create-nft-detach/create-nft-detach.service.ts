@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from '@solana/web3.js';
+import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ObjectId } from 'mongoose';
 import {
@@ -16,11 +11,7 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import {
-  findAssociatedTokenAccountPda,
-  findMasterEditionV2Pda,
-  findMetadataPda,
-} from '@metaplex-foundation/js';
+import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda } from '@metaplex-foundation/js';
 import {
   createCreateMasterEditionV3Instruction,
   createCreateMetadataAccountV2Instruction,
@@ -40,23 +31,16 @@ export interface CreateParams {
   maxSupply: number;
   royalty: number;
   userId: ObjectId;
-  serviceCharge: ServiceCharge;
+  nftReceiver?: string;
+  serviceCharge?: ServiceCharge;
 }
 
 @Injectable()
 export class CreateNftDetachService {
   constructor(private eventEmitter: EventEmitter2) {}
   async createMasterNft(createParams: CreateParams): Promise<unknown> {
-    const {
-      name,
-      symbol,
-      metadataUri,
-      maxSupply,
-      royalty,
-      network,
-      address,
-      serviceCharge,
-    } = createParams;
+    const { name, symbol, metadataUri, maxSupply, royalty, network, address, nftReceiver, serviceCharge } =
+      createParams;
     if (!metadataUri) {
       throw new Error('No metadata URI');
     }
@@ -69,9 +53,10 @@ export class CreateNftDetachService {
       const masterEditionPda = findMasterEditionV2Pda(mintKeypair.publicKey);
 
       const addressPubKey = new PublicKey(address);
+      const receiverPubKey = nftReceiver ? new PublicKey(nftReceiver) : addressPubKey;
       const associatedToken = findAssociatedTokenAccountPda(
         mintKeypair.publicKey,
-        addressPubKey,
+        receiverPubKey,
         TOKEN_PROGRAM_ID,
         ASSOCIATED_TOKEN_PROGRAM_ID,
       );
@@ -100,27 +85,16 @@ export class CreateNftDetachService {
           lamports: mintRent,
           programId: TOKEN_PROGRAM_ID,
         }),
-        createInitializeMintInstruction(
-          mintKeypair.publicKey,
-          0,
-          addressPubKey,
-          addressPubKey,
-          TOKEN_PROGRAM_ID,
-        ),
+        createInitializeMintInstruction(mintKeypair.publicKey, 0, addressPubKey, addressPubKey, TOKEN_PROGRAM_ID),
         createAssociatedTokenAccountInstruction(
           addressPubKey,
           associatedToken,
-          addressPubKey,
+          receiverPubKey,
           mintKeypair.publicKey,
           TOKEN_PROGRAM_ID,
           ASSOCIATED_TOKEN_PROGRAM_ID,
         ),
-        createMintToInstruction(
-          mintKeypair.publicKey,
-          associatedToken,
-          addressPubKey,
-          1,
-        ),
+        createMintToInstruction(mintKeypair.publicKey, associatedToken, addressPubKey, 1),
         createCreateMetadataAccountV2Instruction(
           {
             metadata: metadataPda,
@@ -147,16 +121,10 @@ export class CreateNftDetachService {
       );
 
       if (serviceCharge) {
-        tx = await Utility.account.addSeviceChargeOnTransaction(
-          connection,
-          tx,
-          serviceCharge,
-          addressPubKey,
-        );
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, addressPubKey);
       }
 
-      const blockHash = (await connection.getLatestBlockhash('finalized'))
-        .blockhash;
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
@@ -166,11 +134,7 @@ export class CreateNftDetachService {
       });
       const transactionBase64 = serializedTransaction.toString('base64');
 
-      const nftCreatedEvent = new NftCreationEvent(
-        mintKeypair.publicKey.toBase58(),
-        network,
-        createParams.userId,
-      );
+      const nftCreatedEvent = new NftCreationEvent(mintKeypair.publicKey.toBase58(), network, createParams.userId);
       this.eventEmitter.emit('nft.created', nftCreatedEvent);
 
       return {
