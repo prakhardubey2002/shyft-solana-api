@@ -125,11 +125,11 @@ export class AccountController {
   @Get('transaction_history')
   @Version('1')
   async transactionHistory(@Query() transactionHistoryDto: TransactionHistoryDto): Promise<any> {
-    const { tx_num } = transactionHistoryDto;
     const transactions = await this.walletService.getTransactionHistory(transactionHistoryDto);
+    const tx_num = transactions ? transactions?.length : 0;
     return {
       success: true,
-      message: `Last ${tx_num || 10} transaction fetched successfully`,
+      message: `Last ${tx_num} transaction fetched successfully`,
       result: transactions,
     };
   }

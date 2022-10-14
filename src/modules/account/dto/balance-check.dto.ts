@@ -54,6 +54,17 @@ export class TransactionHistoryDto {
   @IsNumber()
   @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   readonly tx_num: number;
+
+  @ApiPropertyOptional({
+    title: 'Before tx signature',
+    type: String,
+    description: 'Tx signature before which X number of transactions will be fetched, in reverse order going back in time',
+    example: 'g9utkFojt6wtXsmLUhw5a17AJpjZo157Hzzq1Aqe771QwpPBzw1v4LSEus3MJibSJx8VzR2CfaiWbR2ueHFTr9e',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  readonly before_tx_signature: string;
 }
 
 export class ResolveAddressDto {

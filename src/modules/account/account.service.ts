@@ -49,13 +49,12 @@ export class WalletService {
 
   async getTransactionHistory(transactionHistoryDto: TransactionHistoryDto): Promise<any> {
     try {
-      const { wallet, network, tx_num } = transactionHistoryDto;
+      const { wallet, network, tx_num, before_tx_signature } = transactionHistoryDto;
       const connection = Utility.connectRpc(network);
 
-      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), { limit: tx_num || 10 });
-      const signature = transactionList.map((tx) => tx.signature);
-      // if not required detailed info simply return 'signature'
-      const transactionDetails = await connection.getParsedTransactions(signature);
+      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), {before: before_tx_signature, limit: tx_num || 10 });
+      const signatures = transactionList.map((tx) => tx.signature);
+      const transactionDetails = await connection.getParsedTransactions(signatures);
       return transactionDetails;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
