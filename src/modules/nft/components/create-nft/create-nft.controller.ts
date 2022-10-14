@@ -70,7 +70,7 @@ export class CreateNftController {
       maxSupply: createNftDto.max_supply,
       userId: request.id,
       serviceCharge: createNftDto?.service_charge,
-      nftReceiver: createNftDto?.nft_receiver,
+      nftReceiver: createNftDto?.receiver,
     };
 
     const nft = await this.createNftService.createMasterNft(mintNftRequest);

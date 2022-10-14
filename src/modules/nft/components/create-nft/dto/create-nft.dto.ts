@@ -128,13 +128,13 @@ export class CreateNftDto {
   data?: string;
 
   @ApiPropertyOptional({
-    name: 'nft_receiver',
-    description: 'To whom wallet you want to mint the NFT',
+    name: 'receiver',
+    description: 'The address which will receive the created NFT',
     type: String,
     example: '3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf',
   })
   @IsOptional()
-  nft_receiver?: string;
+  receiver?: string;
 
   @ApiPropertyOptional({
     name: 'service_charge',

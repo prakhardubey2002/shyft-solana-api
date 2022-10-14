@@ -69,7 +69,7 @@ export class CreateNftDetachController {
       maxSupply: createNftDetachDto.max_supply,
       royalty: createNftDetachDto.royalty ?? 0,
       userId: request.id,
-      nftReceiver: createNftDetachDto?.nft_receiver,
+      nftReceiver: createNftDetachDto?.receiver,
       serviceCharge: createNftDetachDto?.service_charge,
     };
 
