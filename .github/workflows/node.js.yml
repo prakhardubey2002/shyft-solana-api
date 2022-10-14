@@ -108,6 +108,7 @@ jobs:
         ENV_WALLET_SYNC_TIME_INTERVAL: ${{ secrets.WALLET_SYNC_TIME_INTERVAL }}
         ENV_MP_TIMER_EXPIRATION: ${{secrets.MP_TIMER_EXPIRATION}}
         ENV_MP_TIMER_INTERVAL: ${{secrets.MP_TIMER_INTERVAL}}
+        ENV_NFT_SYNC_TIME_INTERVAL: ${{ secrets.NFT_SYNC_TIME_INTERVAL }}
 
 
     - name: Build
