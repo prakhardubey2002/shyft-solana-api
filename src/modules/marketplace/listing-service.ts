@@ -395,7 +395,12 @@ export class ListingService {
           }
         }),
       );
-      return result;
+      const resp = result.filter((acl) => {
+        if (acl) {
+          return acl;
+        }
+      });
+      return resp;
     } catch (err) {
       throw newProgramErrorFrom(err, 'get_active_listings_error');
     }
