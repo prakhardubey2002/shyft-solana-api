@@ -18,9 +18,11 @@ import {
 import { ApiMonitorService } from './modules/api-monitor/api.event-handeler';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthService } from './modules/auth/auth.service';
+import { Globals } from './globals';
 
 async function bootstrap() {
   Sentry.init({ dsn: configuration().sentryDSN });
+  await Globals.init();
   const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix('sol'); // To run app at `/sol` prefix
   app.enableVersioning({

@@ -10,11 +10,11 @@ export class GetTokenService {
     try {
       const { network, token_address } = getTokenDto;
       const connection = Utility.connectRpc(network);
-
-      const tokenInfo = await getMint(connection, new PublicKey(token_address));
-      return await Utility.token.getTokenInfo(connection, network, tokenInfo);
+      const mint = await getMint(connection, new PublicKey(token_address));
+      const tokenInfo =  await Utility.token.getTokenInfo(connection, mint);
+      return tokenInfo;
     } catch (err) {
-      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 }

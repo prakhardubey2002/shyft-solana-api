@@ -18,16 +18,18 @@ import {
   performReverseLookup,
   performReverseLookupBatch,
 } from '@bonfida/spl-name-service';
-import { Utility } from 'src/common/utils/utils';
+import { TokenUiInfo, Utility } from 'src/common/utils/utils';
 import { Wallet } from 'src/common/utils/semi-wallet';
 import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
 import { ObjectId } from 'mongoose';
 import * as base58 from 'bs58';
 import { VerifyDto } from './dto/semi-wallet-dto';
+import { Globals } from 'src/globals';
 
 export type TokenBalanceDto = {
   address: string;
   balance: number;
+  info?: TokenUiInfo;
 }
 
 @Injectable()
@@ -61,7 +63,7 @@ export class WalletService {
     }
   }
 
-  async getTokenBalance(balanceCheckDto: TokenBalanceCheckDto): Promise<number> {
+  async getTokenBalance(balanceCheckDto: TokenBalanceCheckDto): Promise<TokenBalanceDto> {
     try {
       const { wallet, network, token } = balanceCheckDto;
       const connection = Utility.connectRpc(network);
@@ -75,7 +77,14 @@ export class WalletService {
         //Do nothing, if mint account isnt found in the wallet, just return 0
         console.log(error);
       } finally {
-        return tokenAccount?.value[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
+        const tokenBalanceRes: TokenBalanceDto = {
+          address:token,
+          balance: tokenAccount?.value[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0,
+          info: await Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, token, Globals.getSolMainnetTokenList())
+        };
+
+        return tokenBalanceRes;
+
       }
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
@@ -83,21 +92,31 @@ export class WalletService {
   }
 
 
-  async getAllTokensBalance(balanceCheckDto: BalanceCheckDto): Promise<TokenBalanceDto[]> {
+  async getAllTokensBalance(balanceCheckDto: BalanceCheckDto, getTokenInfo = true): Promise<TokenBalanceDto[]> {
     try {
       const { wallet, network } = balanceCheckDto;
       const connection = Utility.connectRpc(network);
       const allTokenInfo = [];
       try {
         const parsedSplAccts = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), { programId: TOKEN_PROGRAM_ID });
+        const mintAddresses = []
         parsedSplAccts.value.forEach((token) => {
           const amount = token.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
           const decimals = token.account?.data?.parsed?.info?.tokenAmount?.decimals;
           if (decimals > 0 && amount > 0) {
             const address = token.account?.data?.parsed?.info?.mint;
+            mintAddresses.push(address);
             allTokenInfo.push({ address: address, balance: amount });
           }
         });
+
+        if(getTokenInfo) {
+          const res = await Utility.token.getMultipleTokenInfo(connection, mintAddresses);
+          res?.forEach((data, i) => {
+            allTokenInfo[i].info = data;
+          });
+        }
+
         return allTokenInfo;
       } catch (error) {
         //Do nothing, if mint account isnt found in the wallet, just return 0
@@ -118,7 +137,7 @@ export class WalletService {
 
     promises.push(amtPromise);
 
-    const tokenPromise = this.getAllTokensBalance(walletDto);
+    const tokenPromise = this.getAllTokensBalance(walletDto, false);
     tokenPromise.then((res) => {
       portfolio['num_tokens'] = Object.keys(res)?.length ?? 0;
       portfolio['tokens'] = res;

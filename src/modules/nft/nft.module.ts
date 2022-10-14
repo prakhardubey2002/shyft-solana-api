@@ -27,6 +27,7 @@ import { CreateNftDetachService } from './components/create-nft-detach/create-nf
 import { BurnNftDetachController } from './components/burn-nft-detach/burn-nft-detach.controller';
 import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-detach.service';
 import { AccountModule } from '../account/account.module';
+import { TokenModule } from '../token/token.module';
 
 @Module({
   controllers: [
@@ -47,6 +48,7 @@ import { AccountModule } from '../account/account.module';
     EventEmitterModule.forRoot(),
     DataCacheModule,
     AccountModule,
+    TokenModule,
   ],
   providers: [
     CreateNftService,

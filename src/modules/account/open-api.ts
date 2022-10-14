@@ -29,16 +29,22 @@ export function TokenBalanceOpenApi() {
       description: ' Token Balance fetched successfully',
       schema: {
         example: {
-          success: true,
-          message: 'Token balance fetched successfully',
-          result: {
-            balance: 500000,
+          "success": true,
+          "message": "Token balance fetched successfully",
+          "result": {
+              "address": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
+              "balance": 76.6726,
+              "info": {
+                  "name": "Wrapped Bitcoin (Sollet)",
+                  "symbol": "BTC",
+                  "image": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E/logo.png"
+              }
+            }
           },
         },
-      },
-    }),
-  );
-}
+     }),
+    );
+  }
 
 export function AllTokensOpenApi() {
   return applyDecorators(
@@ -47,27 +53,29 @@ export function AllTokensOpenApi() {
       description: 'Balance fetched successfully',
       schema: {
         example: {
-          success: true,
-          message: '4 tokens fetched successfully',
-          result: [
-            {
-              address: '7yPeRofJpfPkjLJ8CLB7czuk4sKG9toXWVq8CcHr4DcU',
-              balance: 100,
-            },
-            {
-              address: '4TLk2jocJuEysZubcMFCqsEFFu5jVGzTp14kAANDaEFv',
-              balance: 500000,
-            },
-            {
-              address: 'FK84vq6aVT2KFrKWz4m7oTufhDZdAt6qpMEBT4dziBEk',
-              balance: 100,
-            },
-            {
-              address: '3dbNYdGJ2bWXtLhMcXW6szxmKPQSAjFuxXxU3PVAwaMA',
-              balance: 100,
-            },
-          ],
-        },
+          "success": true,
+          "message": "2 tokens fetched successfully",
+          "result": [
+              {
+                  "address": "2FGW8BVMu1EHsz2ZS9rZummDaq6o2DVrZZPw4KaAvDWh",
+                  "balance": 21607120,
+                  "info": {
+                      "name": "BSVBEAR",
+                      "symbol": "BSVBEAR",
+                      "image": ""
+                  }
+              },
+              {
+                  "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                  "balance": 2.968471,
+                  "info": {
+                      "name": "USD Coin",
+                      "symbol": "USDC",
+                      "image": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png"
+                  }
+              }
+          ]
+      },
       },
     }),
   );

@@ -12,24 +12,18 @@ import { SignTransactionController } from './components/sign-transaction/sign-tr
 import { SendSolDetachService } from './components/send-sol-detach/send-sol-detach.service';
 import { SignTransactionService } from './components/sign-transaction/sign-transaction.service';
 import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
-import {
-  SemiWalletSchema,
-  SemiCustodialWallet,
-} from 'src/dal/semi-wallet-repo/semi-wallet.schema';
+import { SemiWalletSchema, SemiCustodialWallet } from 'src/dal/semi-wallet-repo/semi-wallet.schema';
+import { TokenModule } from '../token/token.module';
+import { GetTokenService } from '../token/components/get-token/get-token.service';
 
 @Module({
-  controllers: [
-    AccountController,
-    SendSolDetachController,
-    SignTransactionController,
-  ],
+  controllers: [AccountController, SendSolDetachController, SignTransactionController],
   imports: [
     RavenModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    MongooseModule.forFeature([
-      { name: SemiCustodialWallet.name, schema: SemiWalletSchema },
-    ]),
+    MongooseModule.forFeature([{ name: SemiCustodialWallet.name, schema: SemiWalletSchema }]),
     DataCacheModule,
+    TokenModule,
   ],
   exports: [SemiWalletAccessor, WalletService],
   providers: [
@@ -42,6 +36,7 @@ import {
       provide: APP_INTERCEPTOR,
       useValue: new RavenInterceptor(),
     },
+    GetTokenService,
   ],
 })
 export class AccountModule {}

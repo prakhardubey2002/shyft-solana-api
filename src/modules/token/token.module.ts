@@ -34,5 +34,6 @@ import { TransferTokenService } from './components/transfer-token/transfer-token
       useValue: new RavenInterceptor(),
     },
   ],
+  exports: [GetTokenService],
 })
 export class TokenModule {}

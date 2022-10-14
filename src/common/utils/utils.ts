@@ -25,10 +25,11 @@ import {
 } from '@solana/spl-token';
 import { configuration } from '../configs/config';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { TokenListProvider } from '@solana/spl-token-registry';
+import { TokenInfo } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
 import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import { Globals } from 'src/globals';
 
 const endpoint = {
   http: {
@@ -43,11 +44,13 @@ const endpoint = {
   },
 };
 
-interface TokenResponse {
+export interface TokenUiInfo {
   name: string;
   symbol: string;
-  description: string;
   image: string;
+}
+
+export interface TokenResponse extends TokenUiInfo {
   mint_authority: string;
   freeze_authority: string;
   current_supply: number;
@@ -65,37 +68,38 @@ async function fetchInfoFromMeta(connection: Connection, mintAddress: string) {
   if (mintAddress) {
     //Take name and symbol from on chain
     let uriData, meta;
+    const tokenInfo = {};
     try {
       //Get metadata
       const pda = findMetadataPda(new PublicKey(mintAddress));
       meta = await Metadata.load(connection, pda);
+      tokenInfo['name'] = meta?.data?.data?.name;
+      tokenInfo['symbol'] = meta?.data?.data?.symbol;
+
       if (meta?.data?.data?.uri) {
         uriData = await Utility.request(meta?.data?.data?.uri);
+        tokenInfo['image'] = uriData?.image;
       }
     } catch (error) {
-      console.log('metadata not available for ', mintAddress);
+      throw error;
     } finally {
-      return {
-        name: meta?.data?.data?.name,
-        symbol: meta?.data?.data?.symbol,
-        image: uriData?.image,
-        description: uriData?.description,
-      };
+      return tokenInfo;
     }
   }
 }
 
-async function fetchInfoFromSplRegistry(network: WalletAdapterNetwork, mintAddress: string) {
-  const tokens = await new TokenListProvider().resolve();
-  const tokenInfoList = tokens.filterByClusterSlug(network).getList();
-  const tokenData = tokenInfoList.find((token) => token.address === mintAddress);
-
-  return {
-    name: tokenData?.name,
-    symbol: tokenData?.symbol,
-    image: tokenData?.logoURI,
-    description: '',
-  };
+async function fetchInfoFromTokenList(mintAddress: string, tokenInfoList: TokenInfo[]) {
+  if (tokenInfoList?.length) {
+    const tokenData = tokenInfoList.find((token) => token.address === mintAddress);
+    if (!tokenData) {
+      throw new Error('No token data found');
+    }
+    return {
+      name: tokenData?.name,
+      symbol: tokenData?.symbol,
+      image: tokenData?.logoURI,
+    };
+  }
 }
 
 const isValidUrl = (url: string) => {
@@ -208,45 +212,79 @@ export const Utility = {
   token: {
     getTokenInfo: async function (
       connection: Connection,
-      network: WalletAdapterNetwork,
       mint: Mint,
     ): Promise<TokenResponse> {
       if (mint) {
         const mintAddr = mint?.address?.toBase58();
-        let metaInfo, registryInfo;
         try {
-          metaInfo = await fetchInfoFromMeta(connection, mintAddr);
-          registryInfo = await fetchInfoFromSplRegistry(network, mintAddr);
-        } catch (error) {
-          console.log(error);
-        } finally {
+          const tokeninfo = await Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, mintAddr, Globals.getSolMainnetTokenList());
           const decimalAmt = Math.pow(10, mint.decimals);
           return {
-            name: metaInfo?.name ?? registryInfo?.name ?? '',
-            symbol: metaInfo?.symbol ?? registryInfo?.symbol ?? '',
-            description: metaInfo?.description ?? registryInfo?.description ?? '',
-            image: metaInfo?.image ?? registryInfo?.image ?? '',
-            address: mint.address?.toBase58(),
+            ...tokeninfo,
+            address: mint?.address?.toBase58(),
             mint_authority: mint?.mintAuthority?.toBase58(),
             freeze_authority: mint?.freezeAuthority?.toBase58() ?? '',
-            current_supply: Number(mint?.supply) / decimalAmt,
+            current_supply: Number(mint?.supply) / decimalAmt ?? 0,
             decimals: mint?.decimals,
           };
+        } catch (error) {
+          console.log(`error fetching token metadata`);
         }
       }
     },
 
+    getTokenUiInfoFromRegistryOrMeta: async function (
+      connection: Connection,
+      mintAddr: string,
+      tokenInfoList: TokenInfo[],
+    ): Promise<TokenUiInfo> {
+      let metaInfo, registryInfo;
+      try {
+        registryInfo = await fetchInfoFromTokenList(mintAddr, tokenInfoList);
+      } catch (error) {
+        metaInfo = await fetchInfoFromMeta(connection, mintAddr);
+      } finally {
+        return {
+          name: metaInfo?.name ?? registryInfo?.name ?? 'Unknown Token',
+          symbol: metaInfo?.symbol ?? registryInfo?.symbol ?? '',
+          image: metaInfo?.image ?? registryInfo?.image ?? '',
+        };
+      }
+    },
+
+    getMultipleTokenInfo: async function (
+      connection: Connection,
+      mintAddresses: string[],
+    ): Promise<TokenUiInfo[]> {
+      if (mintAddresses && mintAddresses?.length) {
+        const response = [];
+        for (const index in mintAddresses) {
+          const mintAddr = mintAddresses[index];
+          try {
+            response.push(Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, mintAddr, Globals.getSolMainnetTokenList()));
+          } catch (error) {
+            console.log('token info not found for: ', mintAddr);
+          }
+        }
+        const resolvedPromises = await Promise.all(response);
+        const result = [];
+        resolvedPromises?.forEach((data) => {
+            result.push(data);
+        });
+        return result;
+      }
+    },
+
     getTokenSymbol: async function (network: WalletAdapterNetwork, tokenAddress: string): Promise<string> {
-      let symbol = '';
+      let symbol = 'Token';
       try {
         const connection = new Connection(clusterApiUrl(network), 'confirmed');
-        const tokenInfo = await getMint(connection, toPublicKey(tokenAddress));
-        const tokenResp = await Utility.token.getTokenInfo(connection, network, tokenInfo);
-        symbol = tokenResp.symbol;
+        const tokenInfo = this.getTokenInfoFromRegistryOrMeta(connection, tokenAddress, Globals.getSolMainnetTokenList());
+        symbol = tokenInfo.symbol;
       } catch (err) {
         newProgramErrorFrom(err, 'get_token_symbol_error').log();
       } finally {
-        return symbol != '' ? symbol : 'Token';
+        return symbol;
       }
     },
 

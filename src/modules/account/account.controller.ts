@@ -63,11 +63,11 @@ export class AccountController {
   @Get('token_balance')
   @Version('1')
   async tokenBalance(@Query() tokenBalanceCheckDto: TokenBalanceCheckDto): Promise<any> {
-    const balance = await this.walletService.getTokenBalance(tokenBalanceCheckDto);
+    const tokenBalance = await this.walletService.getTokenBalance(tokenBalanceCheckDto);
     return {
       success: true,
       message: 'Token balance fetched successfully',
-      result: { balance: balance },
+      result: tokenBalance,
     };
   }
 
