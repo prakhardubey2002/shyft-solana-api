@@ -210,14 +210,15 @@ export const Utility = {
   },
 
   token: {
-    getTokenInfo: async function (
-      connection: Connection,
-      mint: Mint,
-    ): Promise<TokenResponse> {
+    getTokenInfo: async function (connection: Connection, mint: Mint): Promise<TokenResponse> {
       if (mint) {
         const mintAddr = mint?.address?.toBase58();
         try {
-          const tokeninfo = await Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, mintAddr, Globals.getSolMainnetTokenList());
+          const tokeninfo = await Utility.token.getTokenUiInfoFromRegistryOrMeta(
+            connection,
+            mintAddr,
+            Globals.getSolMainnetTokenList(),
+          );
           const decimalAmt = Math.pow(10, mint.decimals);
           return {
             ...tokeninfo,
@@ -252,16 +253,15 @@ export const Utility = {
       }
     },
 
-    getMultipleTokenInfo: async function (
-      connection: Connection,
-      mintAddresses: string[],
-    ): Promise<TokenUiInfo[]> {
+    getMultipleTokenInfo: async function (connection: Connection, mintAddresses: string[]): Promise<TokenUiInfo[]> {
       if (mintAddresses && mintAddresses?.length) {
         const response = [];
         for (const index in mintAddresses) {
           const mintAddr = mintAddresses[index];
           try {
-            response.push(Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, mintAddr, Globals.getSolMainnetTokenList()));
+            response.push(
+              Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, mintAddr, Globals.getSolMainnetTokenList()),
+            );
           } catch (error) {
             console.log('token info not found for: ', mintAddr);
           }
@@ -269,7 +269,7 @@ export const Utility = {
         const resolvedPromises = await Promise.all(response);
         const result = [];
         resolvedPromises?.forEach((data) => {
-            result.push(data);
+          result.push(data);
         });
         return result;
       }
@@ -279,7 +279,11 @@ export const Utility = {
       let symbol = 'Token';
       try {
         const connection = new Connection(clusterApiUrl(network), 'confirmed');
-        const tokenInfo = this.getTokenInfoFromRegistryOrMeta(connection, tokenAddress, Globals.getSolMainnetTokenList());
+        const tokenInfo = await Utility.token.getTokenUiInfoFromRegistryOrMeta(
+          connection,
+          tokenAddress,
+          Globals.getSolMainnetTokenList(),
+        );
         symbol = tokenInfo.symbol;
       } catch (err) {
         newProgramErrorFrom(err, 'get_token_symbol_error').log();
