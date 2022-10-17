@@ -20,8 +20,8 @@ import * as fastq from 'fastq';
 import { queueAsPromised } from 'fastq';
 import { WalletDbSyncService } from './wallet-db-sync.service';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { Timer } from 'src/common/utils/timer';
+import { Metadata } from '@metaplex-foundation/js';
 
 const afterNftCreationWaitTime_ms = 12000;
 const afterNftUpdateWaitTime_ms = 12000;
@@ -122,16 +122,11 @@ export class NFtDbSyncService {
     }
   }
 
-  async syncNewWalletNfts(
-    onChainNfts: MetadataData[],
-    dbNfts: NftInfo[],
-    network: WalletAdapterNetwork,
-    wallet: string,
-  ) {
+  async syncNewWalletNfts(onChainNfts: Metadata[], dbNfts: NftInfo[], network: WalletAdapterNetwork, wallet: string) {
     //Get their diff and figure out which nfts we need to add
     const nftsToAdd = onChainNfts.filter((value) => {
       return dbNfts.some((dbNft) => {
-        return dbNft.mint === value.mint;
+        return dbNft.mint === value.mintAddress.toBase58();
       })
         ? false
         : true;
@@ -143,11 +138,11 @@ export class NFtDbSyncService {
     console.log('new NFTs added ', nftsToAdd.length);
   }
 
-  async syncDeletedWalletNfts(onChainNfts: MetadataData[], dbNfts: NftInfo[], network: WalletAdapterNetwork) {
+  async syncDeletedWalletNfts(onChainNfts: Metadata[], dbNfts: NftInfo[], network: WalletAdapterNetwork) {
     //Get their diff and figure out which nfts we need to delete
     const nftsToDel = dbNfts.filter((value) => {
       return onChainNfts.some((dbNft) => {
-        return dbNft.mint === value.mint;
+        return dbNft.mintAddress.toBase58() === value.mint;
       })
         ? false
         : true;

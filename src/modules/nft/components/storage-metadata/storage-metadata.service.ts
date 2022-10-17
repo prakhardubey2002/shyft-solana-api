@@ -22,19 +22,9 @@ export class StorageMetadataService {
   }
 
   async prepareNFTMetadata(createMetadataDto: CreateMetadataDto): Promise<any> {
-    const {
-      creator,
-      image,
-      name,
-      description,
-      symbol,
-      attributes,
-      share,
-      royalty,
-      external_url,
-      file,
-    } = createMetadataDto;
-    
+    const { creator, image, name, description, symbol, attributes, share, royalty, external_url, file } =
+      createMetadataDto;
+
     const metadata = {
       name,
       symbol,

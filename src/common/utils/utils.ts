@@ -1,5 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
-import { AuctionHouse, findMetadataPda, Metaplex, toPublicKey } from '@metaplex-foundation/js';
+import { AuctionHouse, findMetadataPda, Metadata, Metaplex, Nft } from '@metaplex-foundation/js';
 import { createTransferCheckedInstruction, getMint, Mint } from '@solana/spl-token';
 import axios from 'axios';
 import {
@@ -24,7 +24,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { configuration } from '../configs/config';
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
+import { Metadata as DepricatedMetadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenInfo } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
@@ -72,7 +72,7 @@ async function fetchInfoFromMeta(connection: Connection, mintAddress: string) {
     try {
       //Get metadata
       const pda = findMetadataPda(new PublicKey(mintAddress));
-      meta = await Metadata.load(connection, pda);
+      meta = await DepricatedMetadata.load(connection, pda);
       tokenInfo['name'] = meta?.data?.data?.name;
       tokenInfo['symbol'] = meta?.data?.data?.symbol;
 
@@ -502,7 +502,7 @@ export const Utility = {
     ): Promise<TransactionInstruction> => {
       try {
         const nft = await getNftToUpdate();
-        const pda = await Metadata.getPDA(tokenAddress);
+        const pda = await DepricatedMetadata.getPDA(tokenAddress);
         return createUpdateMetadataAccountV2Instruction(
           {
             metadata: pda,
@@ -557,6 +557,29 @@ export const Utility = {
         const nft = await metaplex.nfts().findByMint(tokenAddress).run();
         return nft;
       }
+    },
+
+    nftToMetadataTypeCast(nft: Nft): Metadata {
+      return {
+        model: 'metadata',
+        address: nft.metadataAddress,
+        mintAddress: nft.mint.address,
+        updateAuthorityAddress: nft.updateAuthorityAddress,
+        json: nft.json,
+        jsonLoaded: nft.jsonLoaded,
+        name: nft.name,
+        symbol: nft.symbol,
+        uri: nft.uri,
+        isMutable: nft.isMutable,
+        primarySaleHappened: nft.primarySaleHappened,
+        sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
+        editionNonce: nft.editionNonce,
+        creators: nft.creators,
+        tokenStandard: nft.tokenStandard,
+        collection: nft.collection,
+        collectionDetails: nft.collectionDetails,
+        uses: nft.uses,
+      };
     },
   },
 };

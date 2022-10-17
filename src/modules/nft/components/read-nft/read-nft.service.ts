@@ -102,7 +102,7 @@ export class ReadNftService {
     return response;
   }
 
-  async readAllNftsByCreator(readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
+  private async readAllNftsByCreator(readAllNftByCreatorDto: ReadAllNftByCreatorDto): Promise<any> {
     try {
       const { network, creator_address, refresh } = readAllNftByCreatorDto;
       let { page, size } = readAllNftByCreatorDto;
@@ -167,7 +167,7 @@ export class ReadNftService {
     }
   }
 
-  tryResyncNft(nft: NftInfo) {
+  private tryResyncNft(nft: NftInfo) {
     if (nft) {
       const sinceLastUpdate = Utility.getElapsedTimeSec((<any>nft)?.updated_at);
       const resync = sinceLastUpdate > parseInt(configuration().nftSyncTimeInterval);
@@ -180,7 +180,7 @@ export class ReadNftService {
     }
   }
 
-  async readAndSyncNftFromChain(tokenAddress: string, network: WalletAdapterNetwork) {
+  private async readAndSyncNftFromChain(tokenAddress: string, network: WalletAdapterNetwork) {
     const nftInfoDto = await this.nftSyncService.getNftInfoDto(new FetchNftDto(network, tokenAddress));
     this.eventEmitter.emit('save.nft.db', nftInfoDto);
 

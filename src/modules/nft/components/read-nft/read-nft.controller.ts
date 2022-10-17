@@ -1,15 +1,15 @@
-import { Controller, Get, Query, Req, Version } from '@nestjs/common';
+import { Controller, Get, Query, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { ReadAllNftDto, ReadAllNftByCreatorDto } from './dto/read-all-nft.dto';
+import { ReadAllNftDto } from './dto/read-all-nft.dto';
 import { ReadNftDto } from './dto/read-nft.dto';
 import { ReadNftService } from './read-nft.service';
-import { ReadAllByCreatorOpenApi, ReadAllOpenApi, ReadOpenApi } from './open-api';
+import { ReadAllOpenApi, ReadOpenApi } from './open-api';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('nft')
 export class ReadNftController {
-  constructor(private readNftService: ReadNftService) { }
+  constructor(private readNftService: ReadNftService) {}
 
   @ReadAllOpenApi()
   @Get('read_all')

@@ -13,6 +13,11 @@ interface creator {
   share: number;
 }
 
+interface collectionData {
+  address?: string;
+  verified?: boolean;
+}
+
 interface file {
   uri: string;
   type: boolean;
@@ -79,6 +84,9 @@ export class NftInfo {
 
   @Prop({ required: false })
   creators: creator[];
+
+  @Prop({ type: Object, required: false })
+  collection_data: collectionData;
 
   @Prop({ required: false })
   files: file[];

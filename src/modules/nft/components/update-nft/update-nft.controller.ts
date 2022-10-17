@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UploadedFiles,
-  UseInterceptors,
-  Version,
-} from '@nestjs/common';
+import { Body, Controller, Post, UploadedFiles, UseInterceptors, Version } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UpdateNftDetachDto, UpdateNftDto } from './dto/update.dto';
 import { UpdateNftService } from './update-nft.service';
@@ -63,9 +56,7 @@ export class UpdateNftController {
     @Body() updateNftDto: UpdateNftDto,
   ): Promise<any> {
     const nftInfo = (
-      await this.dataFetcher.fetchNft(
-        new FetchNftDto(updateNftDto.network, updateNftDto.token_address),
-      )
+      await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDto.network, updateNftDto.token_address))
     ).getNftInfoDto();
     let image = nftInfo.image_uri;
     let data: NftFile;
@@ -85,9 +76,7 @@ export class UpdateNftController {
 
     const createParams = {
       network: updateNftDto.network,
-      creator: AccountUtils.getKeypair(
-        updateNftDto.private_key,
-      ).publicKey.toBase58(),
+      creator: AccountUtils.getKeypair(updateNftDto.private_key).publicKey.toBase58(),
       image,
       name: updateNftDto.name ?? nftInfo.name,
       description: updateNftDto.description ?? nftInfo.description,
@@ -135,12 +124,7 @@ export class UpdateNftController {
     @Body() updateNftDetachDto: UpdateNftDetachDto,
   ): Promise<any> {
     const nftInfo = (
-      await this.dataFetcher.fetchNft(
-        new FetchNftDto(
-          updateNftDetachDto.network,
-          updateNftDetachDto.token_address,
-        ),
-      )
+      await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDetachDto.network, updateNftDetachDto.token_address))
     ).getNftInfoDto();
     let image = nftInfo.image_uri;
     let data: NftFile;
@@ -177,16 +161,13 @@ export class UpdateNftController {
 
     const { uri } = await this.storageService.prepareNFTMetadata(createParams);
 
-    const encoded_transaction = await this.updateNftService.updateNftDetach(
-      uri,
-      {
-        ...updateNftDetachDto,
-        ...createParams,
-        update_authority: nftInfo.update_authority,
-        is_mutable: nftInfo.is_mutable,
-        primary_sale_happened: nftInfo.primary_sale_happened,
-      },
-    );
+    const encoded_transaction = await this.updateNftService.updateNftDetach(uri, {
+      ...updateNftDetachDto,
+      ...createParams,
+      update_authority: nftInfo.update_authority,
+      is_mutable: nftInfo.is_mutable,
+      primary_sale_happened: nftInfo.primary_sale_happened,
+    });
 
     return {
       success: true,

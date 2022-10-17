@@ -1,6 +1,7 @@
-import { isObject } from "class-validator";
-import { NftDbResponse } from "src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto";
-import { NftInfo } from "./nft-info.schema";
+import { isObject } from 'class-validator';
+import { omitBy, isNull } from 'lodash';
+import { NftDbResponse } from 'src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto';
+import { NftInfo } from './nft-info.schema';
 
 export function getNftDbResponseFromNftInfo(r: NftInfo): NftDbResponse {
   const response = {
@@ -14,6 +15,7 @@ export function getNftDbResponseFromNftInfo(r: NftInfo): NftDbResponse {
     mint: r.mint,
     owner: r.owner,
     creators: r.creators,
+    collection: r.collection_data ? omitBy(r.collection_data, isNull) : {},
     attributes: r.attributes,
     attributes_array: [],
     files: r.files,

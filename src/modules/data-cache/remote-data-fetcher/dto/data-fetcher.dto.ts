@@ -1,9 +1,9 @@
-import { MetadataData } from '@metaplex-foundation/mpl-token-metadata-depricated';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
-import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { Metadata } from '@metaplex-foundation/js';
+import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { NftFile } from 'src/modules/nft/components/storage-metadata/dto/create-metadata.dto';
 
 //update attributes value type to hold objects also
@@ -95,11 +95,11 @@ export class FetchNftDto {
 }
 
 export class NftData {
-  onChainMetadata: MetadataData;
+  onChainMetadata: Metadata;
   offChainMetadata: any;
   owner: string;
 
-  constructor(onChainData: MetadataData, offChainData: any, owner?: string) {
+  constructor(onChainData: Metadata, offChainData: any, owner?: string) {
     this.onChainMetadata = onChainData;
     this.offChainMetadata = offChainData;
     this.owner = owner;
@@ -108,21 +108,27 @@ export class NftData {
   //For API response
   public getNftDbResponse(): NftDbResponse {
     const nftDbResponse = {
-      name: this.onChainMetadata?.data?.name,
-      symbol: this.onChainMetadata?.data?.symbol,
-      royalty: this.onChainMetadata?.data?.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
+      name: this.onChainMetadata?.name,
+      symbol: this.onChainMetadata?.symbol,
+      royalty: this.onChainMetadata?.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
       image_uri: this.offChainMetadata?.image ?? '',
       cached_image_uri: this.offChainMetadata?.image ?? '',
-      metadata_uri: this.onChainMetadata?.data.uri ?? '',
+      metadata_uri: this.onChainMetadata?.uri ?? '',
       description: this.offChainMetadata?.description ?? '',
-      update_authority: this.onChainMetadata?.updateAuthority,
+      update_authority: this.onChainMetadata?.updateAuthorityAddress.toBase58(),
       attributes: {},
       attributes_array: [],
       external_url: this.offChainMetadata?.external_url ?? '',
       files: this.offChainMetadata?.properties?.files,
-      mint: this.onChainMetadata?.mint,
+      mint: this.onChainMetadata?.mintAddress.toBase58(),
       owner: this.owner,
-      creators: this.onChainMetadata?.data?.creators,
+      creators: this.onChainMetadata?.creators,
+      collection: this.onChainMetadata?.collection
+        ? {
+            address: this.onChainMetadata?.collection?.address,
+            verified: this.onChainMetadata?.collection?.verified,
+          }
+        : {},
     };
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait: any) => {
@@ -142,22 +148,26 @@ export class NftData {
   //Convert to a format which can be saved in DB
   public getNftInfoDto(): NftInfo {
     const nftDbDto = new NftInfo();
-    nftDbDto.update_authority = this.onChainMetadata.updateAuthority;
-    nftDbDto.mint = this.onChainMetadata.mint;
+    nftDbDto.update_authority = this.onChainMetadata.updateAuthorityAddress.toBase58();
+    nftDbDto.mint = this.onChainMetadata.mintAddress.toBase58();
     nftDbDto.owner = this.owner;
     nftDbDto.primary_sale_happened = this.onChainMetadata.primarySaleHappened;
     nftDbDto.is_mutable = this.onChainMetadata.isMutable;
-    nftDbDto.name = this.onChainMetadata.data.name;
-    nftDbDto.symbol = this.onChainMetadata.data.symbol;
-    nftDbDto.royalty = this.onChainMetadata.data.sellerFeeBasisPoints ?? 0; //Here we send the actual value back
-    nftDbDto.metadata_uri = this.onChainMetadata.data.uri ?? '';
-    nftDbDto.creators = this.onChainMetadata.data?.creators?.map((cr) => {
+    nftDbDto.name = this.onChainMetadata.name;
+    nftDbDto.symbol = this.onChainMetadata.symbol;
+    nftDbDto.royalty = this.onChainMetadata.sellerFeeBasisPoints ?? 0; //Here we send the actual value back
+    nftDbDto.metadata_uri = this.onChainMetadata.uri ?? '';
+    nftDbDto.creators = this.onChainMetadata?.creators?.map((cr) => {
       return {
-        address: cr.address,
+        address: cr.address.toBase58(),
         share: cr.share,
         verified: cr.verified,
       };
     });
+    nftDbDto.collection_data = {
+      address: this.onChainMetadata?.collection?.address.toBase58(),
+      verified: this.onChainMetadata?.collection?.verified,
+    };
     //Only add these keys, if we have valid values
     this.offChainMetadata?.image ? (nftDbDto.image_uri = this.offChainMetadata?.image) : {};
 
