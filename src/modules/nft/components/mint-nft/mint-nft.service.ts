@@ -1,11 +1,31 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Metaplex, keypairIdentity, findAssociatedTokenAccountPda, findMetadataPda, findMasterEditionV2Pda, parseOriginalEditionAccount, findEditionPda, findEditionMarkerPda, AccountNotFoundError, toBigNumber, ProgramError } from '@metaplex-foundation/js';
+import {
+  Metaplex,
+  keypairIdentity,
+  findAssociatedTokenAccountPda,
+  findMetadataPda,
+  findMasterEditionV2Pda,
+  parseOriginalEditionAccount,
+  findEditionPda,
+  findEditionMarkerPda,
+  AccountNotFoundError,
+  toBigNumber,
+  ProgramError,
+} from '@metaplex-foundation/js';
 import { PrintNftEditionDto, PrintNftEditionDetachDto } from './dto/mint-nft.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  getMinimumBalanceForRentExemptMint,
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 import { createMintNewEditionFromMasterEditionViaTokenInstruction } from '@metaplex-foundation/mpl-token-metadata';
-import * as BN from 'bn.js';
+import BN from 'bn.js';
 import { Utility } from 'src/common/utils/utils';
 import { newProgramErrorFrom } from 'src/core/program-error';
 
@@ -13,13 +33,7 @@ import { newProgramErrorFrom } from 'src/core/program-error';
 export class MintNftService {
   async printNewEdition(printNftEditionDto: PrintNftEditionDto): Promise<any> {
     try {
-      const {
-        network,
-        private_key,
-        master_nft_address,
-        receiver,
-        transfer_authority,
-      } = printNftEditionDto;
+      const { network, private_key, master_nft_address, receiver, transfer_authority } = printNftEditionDto;
       const feePayer = AccountUtils.getKeypair(private_key);
       const connection = Utility.connectRpc(network);
       const metaplex = Metaplex.make(connection).use(keypairIdentity(feePayer));
@@ -45,15 +59,8 @@ export class MintNftService {
 
   async printNewEditionDetach(printNftEditionDetachDto: PrintNftEditionDetachDto): Promise<any> {
     try {
-      const {
-        network,
-        wallet,
-        master_nft_address,
-        receiver,
-        transfer_authority,
-        message,
-        service_charge,
-      } = printNftEditionDetachDto;
+      const { network, wallet, master_nft_address, receiver, transfer_authority, message, service_charge } =
+        printNftEditionDetachDto;
       const addressPubKey = new PublicKey(wallet);
       const connection = Utility.connectRpc(network);
       const metaplex = Metaplex.make(connection);
@@ -68,24 +75,17 @@ export class MintNftService {
 
       const originalMetadata = findMetadataPda(originalMint);
       const originalEdition = findMasterEditionV2Pda(originalMint);
-      const originalEditionAccount = parseOriginalEditionAccount(
-        await metaplex.rpc().getAccount(originalEdition),
-      );
+      const originalEditionAccount = parseOriginalEditionAccount(await metaplex.rpc().getAccount(originalEdition));
 
       if (!originalEditionAccount.exists) {
-        throw new AccountNotFoundError(
-          originalEdition,
-          'OriginalEdition',
-          {
-            solution: `Ensure the provided mint address for the original NFT [${originalMint.toBase58()}] ` + `is correct and that it has an associated OriginalEdition PDA.`
-          }
-        );
+        throw new AccountNotFoundError(originalEdition, 'OriginalEdition', {
+          solution:
+            `Ensure the provided mint address for the original NFT [${originalMint.toBase58()}] ` +
+            `is correct and that it has an associated OriginalEdition PDA.`,
+        });
       }
 
-      const edition = new BN(
-        originalEditionAccount.data.supply,
-        'le',
-      ).add(new BN(1));
+      const edition = new BN(originalEditionAccount.data.supply, 'le').add(new BN(1));
 
       const originalEditionMarkPda = findEditionMarkerPda(originalMint, toBigNumber(edition));
       // New NFT
@@ -113,13 +113,7 @@ export class MintNftService {
           lamports: mintRent,
           programId: TOKEN_PROGRAM_ID,
         }),
-        createInitializeMintInstruction(
-          newMintKeypair.publicKey,
-          0,
-          addressPubKey,
-          addressPubKey,
-          TOKEN_PROGRAM_ID,
-        ),
+        createInitializeMintInstruction(newMintKeypair.publicKey, 0, addressPubKey, addressPubKey, TOKEN_PROGRAM_ID),
         createAssociatedTokenAccountInstruction(
           addressPubKey,
           newAssociatedToken,
@@ -128,12 +122,7 @@ export class MintNftService {
           TOKEN_PROGRAM_ID,
           ASSOCIATED_TOKEN_PROGRAM_ID,
         ),
-        createMintToInstruction(
-          newMintKeypair.publicKey,
-          newAssociatedToken,
-          addressPubKey,
-          1,
-        ),
+        createMintToInstruction(newMintKeypair.publicKey, newAssociatedToken, addressPubKey, 1),
         createMintNewEditionFromMasterEditionViaTokenInstruction(
           {
             newMetadata,
@@ -156,12 +145,12 @@ export class MintNftService {
         tx.add(Utility.transaction.getMemoTx(addressPubKey, message));
       }
 
-      if (service_charge) {        
+      if (service_charge) {
         tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, service_charge, newOwner);
       }
 
       tx.feePayer = addressPubKey;
-      tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;;
+      tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       tx.partialSign(newMintKeypair);
 
       const serializedTransaction = tx.serialize({ requireAllSignatures: false, verifySignatures: false });

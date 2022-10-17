@@ -138,22 +138,10 @@ export class RemoteDataFetcherService {
     try {
       const { network, tokenAddress } = fetchNftDto;
       const connection = Utility.connectRpc(network);
-      if (!tokenAddress) {
-        throw new HttpException('Please provide any public or private key', HttpStatus.BAD_REQUEST);
-      }
-      const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
-
-      if (largestAcc?.value.length) {
-        const ownerInfo = <any>await connection.getParsedAccountInfo(largestAcc?.value[0]?.address);
-        return ownerInfo.value?.data?.parsed?.info?.tokenAmount.uiAmount > 0
-          ? ownerInfo.value?.data?.parsed?.info?.owner
-          : 'None';
-      }
-
-      return 'None';
+      const owner = await Utility.nft.getNftOwner(connection, new PublicKey(tokenAddress));
+      return owner;
     } catch (error) {
-      console.log(error.message);
-      throw new HttpException(error.message, error.status);
+      throw error;
     }
   }
 

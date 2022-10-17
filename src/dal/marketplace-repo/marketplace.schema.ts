@@ -38,8 +38,7 @@ export class Marketplace {
       this.fee_payer = feePayer;
     }
     if (treasuryWithdrawalDestinationOwner !== undefined) {
-      this.treasury_withdrawal_destination_owner =
-        treasuryWithdrawalDestinationOwner;
+      this.treasury_withdrawal_destination_owner = treasuryWithdrawalDestinationOwner;
     }
     if (treasuryWithdrawalDestination !== undefined) {
       this.treasury_withdrawal_destination = treasuryWithdrawalDestination;
@@ -122,8 +121,7 @@ export class Marketplace {
       this.authority != mpDoc.authority ||
       this.transaction_fee != mpDoc.transaction_fee ||
       this.fee_payer != mpDoc.fee_payer ||
-      this.treasury_withdrawal_destination_owner !=
-        mpDoc.treasury_withdrawal_destination_owner
+      this.treasury_withdrawal_destination_owner != mpDoc.treasury_withdrawal_destination_owner
     ) {
       return false;
     }

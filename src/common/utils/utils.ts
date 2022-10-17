@@ -27,7 +27,7 @@ import { configuration } from '../configs/config';
 import { Metadata as DepricatedMetadata } from '@metaplex-foundation/mpl-token-metadata-depricated';
 import { TokenInfo } from '@solana/spl-token-registry';
 import bs58 from 'bs58';
-import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
+import { newProgramError, newProgramErrorFrom, ProgramError } from 'src/core/program-error';
 import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { Globals } from 'src/globals';
 
@@ -100,6 +100,7 @@ async function fetchInfoFromTokenList(mintAddress: string, tokenInfoList: TokenI
       image: tokenData?.logoURI,
     };
   }
+  throw new Error('No token data found');
 }
 
 const isValidUrl = (url: string) => {
@@ -247,7 +248,7 @@ export const Utility = {
       } finally {
         return {
           name: metaInfo?.name ?? registryInfo?.name ?? 'Unknown Token',
-          symbol: metaInfo?.symbol ?? registryInfo?.symbol ?? '',
+          symbol: metaInfo?.symbol ?? registryInfo?.symbol ?? 'Token',
           image: metaInfo?.image ?? registryInfo?.image ?? '',
         };
       }
@@ -365,7 +366,7 @@ export const Utility = {
       network: WalletAdapterNetwork,
       auctionHouseAddress: PublicKey,
     ): Promise<AuctionHouse> {
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      const connection = new Connection(Utility.clusterUrl(network), 'confirmed');
       const metaplex = Metaplex.make(connection, { cluster: network });
       const auctionsClient = metaplex.auctions();
       const auctionHouse = await auctionsClient.findAuctionHouseByAddress(auctionHouseAddress).run();
@@ -557,6 +558,28 @@ export const Utility = {
         const nft = await metaplex.nfts().findByMint(tokenAddress).run();
         return nft;
       }
+    },
+
+    getNftOwner: async (connection: Connection, tokenAddress: PublicKey): Promise<string> => {
+      if (!tokenAddress) {
+        throw new ProgramError(
+          'invalid_token_address',
+          HttpStatus.BAD_REQUEST,
+          'Please provide any public or private key',
+          '',
+          'utils.nfts.getNftOwner',
+        );
+      }
+      const largestAcc = await connection.getTokenLargestAccounts(new PublicKey(tokenAddress));
+
+      if (largestAcc?.value.length) {
+        const ownerInfo = <any>await connection.getParsedAccountInfo(largestAcc?.value[0]?.address);
+        return ownerInfo.value?.data?.parsed?.info?.tokenAmount.uiAmount > 0
+          ? ownerInfo.value?.data?.parsed?.info?.owner
+          : 'None';
+      }
+
+      return 'None';
     },
 
     nftToMetadataTypeCast(nft: Nft): Metadata {

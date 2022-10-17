@@ -36,6 +36,10 @@ export class Listing {
     }
   }
 
+  public setPurchasedAt(purchasedAt: DateTime) {
+    this.purchased_at = new Date(purchasedAt.toNumber() * 1000);
+  }
+
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, default: null })
   api_key_id: ObjectId;
 

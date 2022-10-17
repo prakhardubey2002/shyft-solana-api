@@ -4,10 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ListingRepo } from 'src/dal/listing-repo/listing-repo';
 import { Listing, ListingSchema } from 'src/dal/listing-repo/listing.schema';
 import { MarketplaceRepo } from 'src/dal/marketplace-repo/marketplace-repo';
-import {
-  Marketplace,
-  MarketPlaceSchema,
-} from 'src/dal/marketplace-repo/marketplace.schema';
+import { Marketplace, MarketPlaceSchema } from 'src/dal/marketplace-repo/marketplace.schema';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo, NftInfoSchema } from 'src/dal/nft-repo/nft-info.schema';
 import { AccountModule } from '../account/account.module';
@@ -19,6 +16,8 @@ import { CreateMarketplaceController } from './mp-controller';
 import { MarketplaceDetachController } from './mp-detached-controller';
 import { MarketplaceDetachedService } from './mp-detached-service';
 import { MarketplaceService } from './mp-service';
+import { MpBcDataFetcher } from './reconstructor/mp-bc-data-fetcher-service';
+import { MpRefillerService } from './reconstructor/mp-refill-service';
 
 @Module({
   imports: [
@@ -41,6 +40,8 @@ import { MarketplaceService } from './mp-service';
     ListingDetachedService,
     NftInfoAccessor,
     RemoteDataFetcherService,
+    MpRefillerService,
+    MpBcDataFetcher,
   ],
   exports: [MarketplaceService],
 })

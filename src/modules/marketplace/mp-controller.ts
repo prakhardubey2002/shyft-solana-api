@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Req, Version } from '@nestjs/common';
-import { ApiTags, ApiSecurity } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Put, Query, Req, Version } from '@nestjs/common';
+import { ApiTags, ApiSecurity, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { newProgramError } from 'src/core/program-error';
 import { BuyAttachedDto as BuyAttachedDto } from './dto/buy-listed.dto';
 import { UnlistAttachedDto } from './dto/cancel-listing.dto';
@@ -12,6 +12,7 @@ import { GetMarketplacesDto } from './dto/get-mp.dto';
 import { GetPurchasesDto } from './dto/get-purchases.dto';
 import { GetSellerListingsDto } from './dto/get-seller-listings.dto';
 import { GetStatsDto } from './dto/get-stats.dto';
+import { RefillMpDetails } from './dto/refill.dto';
 import { GetTreasuryBalanceDto } from './dto/treasury-balance.dto';
 import { UpdateMarketplaceAttachedDto } from './dto/update-marketplace.dto';
 import { WithdrawFeeAttachedDto } from './dto/withdraw-royalty.dto';
@@ -33,12 +34,17 @@ import {
   UpdateMpAttachedOpenApi,
   WithdrawAttachedOpenApi,
 } from './open-api';
+import { MpRefillerService } from './reconstructor/mp-refill-service';
 
 @ApiTags('MarketPlace')
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('marketplace')
 export class CreateMarketplaceController {
-  constructor(private marketplaceService: MarketplaceService, private listingService: ListingService) {}
+  constructor(
+    private marketplaceService: MarketplaceService,
+    private listingService: ListingService,
+    private mpRefillService: MpRefillerService,
+  ) {}
 
   @Post('create')
   @CreateMpAttachedOpenApi()
@@ -268,5 +274,20 @@ export class CreateMarketplaceController {
     } catch (err) {
       throw err;
     }
+  }
+
+  @ApiExcludeEndpoint()
+  @Put('refill_mp')
+  @Version('1')
+  async refillMarketplaceDetails(@Body() refillDto: RefillMpDetails) {
+    console.log('mp refill service request received');
+    await this.mpRefillService.refillMarketplace(refillDto.network, refillDto.marketplace_address);
+    if (refillDto.refill_listings) {
+      await this.mpRefillService.refillMpListings(refillDto.network, refillDto.marketplace_address);
+    }
+    return {
+      success: true,
+      mesasge: 'Mp synced into db successfully',
+    };
   }
 }
