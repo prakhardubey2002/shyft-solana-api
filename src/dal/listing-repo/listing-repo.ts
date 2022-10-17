@@ -97,6 +97,27 @@ export class ListingRepo {
     }
   }
 
+  public async deleteInvalidListings(
+    network: WalletAdapterNetwork,
+    nftAddress: string,
+    buyerAddress: string,
+  ): Promise<number> {
+    try {
+      const deleteOthersListingfilter = {
+        network: network,
+        nft_address: nftAddress,
+        seller_address: { $ne: buyerAddress },
+        purchased_at: { $exists: false },
+        $or: [{ cancelled_at: { $exists: false } }, { cancelled_at: { $eq: null } }],
+      };
+
+      const result = await this.ListingModel.deleteMany(deleteOthersListingfilter);
+      return result.deletedCount;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
   async updateCancelledAt(network: WalletAdapterNetwork, listState: string, cancelTime: Date): Promise<any> {
     try {
       const filter = { network: network, list_state: listState };

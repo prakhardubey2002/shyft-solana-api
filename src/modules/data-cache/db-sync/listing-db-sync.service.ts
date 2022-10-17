@@ -71,6 +71,7 @@ export class ListingDbSyncService {
         event.purchaseReceipt,
       );
       await this.nftInfoAccessor.updateNftOwner(event.network, event.nftAddress, event.buyerAddress);
+      await this.listingRepo.deleteInvalidListings(event.network, event.nftAddress, event.buyerAddress);
     } catch (err) {
       newProgramErrorFrom(err, 'listing_db_mark_sold').log();
     }
@@ -200,6 +201,7 @@ export class ListingDbSyncService {
 
         await this.nftInfoAccessor.updateNftOwner(event.network, event.nftAddress, buyer);
         console.log('listing purchased');
+        await this.listingRepo.deleteInvalidListings(event.network, event.nftAddress, buyer);
         return true;
       }
       return false;
@@ -225,6 +227,7 @@ export class ListingDbSyncService {
         this.listingRepo.markSoldWithoutReceipt(event.network, event.sellerTradeState.toBase58(), buyer, createdAt);
         await this.nftInfoAccessor.updateNftOwner(event.network, event.nftAddress, buyer);
         console.log('listing purchased');
+        await this.listingRepo.deleteInvalidListings(event.network, event.nftAddress, buyer);
         return true;
       }
       console.log('listing not bought, listState: ', event.sellerTradeState.toBase58());
