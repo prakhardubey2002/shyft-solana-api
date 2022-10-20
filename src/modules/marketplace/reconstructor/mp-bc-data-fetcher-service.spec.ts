@@ -235,4 +235,30 @@ describe('check what happens', () => {
     console.log(mp);
     expect(mp.currency_address).toEqual('So11111111111111111111111111111111111111112');
   });
+
+  it('test_get_nft_listings_map', async () => {
+    const connection = new Connection('http://api.devnet.solana.com', {
+      commitment: 'confirmed',
+      disableRetryOnRateLimit: true,
+    });
+    const burntListing: Listing[] = [
+      from({
+        api_key_id: null,
+        network: 'devnet',
+        marketplace_address: '5J8iyoAAXpn2Hxh5ketJaNFVBCSZqHrMjH6Z49ZVCNij',
+        seller_address: '9tbyhoEx7k9B81dbTcwYgz9SLfWmDPbdBsavqQfGktyB',
+        price: 1,
+        nft_address: '5jg9mw8YrboXEcd8FXgNzq4oagefdMk4GWbCQbSPR3PX',
+        list_state: '67xKKGz1i4xR5s6FNQiiM49M5zYmTsVZhrtdj1gYnbge',
+        currency_symbol: 'LUNC',
+        cancelled_at: null,
+        receipt_address: 'Fa26MqXghrP5FYojobz6S3oXSnfAqPakJUTehGDEpntE',
+      }),
+    ];
+    const map = new Map<string, Listing[]>();
+    map.set('5jg9mw8YrboXEcd8FXgNzq4oagefdMk4GWbCQbSPR3PX', burntListing);
+    const mp = new MpBcDataFetcher();
+    const retMap = await mp.getActiveNftListingsMap(connection, map);
+    expect(retMap.size).toBe(0);
+  });
 });

@@ -582,6 +582,11 @@ export const Utility = {
       return 'None';
     },
 
+    getNftSupply: async (connection: Connection, tokenAddress: PublicKey): Promise<number> => {
+      const mintAccount = await getMint(connection, tokenAddress);
+      return Number(mintAccount.supply);
+    },
+
     nftToMetadataTypeCast(nft: Nft): Metadata {
       return {
         model: 'metadata',

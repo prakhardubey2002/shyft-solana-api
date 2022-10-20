@@ -68,8 +68,10 @@ export class MpBcDataFetcher {
       }
     });
 
+    const liveNftListingMap = await this.getActiveNftListingsMap(connection, nftListingMap);
+
     const validActiveListings: Listing[] = [];
-    for (const [nftAddress, listings] of nftListingMap) {
+    for (const [nftAddress, listings] of liveNftListingMap) {
       const owner = await Utility.nft.getNftOwner(connection, toPublicKey(nftAddress));
       listings.forEach((l) => {
         if (l.seller_address == owner) {
@@ -77,8 +79,20 @@ export class MpBcDataFetcher {
         }
       });
     }
+
     const validListings = [...purchasedListings, ...cancelledListings, ...validActiveListings];
     return validListings;
+  }
+
+  public async getActiveNftListingsMap(connection: Connection, nftListingMap: Map<string, Listing[]>) {
+    const liveNftListingMap = new Map<string, Listing[]>();
+    for (const [nftAddress, listings] of nftListingMap) {
+      const supply = await Utility.nft.getNftSupply(connection, toPublicKey(nftAddress));
+      if (supply > 0) {
+        liveNftListingMap.set(nftAddress, listings);
+      }
+    }
+    return liveNftListingMap;
   }
 
   public async getAllListings(
