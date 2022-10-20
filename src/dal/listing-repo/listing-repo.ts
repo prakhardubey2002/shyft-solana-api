@@ -26,11 +26,16 @@ export class ListingRepo {
     }
   }
 
-  public async removeListingsForNft(network: WalletAdapterNetwork, nftAddress: string): Promise<any> {
-    const filter = { network: network, nft_address: nftAddress };
+  public async removeListingsForNft(network: WalletAdapterNetwork, nftAddress: string): Promise<number> {
+    const filter = {
+      $or: [{ cancelled_at: { $exists: false } }, { cancelled_at: { $eq: null } }],
+      purchased_at: { $exists: false },
+      network: network,
+      nft_address: nftAddress,
+    };
     try {
       const result = await this.ListingModel.deleteMany(filter);
-      return result;
+      return result.deletedCount;
     } catch (err) {
       throw new Error(err);
     }

@@ -10,7 +10,7 @@ import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class BurnNftService {
-  constructor(private eventEmitter: EventEmitter2) { }
+  constructor(private eventEmitter: EventEmitter2) {}
   async burnNft(burnNftDto: BurnNftDto): Promise<any> {
     try {
       const { network, private_key, token_address, close, amount } = burnNftDto;
@@ -18,10 +18,7 @@ export class BurnNftService {
       const keypair = AccountUtils.getKeypair(private_key);
       const wallet = new NodeWallet(keypair);
 
-      const associatedAddress = await getAssociatedTokenAddress(
-        new PublicKey(token_address),
-        keypair.publicKey,
-      );
+      const associatedAddress = await getAssociatedTokenAddress(new PublicKey(token_address), keypair.publicKey);
 
       const result = await actions.burnToken({
         connection,
@@ -33,8 +30,8 @@ export class BurnNftService {
         close: close,
       });
 
-      const nftCreationEvent = new NftDeleteEvent(token_address, network);
-      this.eventEmitter.emit('nft.deleted', nftCreationEvent);
+      const nftDeleteEvent = new NftDeleteEvent(token_address, network);
+      this.eventEmitter.emit('nft.deleted', nftDeleteEvent);
 
       return result;
     } catch (error) {

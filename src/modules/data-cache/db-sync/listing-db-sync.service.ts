@@ -87,10 +87,11 @@ export class ListingDbSyncService {
     }
   }
 
-  //@OnEvent('nft.deleted', { async: true })
-  private async handleDeleteNftEvent(event: NftDeleteEvent) {
+  @OnEvent('nft.deleted', { async: true })
+  private async handleBurnNftEvent(event: NftDeleteEvent) {
     try {
       const result = await this.listingRepo.removeListingsForNft(event.network, event.tokenAddress);
+      console.log(`${result} active listing deleted due to nft burn`);
       return result;
     } catch (err) {
       console.error(err);

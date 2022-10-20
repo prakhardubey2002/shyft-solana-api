@@ -12,16 +12,13 @@ import { Utility } from 'src/common/utils/utils';
 
 @Injectable()
 export class BurnNftDetachService {
-  constructor(private eventEmitter: EventEmitter2) { }
+  constructor(private eventEmitter: EventEmitter2) {}
   async burnNft(burnNftDetachDto: BurnNftDetachDto): Promise<any> {
     try {
       const { network, wallet, token_address, close } = burnNftDetachDto;
       const connection = Utility.connectRpc(burnNftDetachDto.network);
       const addressPubKey = new PublicKey(wallet);
-      const associatedTokenAddress = await getAssociatedTokenAddress(
-        new PublicKey(token_address),
-        addressPubKey,
-      );
+      const associatedTokenAddress = await getAssociatedTokenAddress(new PublicKey(token_address), addressPubKey);
       const tokenAddressPubKey = new PublicKey(token_address);
 
       const tx = new Transaction().add(
@@ -44,8 +41,7 @@ export class BurnNftDetachService {
         );
       }
 
-      const blockHash = (await connection.getLatestBlockhash('finalized'))
-        .blockhash;
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
       tx.feePayer = addressPubKey;
       tx.recentBlockhash = blockHash;
 
