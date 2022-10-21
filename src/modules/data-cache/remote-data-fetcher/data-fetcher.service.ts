@@ -4,11 +4,14 @@ import { Connection, programs } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
+import { getAllDomains, performReverseLookupBatch } from '@bonfida/spl-name-service';
 import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto } from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { NftDeleteEvent } from '../db-sync/db.events';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
 import { Metaplex, Nft, Account, toMetadataAccount, toMetadata, Metadata } from '@metaplex-foundation/js';
+import { GetDomainDto } from 'src/modules/account/dto/balance-check.dto';
+import { DomainType } from 'src/dal/wallet-repo/wallet.schema';
 
 export interface RawMetaData {
   pubkey: PublicKey;
@@ -259,6 +262,22 @@ export class RemoteDataFetcherService {
       return { nfts: results, total: results.length };
     } catch (error) {
       throw new HttpException(error.message, error.status);
+    }
+  }
+
+  async fetchDomainsFromWallet(getDomainDto: GetDomainDto): Promise<DomainType[]> {
+    try {
+      const { network, wallet } = getDomainDto;
+      const connection = Utility.connectRpc(network);
+      const domains = await getAllDomains(connection, new PublicKey(wallet));
+      const names = await performReverseLookupBatch(connection, domains);
+      const resp = [];
+      names.forEach((element, i) => {
+        resp.push({ address: domains[i].toBase58(), name: `${element}.sol` });
+      });
+      return resp as DomainType[];
+    } catch (error) {
+      throw newProgramErrorFrom(error);
     }
   }
 }

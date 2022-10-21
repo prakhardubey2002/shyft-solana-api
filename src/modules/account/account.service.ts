@@ -1,23 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import {
-  LAMPORTS_PER_SOL,
-  Transaction,
-  SystemProgram,
-  PublicKey,
-  sendAndConfirmTransaction,
-} from '@solana/web3.js';
-import { BalanceCheckDto, ResolveAddressDto, TransactionHistoryDto, } from './dto/balance-check.dto';
+import { LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey, sendAndConfirmTransaction } from '@solana/web3.js';
+import { BalanceCheckDto, GetDomainDto, ResolveAddressDto, TransactionHistoryDto } from './dto/balance-check.dto';
 import { SendSolDto } from './dto/send-sol.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
 import { FetchAllNftDto } from '../data-cache/remote-data-fetcher/dto/data-fetcher.dto';
-import {
-  getAllDomains,
-  performReverseLookup,
-  performReverseLookupBatch,
-} from '@bonfida/spl-name-service';
+import { performReverseLookup } from '@bonfida/spl-name-service';
 import { TokenUiInfo, Utility } from 'src/common/utils/utils';
 import { Wallet } from 'src/common/utils/semi-wallet';
 import { SemiWalletAccessor } from 'src/dal/semi-wallet-repo/semi-wallet.accessor';
@@ -25,18 +15,31 @@ import { ObjectId } from 'mongoose';
 import * as base58 from 'bs58';
 import { VerifyDto } from './dto/semi-wallet-dto';
 import { Globals } from 'src/globals';
+import { WalletDbSyncService } from '../data-cache/db-sync/wallet-db-sync.service';
+import { ErrorCode } from 'src/common/utils/error-codes';
+import { configuration } from 'src/common/configs/config';
+import { WalletAccessor } from 'src/dal/wallet-repo/wallet.accessor';
+import { DomainType } from 'src/dal/wallet-repo/wallet.schema';
+import { newProgramErrorFrom } from 'src/core/program-error';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ResyncDomainsInDbEvent, SaveDomainsInDbEvent } from '../data-cache/db-sync/db.events';
 
 export type TokenBalanceDto = {
   address: string;
   balance: number;
   info?: TokenUiInfo;
-}
+};
+
+const DOMAIN_SYNC_TIME_INTERVAL = parseInt(configuration().domainSyncTimeInterval);
 
 @Injectable()
 export class WalletService {
   constructor(
+    private eventEmitter: EventEmitter2,
     private dataFetcher: RemoteDataFetcherService,
-    private walletAccessor: SemiWalletAccessor,
+    private semiWalletAccessor: SemiWalletAccessor,
+    private walletAccessor: WalletAccessor,
+    private walletSyncService: WalletDbSyncService,
   ) {}
   async getBalance(balanceCheckDto: BalanceCheckDto): Promise<number> {
     try {
@@ -54,7 +57,10 @@ export class WalletService {
       const { wallet, network, tx_num, before_tx_signature } = transactionHistoryDto;
       const connection = Utility.connectRpc(network);
 
-      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), {before: before_tx_signature, limit: tx_num || 10 });
+      const transactionList = await connection.getSignaturesForAddress(new PublicKey(wallet), {
+        before: before_tx_signature,
+        limit: tx_num || 10,
+      });
       const signatures = transactionList.map((tx) => tx.signature);
       const transactionDetails = await connection.getParsedTransactions(signatures);
       return transactionDetails;
@@ -69,28 +75,29 @@ export class WalletService {
       const connection = Utility.connectRpc(network);
       let tokenAccount;
       try {
-        tokenAccount = await connection.getParsedTokenAccountsByOwner(
-          new PublicKey(wallet),
-          { mint: new PublicKey(token) },
-        );
+        tokenAccount = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), {
+          mint: new PublicKey(token),
+        });
       } catch (error) {
         //Do nothing, if mint account isnt found in the wallet, just return 0
         console.log(error);
       } finally {
         const tokenBalanceRes: TokenBalanceDto = {
-          address:token,
+          address: token,
           balance: tokenAccount?.value[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0,
-          info: await Utility.token.getTokenUiInfoFromRegistryOrMeta(connection, token, Globals.getSolMainnetTokenList())
+          info: await Utility.token.getTokenUiInfoFromRegistryOrMeta(
+            connection,
+            token,
+            Globals.getSolMainnetTokenList(),
+          ),
         };
 
         return tokenBalanceRes;
-
       }
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
 
   async getAllTokensBalance(balanceCheckDto: BalanceCheckDto, getTokenInfo = true): Promise<TokenBalanceDto[]> {
     try {
@@ -98,8 +105,10 @@ export class WalletService {
       const connection = Utility.connectRpc(network);
       const allTokenInfo = [];
       try {
-        const parsedSplAccts = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), { programId: TOKEN_PROGRAM_ID });
-        const mintAddresses = []
+        const parsedSplAccts = await connection.getParsedTokenAccountsByOwner(new PublicKey(wallet), {
+          programId: TOKEN_PROGRAM_ID,
+        });
+        const mintAddresses = [];
         parsedSplAccts.value.forEach((token) => {
           const amount = token.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
           const decimals = token.account?.data?.parsed?.info?.tokenAmount?.decimals;
@@ -110,7 +119,7 @@ export class WalletService {
           }
         });
 
-        if(getTokenInfo) {
+        if (getTokenInfo) {
           const res = await Utility.token.getMultipleTokenInfo(connection, mintAddresses);
           res?.forEach((data, i) => {
             allTokenInfo[i].info = data;
@@ -144,7 +153,7 @@ export class WalletService {
     });
     promises.push(tokenPromise);
 
-    const nftpromise = this.dataFetcher.fetchAllNfts(new FetchAllNftDto(walletDto.network, walletDto.wallet))
+    const nftpromise = this.dataFetcher.fetchAllNfts(new FetchAllNftDto(walletDto.network, walletDto.wallet));
     nftpromise.then((nfts) => {
       portfolio['num_nfts'] = nfts.length;
       portfolio['nfts'] = nfts;
@@ -156,20 +165,50 @@ export class WalletService {
     return portfolio;
   }
 
-  async getDomains(walletDto: BalanceCheckDto) {
+  async getDomains(getDomainDto: GetDomainDto): Promise<DomainType[]> {
     try {
-      const connection = Utility.connectRpc(walletDto.network);
-      const domains = await getAllDomains(connection, new PublicKey(walletDto.wallet));
-      const names = await performReverseLookupBatch(connection, domains);
-      const resp = [];
-      names.forEach((element, i) => {
-        resp.push({ address: domains[i], name: `${element}.sol` });
-      });
+      const { network, wallet, refresh } = getDomainDto;
+      const sinceLastWalletSyncSec = await this.walletSyncService.getTimeElapsedUntilLastSyncDomainsSec(
+        network,
+        wallet,
+      );
 
+      console.log('time elapsed since last domains sync: ', sinceLastWalletSyncSec);
+
+      const isFetchFromDB = refresh === undefined && sinceLastWalletSyncSec != ErrorCode.RECORD_NOT_FOUND;
+
+      if (isFetchFromDB) {
+        const isWalletResyncNeeded = sinceLastWalletSyncSec > DOMAIN_SYNC_TIME_INTERVAL;
+        console.log('resync needed (domains): ', isWalletResyncNeeded);
+        console.log('reading from DB (domains)');
+        const dbDomains = await this.walletAccessor.getDomainsFromWallet(network, wallet);
+
+        if (isWalletResyncNeeded) {
+          const nftWalletReadEvent = new ResyncDomainsInDbEvent(network, wallet);
+          this.eventEmitter.emit('resync.wallet.domains', nftWalletReadEvent);
+        }
+        return dbDomains;
+      }
+      const resp = await this.readDomainsFromChain(getDomainDto);
       return resp;
     } catch (error) {
       console.log(error);
       return [];
+    }
+  }
+
+  async readDomainsFromChain(getDomainDto: GetDomainDto): Promise<DomainType[]> {
+    try {
+      const domains = await this.dataFetcher.fetchDomainsFromWallet(getDomainDto);
+
+      this.eventEmitter.emit(
+        'save.wallet.domains',
+        new SaveDomainsInDbEvent(getDomainDto.network, getDomainDto.wallet, domains),
+      );
+
+      return domains;
+    } catch (error) {
+      throw newProgramErrorFrom(error);
     }
   }
 
@@ -186,7 +225,7 @@ export class WalletService {
   async createSemiWallet(password: string, apiKey: ObjectId) {
     try {
       const walletInfo = await Wallet.create(password);
-      const res = await this.walletAccessor.insert({
+      const res = await this.semiWalletAccessor.insert({
         api_key_id: apiKey,
         public_key: walletInfo.wallet.publicKey.toBase58(),
         encrytped_private_key: walletInfo.wallet.keys.encryptedPrivateKey,
@@ -205,7 +244,7 @@ export class WalletService {
   async getDecryptionKey(dto: VerifyDto, id: ObjectId) {
     try {
       //Fetch encryption params from DB
-      const walletInfo = await this.walletAccessor.fetch({
+      const walletInfo = await this.semiWalletAccessor.fetch({
         public_key: dto.wallet,
         api_key_id: id,
       });
@@ -215,10 +254,7 @@ export class WalletService {
       }
 
       //Create wallet and verify the password
-      const wallet = new Wallet(
-        new PublicKey(dto.wallet),
-        walletInfo.encrytped_private_key,
-      );
+      const wallet = new Wallet(new PublicKey(dto.wallet), walletInfo.encrytped_private_key);
       await wallet.getKeypair(dto.password, JSON.parse(walletInfo.params));
 
       //If we are here, everything is good
@@ -234,7 +270,7 @@ export class WalletService {
   //User id is required, because the organisation who created only they can fetch their users wallet info
   async getKeypair(publicKey: string, pwd: string, id: ObjectId) {
     try {
-      const walletInfo = await this.walletAccessor.fetch({
+      const walletInfo = await this.semiWalletAccessor.fetch({
         public_key: publicKey,
         api_key_id: id,
       });
@@ -243,14 +279,8 @@ export class WalletService {
         return { msg: `No semi custodial wallet found with address: ${publicKey}` };
       }
 
-      const wallet = new Wallet(
-        new PublicKey(publicKey),
-        walletInfo.encrytped_private_key,
-      );
-      const keypair = await wallet.getKeypair(
-        pwd,
-        JSON.parse(walletInfo.params),
-      );
+      const wallet = new Wallet(new PublicKey(publicKey), walletInfo.encrytped_private_key);
+      const keypair = await wallet.getKeypair(pwd, JSON.parse(walletInfo.params));
       return {
         publicKey: keypair.publicKey.toBase58(),
         secretKey: base58.encode(keypair.secretKey),
@@ -276,11 +306,7 @@ export class WalletService {
       );
 
       // Sign transaction, broadcast, and confirm
-      const signature = await sendAndConfirmTransaction(
-        connection,
-        transaction,
-        [from],
-      );
+      const signature = await sendAndConfirmTransaction(connection, transaction, [from]);
       return signature;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);

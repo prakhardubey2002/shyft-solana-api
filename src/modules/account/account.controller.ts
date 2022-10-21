@@ -1,15 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Post,
-  Query,
-  Req,
-  Version,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, Req, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { BalanceCheckDto, ResolveAddressDto, TransactionHistoryDto } from './dto/balance-check.dto';
+import { BalanceCheckDto, GetDomainDto, ResolveAddressDto, TransactionHistoryDto } from './dto/balance-check.dto';
 import { WalletService } from './account.service';
 import { SendSolDto } from './dto/send-sol.dto';
 import {
@@ -23,7 +14,7 @@ import {
   TransactionHistoryOpenApi,
 } from './open-api';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
-import { GetKeypairDto, Password, VerifyDto } from './dto/semi-wallet-dto';    
+import { GetKeypairDto, Password, VerifyDto } from './dto/semi-wallet-dto';
 
 @ApiTags('Wallet')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -99,8 +90,8 @@ export class AccountController {
   @AllTokensOpenApi()
   @Get('get_domains')
   @Version('1')
-  async getDomains(@Query() balanceCheckDto: BalanceCheckDto): Promise<any> {
-    const allTokens = await this.walletService.getDomains(balanceCheckDto);
+  async getDomains(@Query() getDomainDto: GetDomainDto): Promise<any> {
+    const allTokens = await this.walletService.getDomains(getDomainDto);
     const count = Object.keys(allTokens)?.length ?? 0;
     return {
       success: true,
@@ -137,10 +128,7 @@ export class AccountController {
   @CreateSemiWalletOpenApi()
   @Post('create_semi_wallet')
   @Version('1')
-  async createSemiWallet(
-    @Body() password: Password,
-    @Req() request: any,
-  ): Promise<any> {
+  async createSemiWallet(@Body() password: Password, @Req() request: any): Promise<any> {
     const semiWallet = await this.walletService.createSemiWallet(password?.password, request.id);
     return {
       success: true,

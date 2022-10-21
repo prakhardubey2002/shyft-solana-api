@@ -58,7 +58,8 @@ export class TransactionHistoryDto {
   @ApiPropertyOptional({
     title: 'Before tx signature',
     type: String,
-    description: 'Tx signature before which X number of transactions will be fetched, in reverse order going back in time',
+    description:
+      'Tx signature before which X number of transactions will be fetched, in reverse order going back in time',
     example: 'g9utkFojt6wtXsmLUhw5a17AJpjZo157Hzzq1Aqe771QwpPBzw1v4LSEus3MJibSJx8VzR2CfaiWbR2ueHFTr9e',
   })
   @IsOptional()
@@ -86,4 +87,38 @@ export class ResolveAddressDto {
   @IsNotEmpty()
   @IsString()
   readonly address: string;
+}
+
+export class GetDomainDto {
+  @ApiProperty({
+    title: 'network',
+    type: String,
+    required: true,
+    enum: WalletAdapterNetwork,
+    description: 'Select solana blockchain environment',
+  })
+  @IsNotEmpty()
+  readonly network: WalletAdapterNetwork;
+
+  @ApiProperty({
+    title: 'wallet',
+    type: String,
+    required: true,
+    description: 'Wallet address',
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly wallet: string;
+
+  @ApiProperty({
+    title: 'Refresh',
+    type: String,
+    description: 'Skip DB and fetch directly from blockchain. Only need to mention in query params, no value needed.',
+    example: '',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  readonly refresh?: boolean;
 }

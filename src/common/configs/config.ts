@@ -13,6 +13,7 @@ export const configuration = () => ({
   solFallBackMainnet: process.env.SOL_FALLBACK_MAINNET_BETA,
   sentryDSN: process.env.SENTRY_DSN,
   walletSyncTimeInterval: process.env.WALLET_SYNC_TIME_INTERVAL ?? '30',
+  domainSyncTimeInterval: process.env.DOMAIN_SYNC_TIME_INTERVAL ?? '1800',
   nftSyncTimeInterval: process.env.NFT_SYNC_TIME_INTERVAL ?? '120',
   mpTimerInterval: process.env.MP_TIMER_INTERVAL,
   mpTimerExpiration: process.env.MP_TIMER_EXPIRATION,

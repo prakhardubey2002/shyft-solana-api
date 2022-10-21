@@ -2,8 +2,31 @@ import { DateTime } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { PublicKey } from '@solana/web3.js';
 import { ObjectId } from 'mongoose';
+import { DomainType } from 'src/dal/wallet-repo/wallet.schema';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { NftData } from '../remote-data-fetcher/dto/data-fetcher.dto';
+
+export class SaveDomainsInDbEvent {
+  constructor(network: WalletAdapterNetwork, wallet: string, domains: DomainType[]) {
+    this.network = network;
+    this.wallet = wallet;
+    this.domains = domains;
+  }
+
+  network: WalletAdapterNetwork;
+  wallet: string;
+  domains: DomainType[];
+}
+
+export class ResyncDomainsInDbEvent {
+  constructor(network: WalletAdapterNetwork, wallet: string) {
+    this.network = network;
+    this.wallet = wallet;
+  }
+
+  network: WalletAdapterNetwork;
+  wallet: string;
+}
 
 export class NftCreationEvent {
   constructor(tokenAddress: string, network: WalletAdapterNetwork, apiKeyId: ObjectId) {
