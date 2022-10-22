@@ -13,6 +13,7 @@ export function CreateMpOpenApi() {
           result: {
             network: 'devnet',
             address: '54K5BTMj8ynktzEeaD1iGhAJsCN2svBKmD1fTQTonbBB',
+            fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
             treasury_address: '9oqVFV1AGQDMTfqWsF1uYXftw9iMAzoXac4Y1RVTwSdU',
             fee_payer: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
             fee_recipient: 'GE4kh5FsCDWeJfqLsKx7zC9ijkqKpCuYQxh8FYBiTJe',
@@ -42,6 +43,7 @@ export function CreateMpAttachedOpenApi() {
           result: {
             network: 'devnet',
             address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+            fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
             treasury_address: 'DWxmKf97AAMhscXryuRDYbLhUJ376tpYmnfBavR2148P',
             fee_payer: 'AQp9HjQZkdnVenFLUzSqeDY9ZoraxVMGzguHTMEifuZj',
             fee_recipient: 'AJfJZ87Eu7frVUuVQ7nqG9SWuvtceAmnoaXcVJGJwyke',
@@ -69,6 +71,7 @@ export function UpdateMpOpenApi() {
           result: {
             network: 'devnet',
             address: '54K5BTMj8ynktzEeaD1iGhAJsCN2svBKmD1fTQTonbBB',
+            fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
             treasury_address: 'AJfJZ87Eu7frVUuVQ7nqG9SWuvtceAmnoaXcVJGJwyke',
             fee_payer: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
             fee_recipient: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
@@ -96,6 +99,7 @@ export function UpdateMpAttachedOpenApi() {
           result: {
             network: 'devnet',
             address: '8DPSUU8NBFJinJRwBtdcJwi1xncaGncJszh561xx5LkM',
+            fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
             currency_address: 'fMeYB3g4ppGbskqpad4X2f85qQeufUSqNVd1djWdHEy',
             currency_symbol: 'VG',
             authority: 'HFiyiUWFxmyKgBwCZ5ay9MYG4AajRDAJBiyRxYqM9JC',
@@ -285,8 +289,7 @@ export function WithdrawAttachedOpenApi() {
           success: true,
           message: 'Fee withdrawn successfully',
           result: {
-            transaction_id:
-              '3Ygjr3X7EQApSdt5KnUxQgLK9x7uTCNLqPr4aUwxmUqbYaVDvDqNLpu4HTQ1uow7pVjoagEdsPc1sBLFhbjkSpA3',
+            transaction_id: '3Ygjr3X7EQApSdt5KnUxQgLK9x7uTCNLqPr4aUwxmUqbYaVDvDqNLpu4HTQ1uow7pVjoagEdsPc1sBLFhbjkSpA3',
             from: 'DVDKeRmPEL3HV1kE8ErtHX7xc1q93p9YqwMGrfB6wQDG',
             to: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
           },
@@ -309,6 +312,7 @@ export function MyMarketsOpenApi() {
             {
               network: 'devnet',
               address: '8VE6di1XAyb46NMz1T4r5fSZExqZkDP8jmCYQ8s5QJBU',
+              fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
               authority: 'HFiyiUWFxmyKgBwCZ5ay9MYG4AajRDAJBiyRxYqM9JC',
               currency_address: '4TLk2jocJuEysZubcMFCqsEFFu5jVGzTp14kAANDaEFv',
               currency_symbol: 'SD',
@@ -322,6 +326,7 @@ export function MyMarketsOpenApi() {
             {
               network: 'devnet',
               address: 'DBjXX7k4uZ2X4Fdp8w9T7zsKYGLN6dJuRAu7oQPJUxtC',
+              fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
               authority: 'HFiyiUWFxmyKgBwCZ5ay9MYG4AajRDAJBiyRxYqM9JC',
               currency_address: '22MxhzHTv3TkeUSv67KKPwud6UnSdKpahosmzJekh4rp',
               currency_symbol: 'Cf',
@@ -335,6 +340,7 @@ export function MyMarketsOpenApi() {
             {
               network: 'devnet',
               address: '8DPSUU8NBFJinJRwBtdcJwi1xncaGncJszh561xx5LkM',
+              fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
               authority: 'HFiyiUWFxmyKgBwCZ5ay9MYG4AajRDAJBiyRxYqM9JC',
               currency_address: 'fMeYB3g4ppGbskqpad4X2f85qQeufUSqNVd1djWdHEy',
               currency_symbol: 'VG',
@@ -364,6 +370,7 @@ export function FindMpOpenApi() {
           result: {
             network: 'devnet',
             address: '54K5BTMj8ynktzEeaD1iGhAJsCN2svBKmD1fTQTonbBB',
+            fee_account: 'Fq5gXLJsCe9tUg6JrxxoMzKEz5gviPeASga8iM7cFmRe',
             currency_address: '4TLk2jocJuEysZubcMFCqsEFFu5jVGzTp14kAANDaEFv',
             currency_symbol: 'SD',
             authority: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
@@ -418,8 +425,7 @@ export function ActiveListingsOpenApi() {
           result: [
             {
               network: 'devnet',
-              marketplace_address:
-                '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+              marketplace_address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
               seller_address: 'AaYFExyZuMHbJHzjimKyQBAH1yfA9sKTxSzBc6Nr5X4s',
               price: 100,
               currency_symbol: 'SD',
@@ -430,8 +436,7 @@ export function ActiveListingsOpenApi() {
             },
             {
               network: 'devnet',
-              marketplace_address:
-                '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+              marketplace_address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
               seller_address: 'GE4kh5FsCDWeJfqLsKx7zC9ijkqKpCuYQxh8FYBiTJe',
               price: 300,
               currency_symbol: 'SD',
@@ -482,8 +487,7 @@ export function SellerListingsOpenApi() {
           result: [
             {
               network: 'devnet',
-              marketplace_address:
-                '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+              marketplace_address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
               seller_address: 'AaYFExyZuMHbJHzjimKyQBAH1yfA9sKTxSzBc6Nr5X4s',
               price: 100,
               nft_address: 'GpLzvmQYcQM3USH7RGehoriEzmJLJ8AfKVdLFZRoVBsz',
@@ -495,8 +499,7 @@ export function SellerListingsOpenApi() {
             },
             {
               network: 'devnet',
-              marketplace_address:
-                '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+              marketplace_address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
               seller_address: 'AaYFExyZuMHbJHzjimKyQBAH1yfA9sKTxSzBc6Nr5X4s',
               price: 300,
               nft_address: 'GpLzvmQYcQM3USH7RGehoriEzmJLJ8AfKVdLFZRoVBsz',
@@ -508,8 +511,7 @@ export function SellerListingsOpenApi() {
             },
             {
               network: 'devnet',
-              marketplace_address:
-                '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+              marketplace_address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
               seller_address: 'AaYFExyZuMHbJHzjimKyQBAH1yfA9sKTxSzBc6Nr5X4s',
               price: 100,
               nft_address: '7vuJXdVxJpztB4zdQiVYMCNgNe5JTJsdoVux6RoFLxB8',
@@ -521,8 +523,7 @@ export function SellerListingsOpenApi() {
             },
             {
               network: 'devnet',
-              marketplace_address:
-                '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
+              marketplace_address: '8svcgCzGTT12h3uvDNR3BUY27hJvKtYdxcMKjEQzh14q',
               seller_address: 'AaYFExyZuMHbJHzjimKyQBAH1yfA9sKTxSzBc6Nr5X4s',
               price: 100,
               nft_address: 'B6wQuXUXkKZu5n3WEfDfdRQKNUpdwstUUErJsb1wmXB',
@@ -553,8 +554,7 @@ export function OrderHistoryOpenApi() {
           result: [
             {
               network: 'devnet',
-              marketplace_address:
-                '7b2dSy4F26A6WweKgdmXzyi5FhhN5AqhuXAQHYcaXfqW',
+              marketplace_address: '7b2dSy4F26A6WweKgdmXzyi5FhhN5AqhuXAQHYcaXfqW',
               seller_address: 'GE4kh5FsCDWeJfqLsKx7zC9ijkqKpCuYQxh8FYBiTJe',
               price: 1,
               nft_address: 'DcxcgowdRg2bXFP4CcgFMaeppYY7GFquNhbZ5RwTVz3L',

@@ -1,14 +1,16 @@
 import { HttpStatus } from '@nestjs/common';
-import { AuctionHouse, findMetadataPda, Metadata, Metaplex, Nft } from '@metaplex-foundation/js';
+import { AuctionHouse, findMetadataPda, Metadata, Metaplex, Nft, toPublicKey } from '@metaplex-foundation/js';
 import { createTransferCheckedInstruction, getMint, Mint } from '@solana/spl-token';
 import axios from 'axios';
 import {
+  AccountMeta,
   clusterApiUrl,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
+  SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -30,6 +32,8 @@ import bs58 from 'bs58';
 import { newProgramError, newProgramErrorFrom, ProgramError } from 'src/core/program-error';
 import { createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { Globals } from 'src/globals';
+import { SellInstructionAccounts, SellInstructionArgs } from '@metaplex-foundation/mpl-auction-house';
+import * as beet from '@metaplex-foundation/beet';
 
 const endpoint = {
   http: {
@@ -110,6 +114,29 @@ const isValidUrl = (url: string) => {
     return false;
   }
 };
+
+export const sellInstructionDiscriminator = [51, 230, 133, 164, 1, 127, 131, 173];
+
+/**
+ * @category Instructions
+ * @category Sell
+ * @category generated
+ */
+export const sellStruct = new beet.BeetArgsStruct<
+  SellInstructionArgs & {
+    instructionDiscriminator: number[] /* size: 8 */;
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['tradeStateBump', beet.u8],
+    ['freeTradeStateBump', beet.u8],
+    ['programAsSignerBump', beet.u8],
+    ['buyerPrice', beet.u64],
+    ['tokenSize', beet.u64],
+  ],
+  'SellInstructionArgs',
+);
 
 function attemptConnection(endpoint: string): Connection {
   try {
@@ -371,6 +398,86 @@ export const Utility = {
       const auctionsClient = metaplex.auctions();
       const auctionHouse = await auctionsClient.findAuctionHouseByAddress(auctionHouseAddress).run();
       return auctionHouse;
+    },
+
+    createSellInstruction: function (
+      accounts: SellInstructionAccounts,
+      args: SellInstructionArgs,
+      programId = toPublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    ) {
+      const [data] = sellStruct.serialize({
+        instructionDiscriminator: sellInstructionDiscriminator,
+        ...args,
+      });
+      const keys: AccountMeta[] = [
+        {
+          pubkey: accounts.wallet,
+          isWritable: false,
+          isSigner: true,
+        },
+        {
+          pubkey: accounts.tokenAccount,
+          isWritable: true,
+          isSigner: false,
+        },
+        {
+          pubkey: accounts.metadata,
+          isWritable: false,
+          isSigner: false,
+        },
+        {
+          pubkey: accounts.authority,
+          isWritable: false,
+          isSigner: true,
+        },
+        {
+          pubkey: accounts.auctionHouse,
+          isWritable: false,
+          isSigner: false,
+        },
+        {
+          pubkey: accounts.auctionHouseFeeAccount,
+          isWritable: true,
+          isSigner: false,
+        },
+        {
+          pubkey: accounts.sellerTradeState,
+          isWritable: true,
+          isSigner: false,
+        },
+        {
+          pubkey: accounts.freeSellerTradeState,
+          isWritable: true,
+          isSigner: false,
+        },
+        {
+          pubkey: TOKEN_PROGRAM_ID,
+          isWritable: false,
+          isSigner: false,
+        },
+        {
+          pubkey: SystemProgram.programId,
+          isWritable: false,
+          isSigner: false,
+        },
+        {
+          pubkey: accounts.programAsSigner,
+          isWritable: false,
+          isSigner: false,
+        },
+        {
+          pubkey: SYSVAR_RENT_PUBKEY,
+          isWritable: false,
+          isSigner: false,
+        },
+      ];
+
+      const ix = new TransactionInstruction({
+        programId,
+        keys,
+        data,
+      });
+      return ix;
     },
   },
 

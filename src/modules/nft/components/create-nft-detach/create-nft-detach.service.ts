@@ -26,21 +26,32 @@ export interface CreateParams {
   network: WalletAdapterNetwork;
   name: string;
   symbol: string;
-  address: string;
+  creatorAddress: string;
   metadataUri: string;
   maxSupply: number;
   royalty: number;
   userId: ObjectId;
   nftReceiver?: string;
   serviceCharge?: ServiceCharge;
+  feePayer?: string;
 }
 
 @Injectable()
 export class CreateNftDetachService {
   constructor(private eventEmitter: EventEmitter2) {}
   async createMasterNft(createParams: CreateParams): Promise<unknown> {
-    const { name, symbol, metadataUri, maxSupply, royalty, network, address, nftReceiver, serviceCharge } =
-      createParams;
+    const {
+      name,
+      symbol,
+      metadataUri,
+      maxSupply,
+      royalty,
+      network,
+      creatorAddress,
+      nftReceiver,
+      serviceCharge,
+      feePayer,
+    } = createParams;
     if (!metadataUri) {
       throw new Error('No metadata URI');
     }
@@ -52,8 +63,9 @@ export class CreateNftDetachService {
       const metadataPda = findMetadataPda(mintKeypair.publicKey);
       const masterEditionPda = findMasterEditionV2Pda(mintKeypair.publicKey);
 
-      const addressPubKey = new PublicKey(address);
-      const receiverPubKey = nftReceiver ? new PublicKey(nftReceiver) : addressPubKey;
+      const creatorPubKey = new PublicKey(creatorAddress);
+      const receiverPubKey = nftReceiver ? new PublicKey(nftReceiver) : creatorPubKey;
+      const txnPayer = feePayer ? new PublicKey(feePayer) : creatorPubKey;
       const associatedToken = findAssociatedTokenAccountPda(
         mintKeypair.publicKey,
         receiverPubKey,
@@ -68,7 +80,7 @@ export class CreateNftDetachService {
         sellerFeeBasisPoints: royalty,
         creators: [
           {
-            address: addressPubKey,
+            address: creatorPubKey,
             verified: true,
             share: 100,
           },
@@ -79,29 +91,29 @@ export class CreateNftDetachService {
 
       let tx = new Transaction().add(
         SystemProgram.createAccount({
-          fromPubkey: addressPubKey,
+          fromPubkey: txnPayer,
           newAccountPubkey: mintKeypair.publicKey,
           space: MINT_SIZE,
           lamports: mintRent,
           programId: TOKEN_PROGRAM_ID,
         }),
-        createInitializeMintInstruction(mintKeypair.publicKey, 0, addressPubKey, addressPubKey, TOKEN_PROGRAM_ID),
+        createInitializeMintInstruction(mintKeypair.publicKey, 0, creatorPubKey, creatorPubKey, TOKEN_PROGRAM_ID),
         createAssociatedTokenAccountInstruction(
-          addressPubKey,
+          txnPayer,
           associatedToken,
           receiverPubKey,
           mintKeypair.publicKey,
           TOKEN_PROGRAM_ID,
           ASSOCIATED_TOKEN_PROGRAM_ID,
         ),
-        createMintToInstruction(mintKeypair.publicKey, associatedToken, addressPubKey, 1),
+        createMintToInstruction(mintKeypair.publicKey, associatedToken, creatorPubKey, 1),
         createCreateMetadataAccountV2Instruction(
           {
             metadata: metadataPda,
             mint: mintKeypair.publicKey,
-            mintAuthority: addressPubKey,
-            payer: addressPubKey,
-            updateAuthority: addressPubKey,
+            mintAuthority: creatorPubKey,
+            payer: txnPayer,
+            updateAuthority: creatorPubKey,
           },
           {
             createMetadataAccountArgsV2: { data: nftMetadata, isMutable: true },
@@ -111,9 +123,9 @@ export class CreateNftDetachService {
           {
             edition: masterEditionPda,
             mint: mintKeypair.publicKey,
-            updateAuthority: addressPubKey,
-            mintAuthority: addressPubKey,
-            payer: addressPubKey,
+            updateAuthority: creatorPubKey,
+            mintAuthority: creatorPubKey,
+            payer: txnPayer,
             metadata: metadataPda,
           },
           { createMasterEditionArgs: { maxSupply } },
@@ -121,11 +133,11 @@ export class CreateNftDetachService {
       );
 
       if (serviceCharge) {
-        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, addressPubKey);
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, txnPayer);
       }
 
       const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
-      tx.feePayer = addressPubKey;
+      tx.feePayer = txnPayer;
       tx.recentBlockhash = blockHash;
       tx.partialSign(mintKeypair);
       const serializedTransaction = tx.serialize({

@@ -10,6 +10,7 @@ export class Marketplace {
     apiKeyId?: ObjectId,
     network?: WalletAdapterNetwork,
     marketplaceAddress?: string,
+    feeAccount?: string,
     currencyAddress?: string,
     feePayer?: string,
     treasuryWithdrawalDestinationOwner?: string,
@@ -27,6 +28,9 @@ export class Marketplace {
     }
     if (network !== undefined) {
       this.network = network;
+    }
+    if (feeAccount) {
+      this.fee_account = feeAccount;
     }
     if (marketplaceAddress !== undefined) {
       this.address = marketplaceAddress;
@@ -81,6 +85,9 @@ export class Marketplace {
 
   @Prop({ required: true, default: 'SOL' })
   currency_symbol: string;
+
+  @Prop({ required: true })
+  fee_account: string;
 
   @Prop({ required: true })
   fee_payer: string;

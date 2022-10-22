@@ -4,7 +4,7 @@ import { IsNotEmpty, IsString, IsNumber, IsOptional, MaxLength } from 'class-val
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ServiceCharge } from 'src/common/utils/utils';
 
-export class CreateNftDetachDto {
+export class CreateNftDetachV2Dto {
   @ApiProperty({
     title: 'network',
     type: String,
@@ -15,14 +15,14 @@ export class CreateNftDetachDto {
   readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
-    title: 'wallet',
+    title: 'creator_wallet',
     type: String,
     description: "Creator's wallet's address",
     example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
   })
   @IsNotEmpty()
   @IsString()
-  readonly wallet: string;
+  readonly creator_wallet: string;
 
   @ApiProperty({
     title: 'name',
@@ -136,6 +136,16 @@ export class CreateNftDetachDto {
   @IsOptional()
   @IsString()
   receiver?: string;
+
+  @ApiPropertyOptional({
+    name: 'fee_payer',
+    description: 'The account that will pay the gas fee for this transaction',
+    type: String,
+    example: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+  })
+  @IsOptional()
+  @IsString()
+  fee_payer?: string;
 
   @ApiPropertyOptional({
     name: 'service_charge',

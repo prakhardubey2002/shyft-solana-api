@@ -23,21 +23,11 @@ import { NATIVE_MINT } from '@solana/spl-token';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { ObjectId } from 'mongoose';
 import { Utility } from 'src/common/utils/utils';
-import {
-  newProgramError,
-  newProgramErrorFrom,
-  ProgramError,
-} from 'src/core/program-error';
-import {
-  MarketplaceInitiationEvent,
-  MarketplaceUpdateInitiationEvent,
-} from '../data-cache/db-sync/db.events';
+import { newProgramError, newProgramErrorFrom, ProgramError } from 'src/core/program-error';
+import { MarketplaceInitiationEvent, MarketplaceUpdateInitiationEvent } from '../data-cache/db-sync/db.events';
 import { CreateMarketPlaceDto } from './dto/create-mp.dto';
 import { UpdateMarketplaceDto } from './dto/update-marketplace.dto';
-import {
-  DetachedMarketPlaceResponseDto,
-  DetachedUpdatedMarketplaceResponseDto,
-} from './response-dto/responses.dto';
+import { DetachedMarketPlaceResponseDto, DetachedUpdatedMarketplaceResponseDto } from './response-dto/responses.dto';
 import { isEqual } from 'lodash';
 import { WithdrawFeeDto } from './dto/withdraw-royalty.dto';
 import { MarketplaceRepo } from 'src/dal/marketplace-repo/marketplace-repo';
@@ -54,48 +44,33 @@ export type UpdateMpSerivceDto = {
 
 @Injectable()
 export class MarketplaceDetachedService {
-  constructor(
-    private eventEmitter: EventEmitter2,
-    private marketplaceRepo: MarketplaceRepo,
-  ) {}
+  constructor(private eventEmitter: EventEmitter2, private marketplaceRepo: MarketplaceRepo) {}
   async createMarketPlace(createMarketPlaceDto: CreateMarketplaceServiceDto) {
     try {
-      const connection = Utility.connectRpc(
-        createMarketPlaceDto.params.network,
-      );
+      const connection = Utility.connectRpc(createMarketPlaceDto.params.network);
       const wallet = toPublicKey(createMarketPlaceDto.params.creator_wallet);
       const canChangeSalePrice = false;
       const requiresSignOff = false;
 
       // Accounts.
-      const authority =
-        createMarketPlaceDto.params.authority_address ??
-        createMarketPlaceDto.params.creator_wallet;
+      const authority = createMarketPlaceDto.params.authority_address ?? createMarketPlaceDto.params.creator_wallet;
       const treasuryMint = createMarketPlaceDto.params.currency_address
         ? toPublicKey(createMarketPlaceDto.params.currency_address)
         : NATIVE_MINT;
       const treasuryWithdrawalDestinationOwner = toPublicKey(
-        createMarketPlaceDto.params.fee_recipient ??
-          createMarketPlaceDto.params.creator_wallet,
+        createMarketPlaceDto.params.fee_recipient ?? createMarketPlaceDto.params.creator_wallet,
       );
       const feeWithdrawalDestination = toPublicKey(
-        createMarketPlaceDto.params.fee_payer ??
-          createMarketPlaceDto.params.creator_wallet,
+        createMarketPlaceDto.params.fee_payer ?? createMarketPlaceDto.params.creator_wallet,
       );
 
       // PDAs.
-      const auctionHouse = findAuctionHousePda(
-        toPublicKey(authority),
-        treasuryMint,
-      );
+      const auctionHouse = findAuctionHousePda(toPublicKey(authority), treasuryMint);
       const auctionHouseFeeAccount = findAuctionHouseFeePda(auctionHouse);
       const auctionHouseTreasury = findAuctionHouseTreasuryPda(auctionHouse);
       const treasuryWithdrawalDestination = treasuryMint.equals(NATIVE_MINT)
         ? treasuryWithdrawalDestinationOwner
-        : findAssociatedTokenAccountPda(
-            treasuryMint,
-            treasuryWithdrawalDestinationOwner,
-          );
+        : findAssociatedTokenAccountPda(treasuryMint, treasuryWithdrawalDestinationOwner);
       const currencySymbol = await Utility.token.getTokenSymbol(
         createMarketPlaceDto.params.network,
         treasuryMint.toBase58(),
@@ -137,9 +112,7 @@ export class MarketplaceDetachedService {
       const instruction = createCreateAuctionHouseInstruction(accounts, args);
       const txt = new Transaction().add(instruction);
       txt.feePayer = wallet;
-      txt.recentBlockhash = (
-        await connection.getLatestBlockhash('finalized')
-      ).blockhash;
+      txt.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const serializedTransaction = txt.serialize({
         requireAllSignatures: false,
         verifySignatures: true,
@@ -149,6 +122,7 @@ export class MarketplaceDetachedService {
       const resp: DetachedMarketPlaceResponseDto = {
         network: createMarketPlaceDto.params.network,
         address: auctionHouse.toBase58(),
+        fee_account: auctionHouseFeeAccount.toBase58(),
         treasury_address: auctionHouseTreasury.toBase58(),
         fee_payer: feeWithdrawalDestination.toBase58(),
         fee_recipient: treasuryWithdrawalDestinationOwner.toBase58(),
@@ -168,14 +142,10 @@ export class MarketplaceDetachedService {
 
   async updateMarketplace(updateMarketplaceDto: UpdateMpSerivceDto) {
     try {
-      const connection = Utility.connectRpc(
-        updateMarketplaceDto.params.network,
-      );
+      const connection = Utility.connectRpc(updateMarketplaceDto.params.network);
       const wallet = toPublicKey(updateMarketplaceDto.params.authority_wallet);
 
-      const auctionHouseAddress = toPublicKey(
-        updateMarketplaceDto.params.marketplace_address,
-      );
+      const auctionHouseAddress = toPublicKey(updateMarketplaceDto.params.marketplace_address);
       const auctionHouse = await Utility.auctionHouse.findAuctionHouse(
         updateMarketplaceDto.params.network,
         auctionHouseAddress,
@@ -185,25 +155,21 @@ export class MarketplaceDetachedService {
       let treasuryWithdrawalDestination: PublicKey;
 
       if (auctionHouse.isNative) {
-        treasuryWithdrawalDestinationOwner = updateMarketplaceDto.params
-          .fee_recipient
+        treasuryWithdrawalDestinationOwner = updateMarketplaceDto.params.fee_recipient
           ? toPublicKey(updateMarketplaceDto.params.fee_recipient)
           : auctionHouse.treasuryWithdrawalDestinationAddress;
         treasuryWithdrawalDestination = treasuryWithdrawalDestinationOwner;
       } else if (updateMarketplaceDto.params.fee_recipient) {
-        treasuryWithdrawalDestinationOwner = toPublicKey(
-          updateMarketplaceDto.params.fee_recipient,
-        );
+        treasuryWithdrawalDestinationOwner = toPublicKey(updateMarketplaceDto.params.fee_recipient);
         treasuryWithdrawalDestination = findAssociatedTokenAccountPda(
           auctionHouse.treasuryMint.address,
           treasuryWithdrawalDestinationOwner,
         );
       } else {
-        const treasuryDestinationOwner =
-          await this.marketplaceRepo.getMarketplaceTreasuryDestinationOwner(
-            updateMarketplaceDto.params.network,
-            auctionHouseAddress.toBase58(),
-          );
+        const treasuryDestinationOwner = await this.marketplaceRepo.getMarketplaceTreasuryDestinationOwner(
+          updateMarketplaceDto.params.network,
+          auctionHouseAddress.toBase58(),
+        );
         if (treasuryDestinationOwner === undefined) {
           throw newProgramError(
             'missing_params',
@@ -220,9 +186,7 @@ export class MarketplaceDetachedService {
             },
           );
         }
-        treasuryWithdrawalDestinationOwner = toPublicKey(
-          treasuryDestinationOwner,
-        );
+        treasuryWithdrawalDestinationOwner = toPublicKey(treasuryDestinationOwner);
         treasuryWithdrawalDestination = findAssociatedTokenAccountPda(
           auctionHouse.treasuryMint.address,
           treasuryWithdrawalDestinationOwner,
@@ -232,8 +196,7 @@ export class MarketplaceDetachedService {
       const originalData = {
         authority: auctionHouse.authorityAddress,
         feeWithdrawalDestination: auctionHouse.feeWithdrawalDestinationAddress,
-        treasuryWithdrawalDestination:
-          auctionHouse.treasuryWithdrawalDestinationAddress,
+        treasuryWithdrawalDestination: auctionHouse.treasuryWithdrawalDestinationAddress,
         sellerFeeBasisPoints: auctionHouse.sellerFeeBasisPoints,
         requiresSignOff: auctionHouse.requiresSignOff,
         canChangeSalePrice: auctionHouse.canChangeSalePrice,
@@ -291,9 +254,7 @@ export class MarketplaceDetachedService {
       const instruction = createUpdateAuctionHouseInstruction(account, args);
       const txt = new Transaction().add(instruction);
       txt.feePayer = wallet;
-      txt.recentBlockhash = (
-        await connection.getLatestBlockhash('finalized')
-      ).blockhash;
+      txt.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const serializedTransaction = txt.serialize({
         requireAllSignatures: false,
         verifySignatures: true,
@@ -311,6 +272,7 @@ export class MarketplaceDetachedService {
       const resp: DetachedUpdatedMarketplaceResponseDto = {
         network: updateMarketplaceDto.params.network,
         address: auctionHouse.address.toBase58(),
+        fee_account: auctionHouse.feeAccountAddress.toBase58(),
         treasury_address: auctionHouse.treasuryAccountAddress.toBase58(),
         fee_payer: updatedData.feeWithdrawalDestination.toBase58(),
         fee_recipient: treasuryWithdrawalDestinationOwner.toBase58(),
@@ -335,9 +297,7 @@ export class MarketplaceDetachedService {
       });
       const auctionsClient = metaplex.auctions();
       const auctionHouse = await auctionsClient
-        .findAuctionHouseByAddress(
-          new PublicKey(withdrawRoyaltyDto.marketplace_address),
-        )
+        .findAuctionHouseByAddress(new PublicKey(withdrawRoyaltyDto.marketplace_address))
         .run();
 
       if (executor.toBase58() != auctionHouse.authorityAddress.toBase58()) {
@@ -357,25 +317,16 @@ export class MarketplaceDetachedService {
       const instructionAccounts: WithdrawFromTreasuryInstructionAccounts = {
         treasuryMint: auctionHouse.treasuryMint.address,
         authority: auctionHouse.authorityAddress,
-        treasuryWithdrawalDestination:
-          auctionHouse.treasuryWithdrawalDestinationAddress,
+        treasuryWithdrawalDestination: auctionHouse.treasuryWithdrawalDestinationAddress,
         auctionHouseTreasury: auctionHouse.treasuryAccountAddress,
         auctionHouse: auctionHouse.address,
       };
-      const withdrawAmount = toBigNumber(
-        withdrawRoyaltyDto.amount *
-          Math.pow(10, auctionHouse.treasuryMint.decimals),
-      );
+      const withdrawAmount = toBigNumber(withdrawRoyaltyDto.amount * Math.pow(10, auctionHouse.treasuryMint.decimals));
 
-      const instruction = createWithdrawFromTreasuryInstruction(
-        instructionAccounts,
-        { amount: withdrawAmount },
-      );
+      const instruction = createWithdrawFromTreasuryInstruction(instructionAccounts, { amount: withdrawAmount });
       const txt = new Transaction().add(instruction);
       txt.feePayer = executor;
-      txt.recentBlockhash = (
-        await connection.getLatestBlockhash('finalized')
-      ).blockhash;
+      txt.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const serializedTransaction = txt.serialize({
         requireAllSignatures: false,
         verifySignatures: true,

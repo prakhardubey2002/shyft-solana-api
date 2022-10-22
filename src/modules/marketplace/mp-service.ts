@@ -88,6 +88,7 @@ export class MarketplaceService {
       const marketplaceCreationEvent = new MarketplaceCreationEvent(
         createMarketPlaceDto.createMarketplaceParams.network,
         auctionHouse.auctionHouseAddress.toBase58(),
+        auctionHouse.auctionHouse.feeAccountAddress.toBase58(),
         auctionHouse.auctionHouse.authorityAddress.toBase58(),
         auctionHouse.auctionHouse.treasuryMint.address.toBase58(),
         auctionHouse.auctionHouse.feeWithdrawalDestinationAddress.toBase58(),
@@ -104,6 +105,7 @@ export class MarketplaceService {
       const resp: MarketPlaceResponseDto = {
         network: createMarketPlaceDto.createMarketplaceParams.network,
         address: auctionHouse.auctionHouseAddress.toBase58(),
+        fee_account: auctionHouse.auctionHouse.feeAccountAddress.toBase58(),
         treasury_address: auctionHouse.auctionHouse.treasuryAccountAddress.toBase58(),
         fee_payer: auctionHouse.auctionHouse.feeWithdrawalDestinationAddress.toBase58(),
         fee_recipient: treasuryWithdrawalDestinationOwner.toBase58(),
@@ -127,6 +129,7 @@ export class MarketplaceService {
         const resp: MarketplaceInfoResponseDto = {
           network: d.network,
           address: d.address,
+          fee_account: d.fee_account,
           authority: d.authority,
           currency_address: d.currency_address,
           currency_symbol: d.currency_symbol,
@@ -166,6 +169,7 @@ export class MarketplaceService {
       const resp: MarketPlaceResponseDto = {
         network: findMarketplaceDto.network,
         address: auctionHouse.address.toBase58(),
+        fee_account: auctionHouse.feeAccountAddress.toBase58(),
         currency_address: auctionHouse.treasuryMint.address.toBase58(),
         currency_symbol: currencySymbol,
         authority: auctionHouse.authorityAddress.toBase58(),
@@ -270,6 +274,7 @@ export class MarketplaceService {
       const result: MarketPlaceResponseDto = {
         network: updateMarketplaceDto.update.network,
         address: updatedAuctionHouse.address.toBase58(),
+        fee_account: updatedAuctionHouse.feeAccountAddress.toBase58(),
         currency_address: updatedAuctionHouse.treasuryMint.address.toBase58(),
         currency_symbol: currencySymbol,
         authority: updatedAuctionHouse.authorityAddress.toBase58(),

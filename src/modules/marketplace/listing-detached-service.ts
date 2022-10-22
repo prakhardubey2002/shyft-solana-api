@@ -65,18 +65,18 @@ export class ListingDetachedService {
   constructor(private eventEmitter: EventEmitter2, private listingRepo: ListingRepo) {}
   async createListing(createListDto: CreateListingServiceDto): Promise<any> {
     try {
-      const { network, marketplace_address, nft_address, seller_wallet, price } = createListDto.params;
+      const { network, marketplace_address, nft_address, seller_wallet, price, on_the_house } = createListDto.params;
       const isAlreadyListed = await this.listingRepo.isListed(network, marketplace_address, nft_address);
-      if (isAlreadyListed)
+      if (isAlreadyListed) {
         throw newProgramError(
           'detached_listing_creation_error',
           HttpStatus.FORBIDDEN,
           'NFT, ' + nft_address + ' already listed in this marketplace, ' + marketplace_address,
         );
+      }
 
       const connection = Utility.connectRpc(network);
       const seller = toPublicKey(seller_wallet);
-
       const metaplex = Metaplex.make(connection, {
         cluster: network,
       });
@@ -100,7 +100,7 @@ export class ListingDetachedService {
       );
       const freeSellerTradeState = findAuctionHouseTradeStatePda(
         auctionHouse.address,
-        toPublicKey(seller),
+        seller,
         auctionHouse.treasuryMint.address,
         mintAccount,
         lamports(0).basisPoints,
@@ -129,7 +129,7 @@ export class ListingDetachedService {
         tokenSize: token(1).basisPoints,
       };
 
-      const bookkeeper = seller;
+      const bookkeeper = on_the_house ? auctionHouse.authorityAddress : seller;
       const receipt = findListingReceiptPda(sellerTradeState);
       const printAccounts: PrintListingReceiptInstructionAccounts = {
         receipt: receipt,
@@ -140,7 +140,9 @@ export class ListingDetachedService {
         receiptBump: receipt.bump,
       };
 
-      const sellInstruction = createSellInstruction(accounts, args);
+      const sellInstruction = on_the_house
+        ? Utility.auctionHouse.createSellInstruction(accounts, args)
+        : createSellInstruction(accounts, args);
       const printListingReceiptInstruction = createPrintListingReceiptInstruction(printAccounts, pArgs);
 
       const txt = new Transaction().add(sellInstruction).add(printListingReceiptInstruction);
@@ -155,7 +157,7 @@ export class ListingDetachedService {
         txt.add(txnServiceCharge);
       }
 
-      txt.feePayer = seller;
+      txt.feePayer = on_the_house ? auctionHouse.authorityAddress : seller;
       txt.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const serializedTransaction = txt.serialize({
         requireAllSignatures: false,

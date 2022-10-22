@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ServiceCharge } from 'src/common/utils/utils';
@@ -104,8 +104,12 @@ export class ListDto {
   @IsString()
   readonly seller_wallet: string;
 
+  @IsOptional()
+  @IsBoolean()
+  on_the_house?: boolean;
+
   @ApiPropertyOptional({
-    name: 'service_charge',
+    name: 'Service Charge',
     description: 'You can charge some token/sol while listing nft for sale',
     type: 'string',
     example: {

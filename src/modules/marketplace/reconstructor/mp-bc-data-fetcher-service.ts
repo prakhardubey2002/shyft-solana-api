@@ -26,6 +26,7 @@ export class MpBcDataFetcher {
       null,
       network,
       mpAddress,
+      auctionHouse.feeAccountAddress.toBase58(),
       auctionHouse.treasuryMint.address.toBase58(),
       auctionHouse.feeWithdrawalDestinationAddress.toBase58(),
       treasuryDestinationOwner,

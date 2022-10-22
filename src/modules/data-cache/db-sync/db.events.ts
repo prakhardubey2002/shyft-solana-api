@@ -123,6 +123,7 @@ export class MarketplaceCreationEvent {
   constructor(
     network: WalletAdapterNetwork,
     address: string,
+    feeAccount: string,
     authority: string,
     currencyAddress: string,
     feePayer: string,
@@ -139,6 +140,7 @@ export class MarketplaceCreationEvent {
     this.network = network;
     this.address = address;
     this.authority = authority;
+    this.feeAccount = feeAccount;
     this.currencyAddress = currencyAddress;
     this.feePayer = feePayer;
     this.treasuryAddress = treasuryAddress;
@@ -153,6 +155,7 @@ export class MarketplaceCreationEvent {
   }
   network: WalletAdapterNetwork;
   address: string;
+  feeAccount: string;
   authority: string;
   currencyAddress: string;
   currencySymbol: string;

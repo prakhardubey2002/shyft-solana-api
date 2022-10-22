@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-  IsString,
-  Max,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Max } from 'class-validator';
 
 export class UpdateMarketplaceAttachedDto {
   @ApiProperty({
@@ -23,8 +16,7 @@ export class UpdateMarketplaceAttachedDto {
     title: 'private_key',
     type: String,
     description: "marketplace authority's private key",
-    example:
-      '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
+    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
   @IsString()
@@ -78,8 +70,7 @@ export class UpdateMarketplaceAttachedDto {
   @ApiPropertyOptional({
     title: "New Fee Recipient's address",
     type: String,
-    description:
-      'address which will receive the transaction fee getting accumulated in the marketplace treasury',
+    description: 'address which will receive the transaction fee getting accumulated in the marketplace treasury',
     example: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
   })
   @IsOptional()
@@ -120,8 +111,7 @@ export class UpdateMarketplaceDto {
   @ApiPropertyOptional({
     title: 'New Update Authority Address',
     type: String,
-    description:
-      'account address that will be the new update authority of the marketplace.',
+    description: 'account address that will be the new update authority of the marketplace.',
     example: '54K5BTMj8ynktzEeaD1iGhAJsCN2svBKmD1fTQTonbBB',
   })
   @IsOptional()
@@ -156,8 +146,7 @@ export class UpdateMarketplaceDto {
   @ApiPropertyOptional({
     title: "New Fee Recipient's address",
     type: String,
-    description:
-      'address which will receive the transaction fee getting accumulated in the marketplace treasury',
+    description: 'address which will receive the transaction fee getting accumulated in the marketplace treasury',
     example: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
   })
   @IsOptional()

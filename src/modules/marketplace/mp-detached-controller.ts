@@ -21,18 +21,12 @@ import {
 @ApiSecurity('api_key', ['x-api-key'])
 @Controller('marketplace')
 export class MarketplaceDetachController {
-  constructor(
-    private marketplaceService: MarketplaceDetachedService,
-    private listingService: ListingDetachedService,
-  ) {}
+  constructor(private marketplaceService: MarketplaceDetachedService, private listingService: ListingDetachedService) {}
 
   @Post('create')
   @CreateMpOpenApi()
   @Version('1')
-  async createMarketplace(
-    @Body() createMarketPlaceDto: CreateMarketPlaceDto,
-    @Req() request: any,
-  ): Promise<any> {
+  async createMarketplace(@Body() createMarketPlaceDto: CreateMarketPlaceDto, @Req() request: any): Promise<any> {
     console.log('market place creation request received.');
 
     const result = await this.marketplaceService.createMarketPlace({
@@ -50,10 +44,7 @@ export class MarketplaceDetachController {
   @Post('update')
   @UpdateMpOpenApi()
   @Version('1')
-  async updateMarketplace(
-    @Body() updateMarketPlaceDto: UpdateMarketplaceDto,
-    @Req() request: any,
-  ): Promise<any> {
+  async updateMarketplace(@Body() updateMarketPlaceDto: UpdateMarketplaceDto, @Req() request: any): Promise<any> {
     console.log('market place request received.');
 
     const result = await this.marketplaceService.updateMarketplace({
@@ -71,12 +62,26 @@ export class MarketplaceDetachController {
   @Post('list')
   @CreateListingOpenApi()
   @Version('1')
-  async list(
-    @Body() createListingDto: ListDto,
-    @Req() request: any,
-  ): Promise<any> {
+  async list(@Body() createListingDto: ListDto, @Req() request: any): Promise<any> {
     console.log('listing creation request received');
 
+    const result = await this.listingService.createListing({
+      apiKeyId: request.id,
+      params: createListingDto,
+    });
+    return {
+      success: true,
+      message: 'Listing transaction created successfully',
+      result: result,
+    };
+  }
+
+  @Post('list_gasless')
+  @CreateListingOpenApi()
+  @Version('1')
+  async listGasless(@Body() createListingDto: ListDto, @Req() request: any): Promise<any> {
+    console.log('listing creation request received');
+    createListingDto.on_the_house = true;
     const result = await this.listingService.createListing({
       apiKeyId: request.id,
       params: createListingDto,

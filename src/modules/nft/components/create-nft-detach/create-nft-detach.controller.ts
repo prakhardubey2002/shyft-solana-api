@@ -7,6 +7,7 @@ import { CreateNftDetachDto } from './dto/create-nft-detach.dto';
 import { StorageMetadataService } from '../storage-metadata/storage-metadata.service';
 import { CreateNftDetachOpenApi } from './open-api';
 import { NftFile } from '../storage-metadata/dto/create-metadata.dto';
+import { CreateNftDetachV2Dto } from './dto/create-nft-v2.dto';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -29,22 +30,7 @@ export class CreateNftDetachController {
     @Body() createNftDetachDto: CreateNftDetachDto,
     @Req() request: any,
   ): Promise<any> {
-    let image: string;
-    if (files.file) {
-      const uploadImage = await this.storageService.uploadToIPFS(
-        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
-      );
-      image = uploadImage.uri;
-    }
-
-    let data: NftFile;
-
-    if (files.data) {
-      const uploadFile = await this.storageService.uploadToIPFS(
-        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
-      );
-      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
-    }
+    const { image, data }: { image: string; data: NftFile } = await this.uploadFilesToIPFS(files);
 
     const { uri } = await this.storageService.prepareNFTMetadata({
       network: createNftDetachDto.network,
@@ -64,7 +50,7 @@ export class CreateNftDetachController {
       network: createNftDetachDto.network,
       name: createNftDetachDto.name,
       symbol: createNftDetachDto.symbol,
-      address: createNftDetachDto.wallet,
+      creatorAddress: createNftDetachDto.wallet,
       metadataUri: uri,
       maxSupply: createNftDetachDto.max_supply,
       royalty: createNftDetachDto.royalty ?? 0,
@@ -80,5 +66,80 @@ export class CreateNftDetachController {
       message: 'NFT mint request generated successfully',
       result,
     };
+  }
+
+  @CreateNftDetachOpenApi()
+  @Post('create')
+  @Version('2')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'data', maxCount: 1 },
+    ]),
+  )
+  async createNftV2(
+    @UploadedFiles()
+    files: { file: Express.Multer.File[]; data?: Express.Multer.File[] },
+    @Body() createNftDetachDto: CreateNftDetachV2Dto,
+    @Req() request: any,
+  ): Promise<any> {
+    console.log('create_detach v2 request received');
+    const { image, data }: { image: string; data: NftFile } = await this.uploadFilesToIPFS(files);
+
+    const { uri } = await this.storageService.prepareNFTMetadata({
+      network: createNftDetachDto.network,
+      creator: createNftDetachDto.creator_wallet,
+      image,
+      name: createNftDetachDto.name,
+      description: createNftDetachDto.description,
+      symbol: createNftDetachDto.symbol,
+      attributes: createNftDetachDto.attributes,
+      share: 100, //keeping it 100 by default for now createNftDto.share,
+      royalty: createNftDetachDto.royalty ?? 0, //500 = 5%
+      external_url: createNftDetachDto.external_url,
+      file: data,
+    });
+
+    const mintNftRequest = {
+      network: createNftDetachDto.network,
+      name: createNftDetachDto.name,
+      symbol: createNftDetachDto.symbol,
+      creatorAddress: createNftDetachDto.creator_wallet,
+      metadataUri: uri,
+      maxSupply: createNftDetachDto.max_supply,
+      royalty: createNftDetachDto.royalty ?? 0,
+      userId: request.id,
+      nftReceiver: createNftDetachDto?.receiver,
+      serviceCharge: createNftDetachDto?.service_charge,
+      feePayer: createNftDetachDto.fee_payer,
+    };
+
+    const result = await this.createNftDetachService.createMasterNft(mintNftRequest);
+
+    return {
+      success: true,
+      message: 'NFT mint request generated successfully',
+      result,
+    };
+  }
+
+  private async uploadFilesToIPFS(files: { file: Express.Multer.File[]; data?: Express.Multer.File[] }) {
+    let image: string;
+    if (files.file) {
+      const uploadImage = await this.storageService.uploadToIPFS(
+        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
+      );
+      image = uploadImage.uri;
+    }
+
+    let data: NftFile;
+
+    if (files.data) {
+      const uploadFile = await this.storageService.uploadToIPFS(
+        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
+      );
+      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
+    }
+    return { image, data };
   }
 }

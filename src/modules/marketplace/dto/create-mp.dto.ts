@@ -1,11 +1,4 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-  IsString,
-  Max,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Max } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -23,8 +16,7 @@ export class CreateMarketPlaceAttachedDto {
     title: 'private_key',
     type: String,
     description: "Marketplace creator wallet's private key",
-    example:
-      '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
+    example: '5GGZQpoiDPRJLwMonq4ovBBKbxvNq76L3zgMXyiQ5grbPzgF3k35dkHuWwt3GmwVGZBXywXteJcJ53Emsda92D5v',
   })
   @IsNotEmpty()
   @IsString()
@@ -45,8 +37,7 @@ export class CreateMarketPlaceAttachedDto {
   @ApiPropertyOptional({
     title: 'SPL currecy address',
     type: String,
-    description:
-      'address of the spl token that will be used as the transaction currency in the marketplace.',
+    description: 'address of the spl token that will be used as the transaction currency in the marketplace.',
     example: '3S8nfVMFhewv8jdy54xqxMt2GekpCDFVF3zkWAF2EThf',
     default: 'So11111111111111111111111111111111111111112',
   })
@@ -68,8 +59,7 @@ export class CreateMarketPlaceAttachedDto {
   @ApiPropertyOptional({
     title: "Fee Receipient's address",
     type: String,
-    description:
-      'address which will receive the transaction fee getting accumulated in the marketplace treasury',
+    description: 'address which will receive the transaction fee getting accumulated in the marketplace treasury',
     example: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
   })
   @IsOptional()
@@ -127,8 +117,7 @@ export class CreateMarketPlaceDto {
   @ApiPropertyOptional({
     title: 'SPL currecy address',
     type: String,
-    description:
-      'address of the spl token that will be used as the transaction currency in the marketplace.',
+    description: 'address of the spl token that will be used as the transaction currency in the marketplace.',
     example: '3S8nfVMFhewv8jdy54xqxMt2GekpCDFVF3zkWAF2EThf',
     default: 'So11111111111111111111111111111111111111112',
   })
@@ -150,8 +139,7 @@ export class CreateMarketPlaceDto {
   @ApiPropertyOptional({
     title: "Fee Recipient's address",
     type: String,
-    description:
-      'address which will receive the transaction fee getting accumulated in the marketplace treasury',
+    description: 'address which will receive the transaction fee getting accumulated in the marketplace treasury',
     example: 'EijtaNNHqqaPmWwAmUi8f1TC6gSPnqkoodQd2BLFpA8T',
   })
   @IsOptional()

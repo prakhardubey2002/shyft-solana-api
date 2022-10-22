@@ -6,6 +6,7 @@ export class MarketPlaceResponseDto {
   currency_address: string;
   currency_symbol: string;
   authority: string;
+  fee_account: string;
   fee_payer: string;
   fee_recipient_account: string;
   fee_recipient?: string;

@@ -11,17 +11,14 @@ import { Utility } from 'src/common/utils/utils';
 export class SignTransactionService {
   async signTransaction(signTransactionDto: SignTransactionDto): Promise<any> {
     try {
-      const { network, private_key, encoded_transaction } = signTransactionDto;
+      const { network, private_keys, encoded_transaction } = signTransactionDto;
       const connection = Utility.connectRpc(network);
-      const feePayer = Keypair.fromSecretKey(decode(private_key));
-      const wallet = new NodeWallet(feePayer);
-      const recoveredTransaction = Transaction.from(
-        Buffer.from(encoded_transaction, 'base64'),
-      );
-      const signedTx = await wallet.signTransaction(recoveredTransaction);
-      const confirmTransaction = await connection.sendRawTransaction(
-        signedTx.serialize(),
-      );
+      const keys = private_keys.map((k) => {
+        return Keypair.fromSecretKey(decode(k));
+      });
+      const recoveredTransaction = Transaction.from(Buffer.from(encoded_transaction, 'base64'));
+      recoveredTransaction.partialSign(...keys);
+      const confirmTransaction = await connection.sendRawTransaction(recoveredTransaction.serialize());
       return confirmTransaction;
     } catch (error) {
       console.log(error);
