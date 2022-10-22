@@ -19,4 +19,8 @@ describe('test marketplace constructor', () => {
     mp.can_change_sale_price = undefined;
     expect(mp.can_change_sale_price).toBe(undefined);
   });
+  it('check if null is assignable', () => {
+    const mp = new Marketplace(null);
+    expect(mp.api_key_id).toBe(undefined);
+  });
 });

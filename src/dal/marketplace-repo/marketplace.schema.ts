@@ -23,49 +23,49 @@ export class Marketplace {
     canChangePrice?: boolean,
     requireSignOff?: boolean,
   ) {
-    if (apiKeyId !== undefined) {
+    if (apiKeyId) {
       this.api_key_id = apiKeyId;
     }
-    if (network !== undefined) {
+    if (network) {
       this.network = network;
     }
     if (feeAccount) {
       this.fee_account = feeAccount;
     }
-    if (marketplaceAddress !== undefined) {
+    if (marketplaceAddress) {
       this.address = marketplaceAddress;
     }
-    if (currencyAddress !== undefined) {
+    if (currencyAddress) {
       this.currency_address = currencyAddress;
     }
-    if (feePayer !== undefined) {
+    if (feePayer) {
       this.fee_payer = feePayer;
     }
-    if (treasuryWithdrawalDestinationOwner !== undefined) {
+    if (treasuryWithdrawalDestinationOwner) {
       this.treasury_withdrawal_destination_owner = treasuryWithdrawalDestinationOwner;
     }
-    if (treasuryWithdrawalDestination !== undefined) {
+    if (treasuryWithdrawalDestination) {
       this.treasury_withdrawal_destination = treasuryWithdrawalDestination;
     }
-    if (transactionFee !== undefined) {
+    if (transactionFee) {
       this.transaction_fee = transactionFee;
     }
-    if (treasuryAddress !== undefined) {
+    if (treasuryAddress) {
       this.treasury_address = treasuryAddress;
     }
-    if (creator !== undefined) {
+    if (creator) {
       this.creator = creator;
     }
-    if (requireSignOff !== undefined) {
+    if (requireSignOff) {
       this.requires_sign_off = requireSignOff ? requireSignOff : false;
     }
-    if (canChangePrice !== undefined) {
+    if (canChangePrice) {
       this.can_change_sale_price = canChangePrice ? canChangePrice : false;
     }
-    if (authority !== undefined) {
+    if (authority) {
       this.authority = authority;
     }
-    this.currency_symbol = symbol !== undefined ? symbol : 'SOL';
+    this.currency_symbol = symbol ? symbol : 'SOL';
   }
 
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, default: null })
