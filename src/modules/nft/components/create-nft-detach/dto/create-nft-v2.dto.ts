@@ -111,12 +111,12 @@ export class CreateNftDetachV2Dto {
   readonly royalty: number;
 
   @ApiProperty({
-    name: 'file',
+    name: 'image',
     description: 'Image that you would want to turn into nft',
     type: String,
     format: 'binary',
   })
-  file: string;
+  image: string;
 
   @ApiPropertyOptional({
     name: 'data',

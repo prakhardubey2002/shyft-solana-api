@@ -118,15 +118,24 @@ export class RemoteDataFetcherService {
     //Run all offchain requests parallely instead of one by one
     const promises: Promise<NftData>[] = [];
     for (const oncd of onChainNfts) {
-      try {
-        promises.push(Utility.request(oncd.uri));
-        //No need to fetch owner, we have the wallet Id
-        const owner = walletAddress;
-        result.push(new NftData(oncd, null, owner));
-      } catch (error) {
-        //Ignore off chain data that cant be fetched or is taking too long.
-        console.log('ignoring');
-      }
+      promises.push(
+        Utility.request(oncd.uri).catch((error) => {
+          newProgramError(
+            'offchain_data_fetch_error',
+            HttpStatus.REQUEST_TIMEOUT,
+            'failed to fetch offChain data from URI',
+            error,
+            'addOffChainDataAndOwner',
+            {
+              nft: oncd.mintAddress.toBase58(),
+              uri: oncd.uri,
+            },
+          ).log();
+        }),
+      );
+      //No need to fetch owner, we have the wallet Id
+      const owner = walletAddress;
+      result.push(new NftData(oncd, null, owner));
     }
 
     const res = await Promise.allSettled(promises);

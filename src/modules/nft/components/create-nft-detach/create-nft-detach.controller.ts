@@ -73,18 +73,21 @@ export class CreateNftDetachController {
   @Version('2')
   @UseInterceptors(
     FileFieldsInterceptor([
-      { name: 'file', maxCount: 1 },
+      { name: 'image', maxCount: 1 },
       { name: 'data', maxCount: 1 },
     ]),
   )
   async createNftV2(
     @UploadedFiles()
-    files: { file: Express.Multer.File[]; data?: Express.Multer.File[] },
+    files: { image: Express.Multer.File[]; data?: Express.Multer.File[] },
     @Body() createNftDetachDto: CreateNftDetachV2Dto,
     @Req() request: any,
   ): Promise<any> {
     console.log('create_detach v2 request received');
-    const { image, data }: { image: string; data: NftFile } = await this.uploadFilesToIPFS(files);
+    const { image, data }: { image: string; data: NftFile } = await this.uploadFilesToIPFS({
+      file: files.image,
+      data: files.data,
+    });
 
     const { uri } = await this.storageService.prepareNFTMetadata({
       network: createNftDetachDto.network,

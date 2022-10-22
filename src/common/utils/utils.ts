@@ -48,6 +48,8 @@ const endpoint = {
   },
 };
 
+const generalRequestTimeout = parseInt(configuration().generalRequestTimeout) * 1000;
+
 export interface TokenUiInfo {
   name: string;
   symbol: string;
@@ -169,7 +171,7 @@ export const Utility = {
     }
   },
 
-  request: async function (uri: string, timeout = 15000): Promise<any> {
+  request: async function (uri: string, timeout = generalRequestTimeout): Promise<any> {
     try {
       const res = await axios.get(uri, { timeout: timeout });
       return res.status === 200 ? res.data : {};
