@@ -178,8 +178,8 @@ export class NftData {
     this.offChainMetadata?.properties?.files
       ? (nftDbDto.files = this.offChainMetadata?.properties?.files?.map((file: NftFile) => {
           return {
-            uri: file.uri,
-            type: file.type,
+            uri: file?.uri,
+            type: file?.type,
           };
         }))
       : {};

@@ -7,10 +7,11 @@ import { NftSyncEvent } from '../../../data-cache/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { AccountUtils } from 'src/common/utils/account-utils';
-import { Creator as CreatorV2, createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import { Collection, createUpdateMetadataAccountV2Instruction, DataV2 } from '@metaplex-foundation/mpl-token-metadata';
 import { Utility, ServiceCharge } from 'src/common/utils/utils';
 import { ProgramError } from '@metaplex-foundation/js';
 import { newProgramErrorFrom } from 'src/core/program-error';
+import {Creator as CreatorV2 } from '@metaplex-foundation/js'
 
 interface UpdateParams {
   update_authority: string;
@@ -26,16 +27,31 @@ interface UpdateParams {
 }
 
 interface UpdateDetachParams {
-  update_authority: string;
+  updateAuthority: string;
   royalty: number;
   wallet: string;
-  is_mutable: boolean;
-  primary_sale_happened: boolean;
+  isMutable: boolean;
+  primarySaleHappened: boolean;
   network: WalletAdapterNetwork;
   token_address: string;
   name: string;
   symbol: string;
   serviceCharge: ServiceCharge;
+}
+
+export type UpdateDetachV2Params = {
+  network: WalletAdapterNetwork;
+  tokenAddress: string;
+  updateAuthorityAddress: string;
+  creators: CreatorV2[];
+  collection?: Collection;
+  royalty?: number;
+  isMutable?: boolean;
+  primarySaleHappened?: boolean;
+  name?: string;
+  symbol?: string;
+  feePayer?: string;
+  serviceCharge?: ServiceCharge;
 }
 
 @Injectable()
@@ -118,11 +134,11 @@ export class UpdateNftService {
         token_address,
         name,
         symbol,
-        update_authority,
+        updateAuthority,
         royalty,
         wallet,
-        is_mutable,
-        primary_sale_happened,
+        isMutable: isMutable,
+        primarySaleHappened,
         serviceCharge,
       } = updateDetachParams;
 
@@ -137,13 +153,13 @@ export class UpdateNftService {
         verified: true,
         share: 100,
       };
-      const updateAuthority = update_authority ? new PublicKey(update_authority) : addressPubKey;
+      const updateAuth = updateAuthority ? new PublicKey(updateAuthority) : addressPubKey;
 
       let tx = new Transaction().add(
         createUpdateMetadataAccountV2Instruction(
           {
             metadata: pda,
-            updateAuthority,
+            updateAuthority: updateAuth,
           },
           {
             updateMetadataAccountArgsV2: {
@@ -156,9 +172,9 @@ export class UpdateNftService {
                 collection: null,
                 uses: null,
               } as DataV2,
-              updateAuthority,
-              primarySaleHappened: primary_sale_happened,
-              isMutable: is_mutable,
+              updateAuthority: updateAuth,
+              primarySaleHappened: primarySaleHappened,
+              isMutable: isMutable,
             }
           }
       ));
@@ -182,6 +198,78 @@ export class UpdateNftService {
         throw error;
       } else {
         throw newProgramErrorFrom(error, 'update_nft_detach_error');
+      }
+    }
+  }
+
+  async updateNftDetachV2(metaDataUri: string, updateDetachV2Params: UpdateDetachV2Params): Promise<any> {
+    if (!metaDataUri) {
+      throw new Error('metadata URI missing');
+    }
+    try {
+      const {
+        network,
+        tokenAddress,
+        name,
+        symbol,
+        creators,
+        updateAuthorityAddress,
+        royalty,
+        isMutable,
+        primarySaleHappened,
+        feePayer,
+        serviceCharge,
+        collection,
+      } = updateDetachV2Params;
+
+      const connection = Utility.connectRpc(network);
+      const pda = await Metadata.getPDA(tokenAddress);
+      const updateAuthority = new PublicKey(updateAuthorityAddress);
+      const txnFeePayer = feePayer ? new PublicKey(feePayer) : updateAuthority;
+
+      let tx = new Transaction().add(
+        createUpdateMetadataAccountV2Instruction(
+          {
+            metadata: pda,
+            updateAuthority,
+          },
+          {
+            updateMetadataAccountArgsV2: {
+              data: {
+                name,
+                symbol,
+                uri: metaDataUri,
+                sellerFeeBasisPoints: royalty,
+                creators,
+                collection: collection,
+                uses: null,
+              } as DataV2,
+              updateAuthority,
+              primarySaleHappened: primarySaleHappened,
+              isMutable: isMutable,
+            }
+          }
+      ));
+
+      if (serviceCharge) {
+        tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, txnFeePayer);
+      }
+
+      const blockHash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      tx.feePayer = txnFeePayer;
+      tx.recentBlockhash = blockHash;
+      const serializedTransaction = tx.serialize({ requireAllSignatures: false });
+      const transactionBase64 = serializedTransaction.toString('base64');
+
+      const nftUpdatedEvent = new NftSyncEvent(tokenAddress, network)
+      this.eventEmitter.emit('nft.updated', nftUpdatedEvent)
+
+      return transactionBase64;
+    } catch (error) {
+      if (error instanceof ProgramError) {
+        throw error;
+      } else {
+        throw newProgramErrorFrom(error, 'update_nft_v2_error');
       }
     }
   }

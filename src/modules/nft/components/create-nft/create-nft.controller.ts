@@ -57,7 +57,7 @@ export class CreateNftController {
       share: 100, //keeping it 100 by default for now createNftDto.share,
       royalty: createNftDto.royalty ?? 0, //500 = 5%
       external_url: createNftDto.external_url,
-      file: data,
+      file: [data],
     });
 
     const mintNftRequest = {

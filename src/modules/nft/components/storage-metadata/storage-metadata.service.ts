@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NFTStorage, Blob } from 'nft.storage';
 import { configuration } from 'src/common/configs/config';
-import { CreateMetadataDto } from './dto/create-metadata.dto';
+import { CreateMetadataDto, CreateMetadataV2Dto, NftFile } from './dto/create-metadata.dto';
 import { CreateTokenMetadataDto } from './dto/create-token-metadata.dto';
 
 const storageClient = new NFTStorage({
@@ -21,6 +21,22 @@ export class StorageMetadataService {
     return { cid: ipfstx, uri: `${configuration().ipfsGateway}` + `${ipfstx}` };
   }
 
+  async uploadFilesAndDataToIPFS(files: { file: Express.Multer.File[]; data?: Express.Multer.File[] }) {
+    let image: string;
+    if (files?.file) {
+      const uploadImage = await this.uploadToIPFS(new Blob([files.file[0].buffer], { type: files.file[0].mimetype }));
+      image = uploadImage.uri;
+    }
+
+    let data: NftFile;
+
+    if (files?.data) {
+      const uploadFile = await this.uploadToIPFS(new Blob([files.data[0].buffer], { type: files.data[0].mimetype }));
+      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
+    }
+    return { image, data };
+  }
+
   async prepareNFTMetadata(createMetadataDto: CreateMetadataDto): Promise<any> {
     const { creator, image, name, description, symbol, attributes, share, royalty, external_url, file } =
       createMetadataDto;
@@ -37,10 +53,15 @@ export class StorageMetadataService {
         creators: [{ address: creator, verified: true, share }],
       },
     };
-
-    if (file) metadata.properties['files'] = [file]; // add files key to metadata obj
+    if (file) metadata.properties['files'] = file; // add files key to metadata obj
 
     const metadataSting = JSON.stringify(metadata);
+    const uploadResponse = await this.uploadToIPFS(new Blob([metadataSting], { type: 'application/json' }));
+    return uploadResponse;
+  }
+
+  async prepareNFTMetadataV2(createMetadataDto: CreateMetadataV2Dto): Promise<any> {
+    const metadataSting = createMetadataDto.getMetaDataString();
     const uploadResponse = await this.uploadToIPFS(new Blob([metadataSting], { type: 'application/json' }));
     return uploadResponse;
   }

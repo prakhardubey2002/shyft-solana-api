@@ -1,6 +1,5 @@
 import { Body, Controller, Post, Req, UploadedFiles, UseInterceptors, Version } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { Blob } from 'nft.storage';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
 import { CreateNftDetachService } from './create-nft-detach.service';
 import { CreateNftDetachDto } from './dto/create-nft-detach.dto';
@@ -30,7 +29,7 @@ export class CreateNftDetachController {
     @Body() createNftDetachDto: CreateNftDetachDto,
     @Req() request: any,
   ): Promise<any> {
-    const { image, data }: { image: string; data: NftFile } = await this.uploadFilesToIPFS(files);
+    const { image, data }: { image: string; data: NftFile } = await this.storageService.uploadFilesAndDataToIPFS(files);
 
     const { uri } = await this.storageService.prepareNFTMetadata({
       network: createNftDetachDto.network,
@@ -43,7 +42,7 @@ export class CreateNftDetachController {
       share: 100, //keeping it 100 by default for now createNftDto.share,
       royalty: createNftDetachDto.royalty ?? 0, //500 = 5%
       external_url: createNftDetachDto.external_url,
-      file: data,
+      file: [data],
     });
 
     const mintNftRequest = {
@@ -84,9 +83,9 @@ export class CreateNftDetachController {
     @Req() request: any,
   ): Promise<any> {
     console.log('create_detach v2 request received');
-    const { image, data }: { image: string; data: NftFile } = await this.uploadFilesToIPFS({
+    const { image, data }: { image: string; data: NftFile } = await this.storageService.uploadFilesAndDataToIPFS({
       file: files.image,
-      data: files.data,
+      data: files?.data,
     });
 
     const { uri } = await this.storageService.prepareNFTMetadata({
@@ -100,7 +99,7 @@ export class CreateNftDetachController {
       share: 100, //keeping it 100 by default for now createNftDto.share,
       royalty: createNftDetachDto.royalty ?? 0, //500 = 5%
       external_url: createNftDetachDto.external_url,
-      file: data,
+      file: [data],
     });
 
     const mintNftRequest = {
@@ -124,25 +123,5 @@ export class CreateNftDetachController {
       message: 'NFT mint request generated successfully',
       result,
     };
-  }
-
-  private async uploadFilesToIPFS(files: { file: Express.Multer.File[]; data?: Express.Multer.File[] }) {
-    let image: string;
-    if (files.file) {
-      const uploadImage = await this.storageService.uploadToIPFS(
-        new Blob([files.file[0].buffer], { type: files.file[0].mimetype }),
-      );
-      image = uploadImage.uri;
-    }
-
-    let data: NftFile;
-
-    if (files.data) {
-      const uploadFile = await this.storageService.uploadToIPFS(
-        new Blob([files.data[0].buffer], { type: files.data[0].mimetype }),
-      );
-      data = new NftFile(uploadFile.uri, files.data[0].mimetype);
-    }
-    return { image, data };
   }
 }

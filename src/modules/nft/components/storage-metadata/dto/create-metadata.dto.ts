@@ -1,15 +1,22 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { Creator, PublicKeyString } from '@metaplex-foundation/js';
 
 export class NftFile {
-  constructor (uri: string, type: string) {
+  constructor(uri: string, type: string) {
     this.uri = uri;
     this.type = type;
   }
   uri: string;
   type: string;
 }
+
+export type CreatorDto = {
+  address: PublicKeyString;
+  verified: boolean;
+  share: number;
+};
 
 export class CreateMetadataDto {
   @ApiProperty({
@@ -22,9 +29,9 @@ export class CreateMetadataDto {
   readonly network: WalletAdapterNetwork;
 
   @ApiProperty({
-    title: 'Creator',
+    title: 'creator',
     type: String,
-    description: 'Creaors Wallet Address',
+    description: "Creator's Wallet Address",
     example: 'BvzKvn6nUUAYtKu2pH3h5SbUkUNcRPQawg4bURBiojJx',
   })
   @IsNotEmpty()
@@ -122,5 +129,51 @@ export class CreateMetadataDto {
     },
   })
   @IsOptional()
-  readonly file?: NftFile;
+  readonly file?: NftFile[];
+}
+
+export class CreateMetadataV2Dto {
+  network: WalletAdapterNetwork;
+  creators: Creator[];
+  image: string;
+  name: string;
+  symbol: string;
+  description: string;
+  attributes: {
+    trait_type: string;
+    value: string | number;
+  }[];
+  externalUrl: string;
+  royalty: number;
+  file?: NftFile[];
+
+  private getJsonableCreators(): CreatorDto[] {
+    const creators = this.creators.map((c) => {
+      return {
+        address: c.address.toBase58(),
+        verified: c.verified,
+        share: c.share,
+      };
+    });
+    return creators;
+  }
+
+  public getMetaDataString(): string {
+    const metadata = {
+      name: this.name,
+      symbol: this.symbol,
+      description: this.description,
+      seller_fee_basis_points: this.royalty ? this.royalty : 0,
+      external_url: this.externalUrl ? this.externalUrl : '',
+      image: this.image,
+      attributes: this.attributes,
+      properties: {
+        creators: this.getJsonableCreators(),
+      },
+    };
+
+    if (this.file) metadata.properties['files'] = this.file; // add files key to metadata obj
+    const metadataSting = JSON.stringify(metadata);
+    return metadataSting;
+  }
 }

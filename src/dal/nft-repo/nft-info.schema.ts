@@ -18,9 +18,9 @@ interface collectionData {
   verified?: boolean;
 }
 
-interface file {
+export interface file {
   uri: string;
-  type: boolean;
+  type: string;
 }
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
