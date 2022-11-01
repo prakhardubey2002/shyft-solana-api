@@ -1,6 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey, sendAndConfirmTransaction } from '@solana/web3.js';
-import { BalanceCheckDto, GetDomainDto, ResolveAddressDto, TransactionHistoryDto } from './dto/balance-check.dto';
+import {
+  BalanceCheckDto,
+  GetDomainDto,
+  GetTransactionDto,
+  ResolveAddressDto,
+  TransactionHistoryDto,
+} from './dto/balance-check.dto';
 import { SendSolDto } from './dto/send-sol.dto';
 import { AccountUtils } from 'src/common/utils/account-utils';
 import { TokenBalanceCheckDto } from './dto/token-balance-check.dto';
@@ -20,7 +26,7 @@ import { ErrorCode } from 'src/common/utils/error-codes';
 import { configuration } from 'src/common/configs/config';
 import { WalletAccessor } from 'src/dal/wallet-repo/wallet.accessor';
 import { DomainType } from 'src/dal/wallet-repo/wallet.schema';
-import { newProgramErrorFrom } from 'src/core/program-error';
+import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResyncDomainsInDbEvent, SaveDomainsInDbEvent } from '../data-cache/db-sync/db.events';
 
@@ -66,6 +72,24 @@ export class WalletService {
       return transactionDetails;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async getTransactionDetails(transactionDto: GetTransactionDto): Promise<any> {
+    try {
+      const { network, txn_signature } = transactionDto;
+      const connection = Utility.connectRpc(network);
+      const transactionDetails = await connection.getParsedTransaction(txn_signature);
+      return transactionDetails;
+    } catch (error) {
+      throw newProgramError(
+        'get_transaction_error',
+        HttpStatus.BAD_REQUEST,
+        'unable to parse txn',
+        error,
+        'account_service_get_transaction_details',
+        { input: transactionDto },
+      );
     }
   }
 

@@ -24,6 +24,27 @@ export class BalanceCheckDto {
   readonly wallet: string;
 }
 
+export class GetTransactionDto {
+  @ApiProperty({
+    title: 'network',
+    type: String,
+    enum: WalletAdapterNetwork,
+    description: 'Select solana blockchain environment',
+  })
+  @IsNotEmpty()
+  readonly network: WalletAdapterNetwork;
+
+  @ApiProperty({
+    title: 'txn_signature',
+    type: String,
+    description: 'Transaction signature',
+    example: '3EXPmmwzSbaRgyeh7GDGipVEmNSWCFDxQbXj5k6MQeYj1j3BQPrVvWeavUhfMqbzbYiG1cDx63EkUHrU5rn12Yve',
+  })
+  @IsNotEmpty()
+  @IsString()
+  readonly txn_signature: string;
+}
+
 export class TransactionHistoryDto {
   @ApiProperty({
     title: 'network',

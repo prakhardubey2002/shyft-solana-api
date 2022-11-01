@@ -1,6 +1,12 @@
 import { Body, Controller, Get, HttpCode, Post, Query, Req, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { BalanceCheckDto, GetDomainDto, ResolveAddressDto, TransactionHistoryDto } from './dto/balance-check.dto';
+import {
+  BalanceCheckDto,
+  GetDomainDto,
+  GetTransactionDto,
+  ResolveAddressDto,
+  TransactionHistoryDto,
+} from './dto/balance-check.dto';
 import { WalletService } from './account.service';
 import { SendSolDto } from './dto/send-sol.dto';
 import {
@@ -8,6 +14,7 @@ import {
   BalanceCheckOpenApi,
   CreateSemiWalletOpenApi,
   DecryptSemiWalletOpenApi,
+  GetTransactionOpenApi,
   PortfoliOpenApi,
   SendBalanceOpenApi,
   TokenBalanceOpenApi,
@@ -121,6 +128,18 @@ export class AccountController {
     return {
       success: true,
       message: `Last ${tx_num} transaction fetched successfully`,
+      result: transactions,
+    };
+  }
+
+  @GetTransactionOpenApi()
+  @Get('transaction')
+  @Version('1')
+  async getTransaction(@Query() transactionDto: GetTransactionDto): Promise<any> {
+    const transactions = await this.walletService.getTransactionDetails(transactionDto);
+    return {
+      success: true,
+      message: 'Transaction details fetched successfully',
       result: transactions,
     };
   }

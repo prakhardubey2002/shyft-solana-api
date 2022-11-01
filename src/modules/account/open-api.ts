@@ -29,22 +29,23 @@ export function TokenBalanceOpenApi() {
       description: ' Token Balance fetched successfully',
       schema: {
         example: {
-          "success": true,
-          "message": "Token balance fetched successfully",
-          "result": {
-              "address": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
-              "balance": 76.6726,
-              "info": {
-                  "name": "Wrapped Bitcoin (Sollet)",
-                  "symbol": "BTC",
-                  "image": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E/logo.png"
-              }
-            }
+          success: true,
+          message: 'Token balance fetched successfully',
+          result: {
+            address: '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E',
+            balance: 76.6726,
+            info: {
+              name: 'Wrapped Bitcoin (Sollet)',
+              symbol: 'BTC',
+              image:
+                'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E/logo.png',
+            },
           },
         },
-     }),
-    );
-  }
+      },
+    }),
+  );
+}
 
 export function AllTokensOpenApi() {
   return applyDecorators(
@@ -53,29 +54,30 @@ export function AllTokensOpenApi() {
       description: 'Balance fetched successfully',
       schema: {
         example: {
-          "success": true,
-          "message": "2 tokens fetched successfully",
-          "result": [
-              {
-                  "address": "2FGW8BVMu1EHsz2ZS9rZummDaq6o2DVrZZPw4KaAvDWh",
-                  "balance": 21607120,
-                  "info": {
-                      "name": "BSVBEAR",
-                      "symbol": "BSVBEAR",
-                      "image": ""
-                  }
+          success: true,
+          message: '2 tokens fetched successfully',
+          result: [
+            {
+              address: '2FGW8BVMu1EHsz2ZS9rZummDaq6o2DVrZZPw4KaAvDWh',
+              balance: 21607120,
+              info: {
+                name: 'BSVBEAR',
+                symbol: 'BSVBEAR',
+                image: '',
               },
-              {
-                  "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                  "balance": 2.968471,
-                  "info": {
-                      "name": "USD Coin",
-                      "symbol": "USDC",
-                      "image": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png"
-                  }
-              }
-          ]
-      },
+            },
+            {
+              address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+              balance: 2.968471,
+              info: {
+                name: 'USD Coin',
+                symbol: 'USDC',
+                image:
+                  'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
+              },
+            },
+          ],
+        },
       },
     }),
   );
@@ -184,8 +186,7 @@ export function SendBalanceOpenApi() {
           message: '1.2 SOL transferred successfully',
           result: {
             amount: 1.2,
-            transactionHash:
-              '2WFK7BfYfGvzHGru3nHJtepZadgAkBV6vreVn2D1yeEqLtQ5BrDp38QPVwS78WriGZ9PU1EiYCwQuLcp7XPjxV8B',
+            transactionHash: '2WFK7BfYfGvzHGru3nHJtepZadgAkBV6vreVn2D1yeEqLtQ5BrDp38QPVwS78WriGZ9PU1EiYCwQuLcp7XPjxV8B',
           },
         },
       },
@@ -219,9 +220,7 @@ export function TransactionHistoryOpenApi() {
                   'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 6199 of 200000 compute units',
                   'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success',
                 ],
-                postBalances: [
-                  36188539840, 2039280, 2039280, 1461600, 934087680,
-                ],
+                postBalances: [36188539840, 2039280, 2039280, 1461600, 934087680],
                 postTokenBalances: [
                   {
                     accountIndex: 1,
@@ -248,9 +247,7 @@ export function TransactionHistoryOpenApi() {
                     },
                   },
                 ],
-                preBalances: [
-                  36188544840, 2039280, 2039280, 1461600, 934087680,
-                ],
+                preBalances: [36188544840, 2039280, 2039280, 1461600, 934087680],
                 preTokenBalances: [
                   {
                     accountIndex: 1,
@@ -317,13 +314,10 @@ export function TransactionHistoryOpenApi() {
                     {
                       parsed: {
                         info: {
-                          authority:
-                            '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
-                          destination:
-                            '4NAZoScfSCtHoarRzLQLtanL2mPfvB5oh98LhUmdQZ4s',
+                          authority: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+                          destination: '4NAZoScfSCtHoarRzLQLtanL2mPfvB5oh98LhUmdQZ4s',
                           mint: '1C3n35poNbm2di6W8YTKjG2BmhaFxmTtbScy1ox2xvY',
-                          source:
-                            '5BiU18pnTjhvgWNXeUCLuEt8p8HhEtpTWjFLaWzTyBge',
+                          source: '5BiU18pnTjhvgWNXeUCLuEt8p8HhEtpTWjFLaWzTyBge',
                           tokenAmount: {
                             amount: '10000000000',
                             decimals: 9,
@@ -337,12 +331,9 @@ export function TransactionHistoryOpenApi() {
                       programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
                     },
                   ],
-                  recentBlockhash:
-                    'GDgPVeLnjG52xktcYKASX4gQPqyxGr58UKKNBxaSjjB9',
+                  recentBlockhash: 'GDgPVeLnjG52xktcYKASX4gQPqyxGr58UKKNBxaSjjB9',
                 },
-                signatures: [
-                  'g9utkFojt6wtXsmLUhw5a17AJpjZo157Hzzq1Aqe771QwpPBzw1v4LSEus3MJibSJx8VzR2CfaiWbR2ueHFTr9e',
-                ],
+                signatures: ['g9utkFojt6wtXsmLUhw5a17AJpjZo157Hzzq1Aqe771QwpPBzw1v4LSEus3MJibSJx8VzR2CfaiWbR2ueHFTr9e'],
               },
             },
             {
@@ -362,19 +353,15 @@ export function TransactionHistoryOpenApi() {
                           type: 'getAccountDataSize',
                         },
                         program: 'spl-token',
-                        programId:
-                          'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                        programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
                       },
                       {
                         parsed: {
                           info: {
                             lamports: 2039280,
-                            newAccount:
-                              'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
-                            owner:
-                              'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-                            source:
-                              '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+                            newAccount: 'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
+                            owner: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                            source: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
                             space: 165,
                           },
                           type: 'createAccount',
@@ -385,29 +372,24 @@ export function TransactionHistoryOpenApi() {
                       {
                         parsed: {
                           info: {
-                            account:
-                              'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
+                            account: 'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
                           },
                           type: 'initializeImmutableOwner',
                         },
                         program: 'spl-token',
-                        programId:
-                          'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                        programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
                       },
                       {
                         parsed: {
                           info: {
-                            account:
-                              'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
+                            account: 'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
                             mint: '48rLtqWcGros2eJ1anmYydTecxvkyErfaeD3dmNx1dUM',
-                            owner:
-                              '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
+                            owner: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
                           },
                           type: 'initializeAccount3',
                         },
                         program: 'spl-token',
-                        programId:
-                          'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                        programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
                       },
                     ],
                   },
@@ -443,10 +425,7 @@ export function TransactionHistoryOpenApi() {
                   'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 6199 of 379455 compute units',
                   'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success',
                 ],
-                postBalances: [
-                  36188544840, 2039280, 2039280, 1, 1461600, 0, 731913600,
-                  1009200, 934087680,
-                ],
+                postBalances: [36188544840, 2039280, 2039280, 1, 1461600, 0, 731913600, 1009200, 934087680],
                 postTokenBalances: [
                   {
                     accountIndex: 1,
@@ -473,10 +452,7 @@ export function TransactionHistoryOpenApi() {
                     },
                   },
                 ],
-                preBalances: [
-                  36190589120, 2039280, 0, 1, 1461600, 0, 731913600, 1009200,
-                  934087680,
-                ],
+                preBalances: [36190589120, 2039280, 0, 1, 1461600, 0, 731913600, 1009200, 934087680],
                 preTokenBalances: [
                   {
                     accountIndex: 1,
@@ -551,18 +527,13 @@ export function TransactionHistoryOpenApi() {
                     {
                       parsed: {
                         info: {
-                          account:
-                            'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
+                          account: 'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
                           mint: '48rLtqWcGros2eJ1anmYydTecxvkyErfaeD3dmNx1dUM',
-                          rentSysvar:
-                            'SysvarRent111111111111111111111111111111111',
-                          source:
-                            '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+                          rentSysvar: 'SysvarRent111111111111111111111111111111111',
+                          source: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
                           systemProgram: '11111111111111111111111111111111',
-                          tokenProgram:
-                            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-                          wallet:
-                            '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
+                          tokenProgram: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                          wallet: '5xSbS5PCkxPeZeJLHRBw57hMbCBNzSRoRaVfpQt5rxAg',
                         },
                         type: 'create',
                       },
@@ -572,13 +543,10 @@ export function TransactionHistoryOpenApi() {
                     {
                       parsed: {
                         info: {
-                          authority:
-                            '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
-                          destination:
-                            'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
+                          authority: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+                          destination: 'yyt6L1Q6nsQSiCdTuVG9mEqTTVYR8BhzsFd7DY1TSDx',
                           mint: '48rLtqWcGros2eJ1anmYydTecxvkyErfaeD3dmNx1dUM',
-                          source:
-                            'BLXDJvswcsaC4GiV4jSBbbKyTbARgu9vEjYzKAENvpe9',
+                          source: 'BLXDJvswcsaC4GiV4jSBbbKyTbARgu9vEjYzKAENvpe9',
                           tokenAmount: {
                             amount: '1',
                             decimals: 0,
@@ -592,8 +560,7 @@ export function TransactionHistoryOpenApi() {
                       programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
                     },
                   ],
-                  recentBlockhash:
-                    '2D2KxekCVay8uG4gYoBKywWAwbbbBdXXHAsqDMBMqt3r',
+                  recentBlockhash: '2D2KxekCVay8uG4gYoBKywWAwbbbBdXXHAsqDMBMqt3r',
                 },
                 signatures: [
                   '2akhRxHAjQ9HP1KntyaLgMMPdBoja1HfCjeS72MdD1LR6AqY6JM2PsgEUA9MyfxxdCag8PEgd5R6YvZ2G29eQLtm',
@@ -601,6 +568,116 @@ export function TransactionHistoryOpenApi() {
               },
             },
           ],
+        },
+      },
+    }),
+  );
+}
+
+export function GetTransactionOpenApi() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Get transaction details' }),
+    ApiOkResponse({
+      description: 'Transaction details fetched successfully',
+      schema: {
+        example: {
+          success: true,
+          message: 'Transaction details fetched successfully',
+          result: {
+            blockTime: 1667194564,
+            meta: {
+              err: null,
+              fee: 10000,
+              innerInstructions: [],
+              logMessages: [
+                'Program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s invoke [1]',
+                'Program log: Instruction: Update Metadata Accounts v2',
+                'Program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s consumed 14007 of 400000 compute units',
+                'Program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s success',
+                'Program 11111111111111111111111111111111 invoke [1]',
+                'Program 11111111111111111111111111111111 success',
+              ],
+              postBalances: [35491611202, 1111543920, 6718957920, 5616720, 1, 1141440],
+              postTokenBalances: [],
+              preBalances: [35501621202, 1111543920, 6708957920, 5616720, 1, 1141440],
+              preTokenBalances: [],
+              rewards: [],
+              status: {
+                Ok: null,
+              },
+            },
+            slot: 172409959,
+            transaction: {
+              message: {
+                accountKeys: [
+                  {
+                    pubkey: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+                    signer: true,
+                    source: 'transaction',
+                    writable: true,
+                  },
+                  {
+                    pubkey: '5KW2twHzRsAaiLeEx4zYNV35CV2hRrZGw7NYbwMfL4a2',
+                    signer: true,
+                    source: 'transaction',
+                    writable: false,
+                  },
+                  {
+                    pubkey: '3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf',
+                    signer: false,
+                    source: 'transaction',
+                    writable: true,
+                  },
+                  {
+                    pubkey: '6qUUc7BpD5T4mX9DNjsSX9PTATzFejnD1AN6jXdVhdhf',
+                    signer: false,
+                    source: 'transaction',
+                    writable: true,
+                  },
+                  {
+                    pubkey: '11111111111111111111111111111111',
+                    signer: false,
+                    source: 'transaction',
+                    writable: false,
+                  },
+                  {
+                    pubkey: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+                    signer: false,
+                    source: 'transaction',
+                    writable: false,
+                  },
+                ],
+                addressTableLookups: null,
+                instructions: [
+                  {
+                    accounts: [
+                      '6qUUc7BpD5T4mX9DNjsSX9PTATzFejnD1AN6jXdVhdhf',
+                      '5KW2twHzRsAaiLeEx4zYNV35CV2hRrZGw7NYbwMfL4a2',
+                    ],
+                    data: 'bgkjo1wRnHyomZsnw8ZmrMbAfkzN4dVaCmkAQZNxUgUFSBhCoSBRQ2yXRddy4Yz8vENGKHcoLfmvKTUkXFjFNG5zqsostLnrxoUwG2FofM3Y5xZjdAPorsybnVm2GV6k746swhYMWsBHLyWdnf2xcXueQRmw6PxYN73LuvUJE3qe6tgkTovNVM2z1ZJjjg6mNWa3RZXXDh17zXdJuVi6eZGoMoEyU7CphdbgQz826Yx8FSqrjQFnm6BXk8qnUkzhYwdikNC',
+                    programId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+                  },
+                  {
+                    parsed: {
+                      info: {
+                        destination: '3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf',
+                        lamports: 10000000,
+                        source: '2fmz8SuNVyxEP6QwKQs6LNaT2ATszySPEJdhUDesxktc',
+                      },
+                      type: 'transfer',
+                    },
+                    program: 'system',
+                    programId: '11111111111111111111111111111111',
+                  },
+                ],
+                recentBlockhash: '6uYtrdFiScC6HwrjyBm1HSxUerkoW3BUxoRwgWoxk2mu',
+              },
+              signatures: [
+                '3EXPmmwzSbaRgyeh7GDGipVEmNSWCFDxQbXj5k6MQeYj1j3BQPrVvWeavUhfMqbzbYiG1cDx63EkUHrU5rn12Yve',
+                '5rLUHBM2KovVgTkcnqpTZ1E6whLGCpnGirPyyjXaRo6gxeayNBKbQxrHn1LBmZvTDDqMwaoY14mpdq73Z9NpC8QG',
+              ],
+            },
+          },
         },
       },
     }),
@@ -635,8 +712,10 @@ export function DecryptSemiWalletOpenApi() {
           success: true,
           message: 'Decryption Data',
           result: {
-              encryptedPrivateKey: 'A9tP2aDsBNwSUojMc2eFF8qakkRRrfrYeUkGvFmZBHtrLPU7s9BNYupRazdMcbGuXtHpAbfW32MZgmGxdM5Z5U8wZrEZ5cNUcnjCSptRE2Hv3jB1zUP8JHKg8U44LM238ZUtHGUvZJcS1',
-              decryptionKey: '{\"salt\":\"8YBdmxT3aoSCAAMBKwYw6V\",\"kdf\":\"pbkdf2\",\"digest\":\"sha256\",\"iterations\":100000,\"nonce\":\"GevsymPUrngEKXxBPWQvTyufrY9XKnsM9\"}'
+            encryptedPrivateKey:
+              'A9tP2aDsBNwSUojMc2eFF8qakkRRrfrYeUkGvFmZBHtrLPU7s9BNYupRazdMcbGuXtHpAbfW32MZgmGxdM5Z5U8wZrEZ5cNUcnjCSptRE2Hv3jB1zUP8JHKg8U44LM238ZUtHGUvZJcS1',
+            decryptionKey:
+              '{"salt":"8YBdmxT3aoSCAAMBKwYw6V","kdf":"pbkdf2","digest":"sha256","iterations":100000,"nonce":"GevsymPUrngEKXxBPWQvTyufrY9XKnsM9"}',
           },
         },
       },
