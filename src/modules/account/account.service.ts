@@ -112,7 +112,7 @@ export class WalletService {
         parsedSplAccts.value.forEach((token) => {
           const amount = token.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
           const decimals = token.account?.data?.parsed?.info?.tokenAmount?.decimals;
-          if (decimals > 0 && amount > 0) {
+          if (decimals > 0) {
             const address = token.account?.data?.parsed?.info?.mint;
             mintAddresses.push(address);
             allTokenInfo.push({ address: address, balance: amount });
