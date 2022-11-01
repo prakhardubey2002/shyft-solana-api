@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ObjectId } from 'mongoose';
 import {
@@ -11,22 +11,40 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { findAssociatedTokenAccountPda, findMasterEditionV2Pda, findMetadataPda } from '@metaplex-foundation/js';
+import {
+  findAssociatedTokenAccountPda,
+  findMasterEditionV2Pda,
+  findMetadataPda,
+  Pda,
+  toPublicKey,
+} from '@metaplex-foundation/js';
 import {
   createCreateMasterEditionV3Instruction,
   createCreateMetadataAccountV2Instruction,
+  createVerifyCollectionInstruction,
   DataV2,
+  MasterEditionV2,
 } from '@metaplex-foundation/mpl-token-metadata';
 import { Utility, ServiceCharge } from 'src/common/utils/utils';
-import { newProgramErrorFrom, ProgramError } from 'src/core/program-error';
+import { newProgramError, newProgramErrorFrom, ProgramError } from 'src/core/program-error';
 
 import { NftCreationEvent } from 'src/modules/data-cache/db-sync/db.events';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RemoteDataFetcherService } from 'src/modules/data-cache/remote-data-fetcher/data-fetcher.service';
+import { FetchNftDto } from 'src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto';
+
+type CollectionAuthorityAndPdas = {
+  collectionAuthority: PublicKey;
+  collectionMetadataPda: Pda;
+  collectionEditionPda: Pda;
+};
+
 export interface CreateParams {
   network: WalletAdapterNetwork;
   name: string;
   symbol: string;
   creatorAddress: string;
+  collectionAddress?: string;
   metadataUri: string;
   maxSupply: number;
   royalty: number;
@@ -38,7 +56,7 @@ export interface CreateParams {
 
 @Injectable()
 export class CreateNftDetachService {
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(private eventEmitter: EventEmitter2, private dataFetcher: RemoteDataFetcherService) {}
   async createMasterNft(createParams: CreateParams): Promise<unknown> {
     const {
       name,
@@ -48,6 +66,7 @@ export class CreateNftDetachService {
       royalty,
       network,
       creatorAddress,
+      collectionAddress,
       nftReceiver,
       serviceCharge,
       feePayer,
@@ -85,7 +104,12 @@ export class CreateNftDetachService {
             share: 100,
           },
         ],
-        collection: null,
+        collection: collectionAddress
+          ? {
+              verified: false,
+              key: toPublicKey(createParams?.collectionAddress),
+            }
+          : null,
         uses: null,
       } as DataV2;
 
@@ -132,6 +156,21 @@ export class CreateNftDetachService {
         ),
       );
 
+      if (collectionAddress) {
+        const { collectionAuthority, collectionMetadataPda, collectionEditionPda } =
+          await this.getCollectionAuthorityAndPdas(network, connection, collectionAddress);
+        tx.add(
+          createVerifyCollectionInstruction({
+            metadata: metadataPda,
+            collectionAuthority,
+            payer: txnPayer,
+            collectionMint: toPublicKey(collectionAddress),
+            collection: collectionMetadataPda,
+            collectionMasterEditionAccount: collectionEditionPda,
+          }),
+        );
+      }
+
       if (serviceCharge) {
         tx = await Utility.account.addSeviceChargeOnTransaction(connection, tx, serviceCharge, txnPayer);
       }
@@ -160,5 +199,26 @@ export class CreateNftDetachService {
         throw newProgramErrorFrom(error, 'create_nft_detach_error');
       }
     }
+  }
+
+  async getCollectionAuthorityAndPdas(
+    network: WalletAdapterNetwork,
+    connection: Connection,
+    collectionAddress: string,
+  ): Promise<CollectionAuthorityAndPdas> {
+    const collectionMint = toPublicKey(collectionAddress);
+    const collectionNft = await this.dataFetcher.fetchNft(new FetchNftDto(network, collectionAddress));
+    const collectionAuthority = collectionNft.onChainMetadata.updateAuthorityAddress;
+    const collectionMetadataPda = findMetadataPda(collectionMint);
+    const collectionEditionPda = findMasterEditionV2Pda(collectionMint);
+    const collectionEdition = await MasterEditionV2.fromAccountAddress(connection, collectionEditionPda);
+    const maxSupply = Number(collectionEdition.maxSupply);
+    if (maxSupply !== 0)
+      throw newProgramError(
+        'create_nft_detach_error',
+        HttpStatus.BAD_REQUEST,
+        'unable to create NFT, while passing collection NFT address make sure that NFT has 0 max supply',
+      );
+    return { collectionAuthority, collectionMetadataPda, collectionEditionPda };
   }
 }

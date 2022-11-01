@@ -128,6 +128,15 @@ export class CreateNftDetachV2Dto {
   data?: string;
 
   @ApiPropertyOptional({
+    name: 'collection_address',
+    description: 'Collection NFT address, with 0 max_supply',
+    type: String,
+    example: '3DaK7VKf7kfSKPXWYTVzSThkuuoT8H5tiJP7QSfadeMJ',
+  })
+  @IsOptional()
+  collection_address?: string;
+
+  @ApiPropertyOptional({
     name: 'receiver',
     description: 'The address which will receive the created NFT',
     type: String,

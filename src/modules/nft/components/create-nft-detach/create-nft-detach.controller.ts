@@ -107,6 +107,7 @@ export class CreateNftDetachController {
       name: createNftDetachDto.name,
       symbol: createNftDetachDto.symbol,
       creatorAddress: createNftDetachDto.creator_wallet,
+      collectionAddress: createNftDetachDto.collection_address,
       metadataUri: uri,
       maxSupply: createNftDetachDto.max_supply,
       royalty: createNftDetachDto.royalty ?? 0,
