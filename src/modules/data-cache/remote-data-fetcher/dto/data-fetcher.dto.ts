@@ -5,19 +5,7 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Metadata } from '@metaplex-foundation/js';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { NftFile } from 'src/modules/nft/components/storage-metadata/dto/create-metadata.dto';
-
-//update attributes value type to hold objects also
-export interface NftDbResponse {
-  name: string;
-  description: string;
-  symbol: string;
-  image_uri: string;
-  royalty: number;
-  mint: string;
-  attributes: { [k: string]: string | number };
-  owner: string;
-  update_authority: string;
-}
+import { NftApiResponse } from '../../../nft/nft-response-dto';
 
 export class FetchAllNftDto {
   constructor(network: WalletAdapterNetwork, address: string, updateAuthority?: string) {
@@ -106,8 +94,8 @@ export class NftData {
   }
 
   //For API response
-  public getNftDbResponse(): NftDbResponse {
-    const nftDbResponse = {
+  public getNftApiResponse(): NftApiResponse {
+    const nftApiResponse: NftApiResponse = {
       name: this.onChainMetadata?.name,
       symbol: this.onChainMetadata?.symbol,
       royalty: this.onChainMetadata?.sellerFeeBasisPoints / 100, //Since onchain 500 = 5%
@@ -123,18 +111,19 @@ export class NftData {
       mint: this.onChainMetadata?.mintAddress.toBase58(),
       owner: this.owner,
       creators: this.onChainMetadata?.creators,
-      collection: this.onChainMetadata?.collection
-        ? {
-            address: this.onChainMetadata?.collection?.address,
-            verified: this.onChainMetadata?.collection?.verified,
-          }
-        : {},
+      collection: {},
+    };
+    nftApiResponse.collection = {
+      address: this.onChainMetadata?.collection?.address,
+      verified: this.onChainMetadata?.collection?.verified,
+      name: this.offChainMetadata?.collection?.name,
+      family: this.offChainMetadata?.collection?.family,
     };
     if (Array.isArray(this.offChainMetadata?.attributes)) {
       this.offChainMetadata?.attributes?.map((trait: any) => {
         if (trait?.trait_type && trait?.value) {
-          nftDbResponse.attributes[trait?.trait_type] = trait?.value;
-          nftDbResponse.attributes_array.push({
+          nftApiResponse.attributes[trait?.trait_type] = trait?.value;
+          nftApiResponse.attributes_array.push({
             trait_type: trait?.trait_type,
             value: trait?.value,
           });
@@ -142,7 +131,7 @@ export class NftData {
       });
     }
 
-    return nftDbResponse;
+    return nftApiResponse;
   }
 
   //Convert to a format which can be saved in DB
@@ -167,6 +156,8 @@ export class NftData {
     nftDbDto.collection_data = {
       address: this.onChainMetadata?.collection?.address.toBase58(),
       verified: this.onChainMetadata?.collection?.verified,
+      name: this.offChainMetadata?.collection?.name,
+      family: this.offChainMetadata?.collection?.family,
     };
     //Only add these keys, if we have valid values
     this.offChainMetadata?.image ? (nftDbDto.image_uri = this.offChainMetadata?.image) : {};

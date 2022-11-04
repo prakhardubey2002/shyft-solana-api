@@ -1,10 +1,29 @@
-import { isObject } from 'class-validator';
-import { omitBy, isNull } from 'lodash';
-import { NftDbResponse } from 'src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto';
-import { NftInfo } from './nft-info.schema';
+//update attributes value type to hold objects also
 
-export function getNftDbResponseFromNftInfo(r: NftInfo): NftDbResponse {
-  const response = {
+import { isNull, isObject, omitBy } from 'lodash';
+import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
+
+export interface NftApiResponse {
+  name: string;
+  description: string;
+  symbol: string;
+  image_uri: string;
+  royalty: number;
+  mint: string;
+  attributes: { [k: string]: string | number };
+  owner: string;
+  update_authority: string;
+  cached_image_uri: string;
+  metadata_uri: string;
+  creators: any;
+  collection: any;
+  attributes_array: any;
+  files: any;
+  external_url: string;
+}
+
+export function getApiResponseFromNftInfo(r: NftInfo): NftApiResponse {
+  const response: NftApiResponse = {
     name: r.name,
     symbol: r.symbol,
     royalty: r.royalty / 100,
@@ -20,6 +39,7 @@ export function getNftDbResponseFromNftInfo(r: NftInfo): NftDbResponse {
     attributes_array: [],
     files: r.files,
     update_authority: r.update_authority,
+    external_url: r.external_url,
   };
   if (isObject(r.attributes)) {
     const keys = Object.keys(r.attributes);

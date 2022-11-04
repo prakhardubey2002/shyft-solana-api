@@ -1,4 +1,4 @@
-import { NftDbResponse } from 'src/modules/data-cache/remote-data-fetcher/dto/data-fetcher.dto';
+import { NftApiResponse } from 'src/modules/nft/nft-response-dto';
 
 export class MarketPlaceResponseDto {
   network: string;
@@ -49,7 +49,7 @@ export class ListingInfoResponseDto {
   seller_address: string;
   price: number;
   nft_address: string;
-  nft?: NftDbResponse;
+  nft?: NftApiResponse;
   list_state: string;
   currency_symbol: string;
   receipt?: string;
@@ -64,7 +64,7 @@ export class ActiveListingsResultDto {
   seller_address: string;
   price: number;
   nft_address: string;
-  nft?: NftDbResponse;
+  nft?: NftApiResponse;
   list_state: string;
   currency_symbol: string;
   receipt?: string;

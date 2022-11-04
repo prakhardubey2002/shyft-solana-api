@@ -16,6 +16,8 @@ interface creator {
 interface collectionData {
   address?: string;
   verified?: boolean;
+  name?: string;
+  family?: string;
 }
 
 export interface file {

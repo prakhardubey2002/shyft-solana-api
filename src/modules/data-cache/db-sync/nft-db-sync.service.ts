@@ -5,7 +5,7 @@ import { Utility } from 'src/common/utils/utils';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
-import { FetchAllNftDto, FetchAllNftByCreatorDto } from '../remote-data-fetcher/dto/data-fetcher.dto';
+import { FetchAllNftDto, FetchAllNftByCreatorDto, NftData } from '../remote-data-fetcher/dto/data-fetcher.dto';
 import {
   NftCacheEvent,
   NftCreationEvent,
@@ -298,11 +298,11 @@ export class NFtDbSyncService {
     }
   }
 
-  async getNftInfoDto(event: NftSyncEvent): Promise<NftInfo> {
+  async getNftInfoDto(dto: NftSyncEvent): Promise<NftInfo> {
     try {
-      const nftData = await this.remoteDataFetcher.fetchNftDetails(event);
+      const nftData = await this.remoteDataFetcher.fetchNftDetails(dto);
       const nftDbDto = nftData.getNftInfoDto();
-      nftDbDto.network = event.network;
+      nftDbDto.network = dto.network;
       return nftDbDto;
     } catch (error) {
       throw error;

@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { isArray } from 'class-validator';
 import { ObjectId } from 'mongoose';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
-import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
+import { getApiResponseFromNftInfo } from '../../nft-response-dto';
 import { SearchNftsDto } from './dto/search-nfts.dto';
 
 @Injectable()
 export class SearchNftService {
-  constructor(
-    private nftInfoAccessor: NftInfoAccessor,
-  ) {}
+  constructor(private nftInfoAccessor: NftInfoAccessor) {}
   async searchNftsByAttributes(query: any, apiKeyId: ObjectId): Promise<any> {
     const filter = {};
     for (const key in query) {
@@ -25,7 +23,7 @@ export class SearchNftService {
     filter['api_key_id'] = apiKeyId;
     const filteredResult = await this.nftInfoAccessor.find(filter);
     const result = filteredResult.map((r) => {
-      return getNftDbResponseFromNftInfo(r);
+      return getApiResponseFromNftInfo(r);
     });
 
     return result;
@@ -43,7 +41,7 @@ export class SearchNftService {
     const filteredResult = await this.nftInfoAccessor.find(filter, page, size);
 
     const nfts = filteredResult.map((r) => {
-      return getNftDbResponseFromNftInfo(r);
+      return getApiResponseFromNftInfo(r);
     });
 
     return { nfts, page, size, total_data: totalData, total_page: totalPage };

@@ -10,12 +10,8 @@ import {
 } from '../../../data-cache/db-sync/db.events';
 import { RemoteDataFetcherService } from '../../../data-cache/remote-data-fetcher/data-fetcher.service';
 import { NftInfoAccessor } from '../../../../dal/nft-repo/nft-info.accessor';
-import {
-  FetchAllNftByCreatorDto,
-  FetchNftDto,
-  NftDbResponse,
-} from '../../../data-cache/remote-data-fetcher/dto/data-fetcher.dto';
-import { getNftDbResponseFromNftInfo } from 'src/dal/nft-repo/nft-info.helper';
+import { FetchAllNftByCreatorDto, FetchNftDto } from '../../../data-cache/remote-data-fetcher/dto/data-fetcher.dto';
+import { getApiResponseFromNftInfo, NftApiResponse } from '../../nft-response-dto';
 import { Utility } from 'src/common/utils/utils';
 import { ErrorCode } from 'src/common/utils/error-codes';
 import { configuration } from 'src/common/configs/config';
@@ -67,7 +63,7 @@ export class ReadNftService {
     walletAddress: string,
     network: WalletAdapterNetwork,
     updateAuthority: string,
-  ): Promise<NftDbResponse[]> {
+  ): Promise<NftApiResponse[]> {
     console.log('reading from chain');
     const nftDataList = await this.remoteDataFetcher.fetchAllNftDetails({
       walletAddress: walletAddress,
@@ -76,7 +72,7 @@ export class ReadNftService {
     });
 
     this.eventEmitter.emit('save.wallet.nfts', new SaveNftsInDbEvent(network, walletAddress, nftDataList));
-    const response = nftDataList?.map((nft) => nft.getNftDbResponse());
+    const response = nftDataList?.map((nft) => nft.getNftApiResponse());
     return response;
   }
 
@@ -85,7 +81,7 @@ export class ReadNftService {
     walletAddress: string,
     updateAuthority: string,
     isWalletResyncNeeded: boolean,
-  ): Promise<NftDbResponse[]> {
+  ): Promise<NftApiResponse[]> {
     console.log('resync needed: ', isWalletResyncNeeded);
     console.log('reading from DB');
     const dbNftInfos = await this.nftInfoAccessor.findNftsByOwnerAndUpdateAuthority(
@@ -98,7 +94,7 @@ export class ReadNftService {
       const nftWalletReadEvent = new NftWalletSyncEvent(network, walletAddress, updateAuthority, dbNftInfos);
       this.eventEmitter.emit('resync.wallet.nfts', nftWalletReadEvent);
     }
-    const response = dbNftInfos.map((nft) => getNftDbResponseFromNftInfo(nft));
+    const response = dbNftInfos.map((nft) => getApiResponseFromNftInfo(nft));
     return response;
   }
 
@@ -124,7 +120,7 @@ export class ReadNftService {
 
         return dbNftInfo.map((nft) => {
           return {
-            nfts: getNftDbResponseFromNftInfo(nft),
+            nfts: getApiResponseFromNftInfo(nft),
             page,
             size,
             total_data: totalData,
@@ -141,7 +137,7 @@ export class ReadNftService {
         const nftReadByCreatorEvent = new NftReadByCreatorEvent(creator_address, network, nftInfo);
         this.eventEmitter.emit('all.nfts.read.by.creator', nftReadByCreatorEvent);
 
-        const nfts = chainNfts.nfts.map((nft) => nft.getNftDbResponse());
+        const nfts = chainNfts.nfts.map((nft) => nft.getNftApiResponse());
         return { nfts, page, size, total_data: total, total_page: totalPage };
       }
     } catch (error) {
@@ -150,7 +146,7 @@ export class ReadNftService {
     }
   }
 
-  async readNft(readNftDto: ReadNftDto): Promise<NftDbResponse> {
+  async readNft(readNftDto: ReadNftDto): Promise<NftApiResponse> {
     try {
       const { network, token_address: tokenAddress } = readNftDto;
 
@@ -158,7 +154,7 @@ export class ReadNftService {
 
       if (dbNft) {
         this.tryResyncNft(dbNft);
-        return getNftDbResponseFromNftInfo(dbNft);
+        return getApiResponseFromNftInfo(dbNft);
       } else {
         return await this.readAndSyncNftFromChain(tokenAddress, network);
       }
@@ -184,7 +180,7 @@ export class ReadNftService {
     const nftInfoDto = await this.nftSyncService.getNftInfoDto(new FetchNftDto(network, tokenAddress));
     this.eventEmitter.emit('save.nft.db', nftInfoDto);
 
-    return getNftDbResponseFromNftInfo(nftInfoDto);
+    return getApiResponseFromNftInfo(nftInfoDto);
   }
 
   async readNftFromDB(tokenAddress: string, network: WalletAdapterNetwork) {
