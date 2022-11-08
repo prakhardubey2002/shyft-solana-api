@@ -1,11 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Connection, programs } from '@metaplex/js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bs58 from 'bs58';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
 import { getAllDomains, performReverseLookupBatch } from '@bonfida/spl-name-service';
-import { FetchNftDto, FetchAllNftDto, NftData, FetchAllNftByCreatorDto } from './dto/data-fetcher.dto';
+import {
+  FetchNftDto,
+  FetchAllNftDto,
+  NftData,
+  FetchAllNftByCreatorDto,
+  FetchNftsByMintListDto,
+} from './dto/data-fetcher.dto';
 import { Utility } from 'src/common/utils/utils';
 import { NftDeleteEvent } from '../db-sync/db.events';
 import { newProgramError, newProgramErrorFrom } from 'src/core/program-error';
@@ -221,6 +228,19 @@ export class RemoteDataFetcherService {
     }
   }
 
+  async fetchNftsByMintList(dto: FetchNftsByMintListDto): Promise<NftData[]> {
+    try {
+      const { network, addresses } = dto;
+      const connection = Utility.connectRpc(network);
+      const metaplex = new Metaplex(connection);
+      const onChainDatas: Metadata[] = await metaplex.nfts().findAllByMintList(addresses).run();
+      const nfts = await this.insertOffChainDataAndOwner(network, onChainDatas);
+      return nfts;
+    } catch (error) {
+      throw newProgramErrorFrom(error);
+    }
+  }
+
   async fetchAllNftsByCreator(fetchAllNftByCreatorDto: FetchAllNftByCreatorDto): Promise<PaginatedNftsResponse> {
     try {
       const { network, creator, page, size } = fetchAllNftByCreatorDto;
@@ -288,5 +308,38 @@ export class RemoteDataFetcherService {
     } catch (error) {
       throw newProgramErrorFrom(error);
     }
+  }
+
+  async insertOffChainDataAndOwner(network: WalletAdapterNetwork, onChainNfts: Metadata[]): Promise<NftData[]> {
+    const result: NftData[] = [];
+
+    //Run all offchain requests parallely instead of one by one
+    const promises: Promise<NftData>[] = [];
+    for await (const oncd of onChainNfts) {
+      promises.push(
+        Utility.request(oncd.uri).catch((error) => {
+          newProgramError(
+            'offchain_data_fetch_error',
+            HttpStatus.REQUEST_TIMEOUT,
+            'failed to fetch offChain data from URI',
+            error,
+            'addOffChainDataAndOwner',
+            {
+              nft: oncd.mintAddress.toBase58(),
+              uri: oncd.uri,
+            },
+          ).log();
+        }),
+      );
+      const owner = await this.fetchOwner({ network, tokenAddress: oncd.mintAddress.toBase58() });
+      result.push(new NftData(oncd, null, owner));
+    }
+
+    const res = await Promise.allSettled(promises);
+
+    res?.forEach((data, i) => {
+      result[i].offChainMetadata = data.status === 'fulfilled' ? data.value : {};
+    });
+    return result;
   }
 }

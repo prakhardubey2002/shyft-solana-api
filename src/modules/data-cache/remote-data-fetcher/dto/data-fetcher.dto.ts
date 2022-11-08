@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { isEmpty } from 'lodash';
+import { PublicKey } from '@solana/web3.js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Metadata } from '@metaplex-foundation/js';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
@@ -81,6 +82,16 @@ export class FetchNftDto {
   @IsNotEmpty()
   @IsString()
   readonly tokenAddress: string;
+}
+
+export class FetchNftsByMintListDto {
+  constructor(network: WalletAdapterNetwork, addresses: PublicKey[]) {
+    this.network = network;
+    this.addresses = addresses;
+  }
+
+  readonly network: WalletAdapterNetwork;
+  readonly addresses: PublicKey[];
 }
 
 export class NftData {

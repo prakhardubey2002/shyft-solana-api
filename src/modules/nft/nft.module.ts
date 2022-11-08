@@ -28,6 +28,8 @@ import { BurnNftDetachController } from './components/burn-nft-detach/burn-nft-d
 import { BurnNftDetachService } from './components/burn-nft-detach/burn-nft-detach.service';
 import { AccountModule } from '../account/account.module';
 import { TokenModule } from '../token/token.module';
+import { CandyMachineController } from './components/candy-machine/candy-machine.controller';
+import { CandyMachineService } from './components/candy-machine/candy-machine.service';
 
 @Module({
   controllers: [
@@ -41,6 +43,7 @@ import { TokenModule } from '../token/token.module';
     SearchNftcontroller,
     TransferNftController,
     MintNftController,
+    CandyMachineController,
   ],
   imports: [
     RavenModule,
@@ -66,6 +69,7 @@ import { TokenModule } from '../token/token.module';
       provide: APP_INTERCEPTOR,
       useValue: new RavenInterceptor(),
     },
+    CandyMachineService,
   ],
   exports: [ReadNftService],
 })
