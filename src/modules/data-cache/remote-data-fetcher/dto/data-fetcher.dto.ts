@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { isEmpty } from 'lodash';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Metadata } from '@metaplex-foundation/js';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
@@ -112,6 +113,7 @@ export class NftData {
       owner: this.owner,
       creators: this.onChainMetadata?.creators,
       collection: {},
+      is_loaded_metadata: this.offChainMetadata ? true : false,
     };
     nftApiResponse.collection = {
       address: this.onChainMetadata?.collection?.address,
@@ -146,6 +148,7 @@ export class NftData {
     nftDbDto.symbol = this.onChainMetadata.symbol;
     nftDbDto.royalty = this.onChainMetadata.sellerFeeBasisPoints ?? 0; //Here we send the actual value back
     nftDbDto.metadata_uri = this.onChainMetadata.uri ?? '';
+    nftDbDto.is_loaded_metadata = isEmpty(this.offChainMetadata) ? false : true;
     nftDbDto.creators = this.onChainMetadata?.creators?.map((cr) => {
       return {
         address: cr.address.toBase58(),

@@ -92,6 +92,9 @@ export class NftInfo {
 
   @Prop({ required: false })
   files: file[];
+
+  @Prop({ required: false })
+  is_loaded_metadata: boolean;
 }
 
 export const NftInfoSchema = SchemaFactory.createForClass(NftInfo);

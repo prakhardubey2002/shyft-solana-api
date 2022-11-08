@@ -20,6 +20,7 @@ export interface NftApiResponse {
   attributes_array: any;
   files: any;
   external_url: string;
+  is_loaded_metadata: boolean;
 }
 
 export function getApiResponseFromNftInfo(r: NftInfo): NftApiResponse {
@@ -40,6 +41,7 @@ export function getApiResponseFromNftInfo(r: NftInfo): NftApiResponse {
     files: r.files,
     update_authority: r.update_authority,
     external_url: r.external_url,
+    is_loaded_metadata: r.is_loaded_metadata,
   };
   if (isObject(r.attributes)) {
     const keys = Object.keys(r.attributes);

@@ -116,10 +116,29 @@ export class NFtDbSyncService {
       //Add new Wallet NFTs to DB
       await this.syncNewWalletNfts(onChainNfts, dbNfts, event.network, event.walletAddress);
 
+      await this.syncNotLoadedNfts(onChainNfts, dbNfts, event.network, event.walletAddress);
       return onChainNfts;
     } catch (error) {
       throw error;
     }
+  }
+
+  private async syncNotLoadedNfts(
+    onChainNfts: Metadata[],
+    dbNfts: NftInfo[],
+    network: WalletAdapterNetwork,
+    walletAddress: string,
+  ): Promise<any> {
+    const notLoadedNfts = onChainNfts.filter((value) => {
+      return dbNfts.some((dbNft) => {
+        return dbNft.mint === value.mintAddress.toBase58() && !dbNft.is_loaded_metadata;
+      });
+    });
+    if (notLoadedNfts.length) {
+      const nfts = await this.remoteDataFetcher.addOffChainDataAndOwner(notLoadedNfts, walletAddress);
+      await this.saveWalletNftsInDb(new SaveNftsInDbEvent(network, walletAddress, nfts));
+    }
+    console.log('resync old NFTs, those metadata not loaded ', notLoadedNfts.length);
   }
 
   async syncNewWalletNfts(onChainNfts: Metadata[], dbNfts: NftInfo[], network: WalletAdapterNetwork, wallet: string) {
