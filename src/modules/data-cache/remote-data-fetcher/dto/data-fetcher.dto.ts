@@ -124,6 +124,8 @@ export class NftData {
       attributes_array: [],
       files: this.offChainMetadata?.properties?.files,
       external_url: this.offChainMetadata?.external_url ?? '',
+      primary_sale_happened: this.onChainMetadata.primarySaleHappened,
+      is_mutable: this.onChainMetadata.isMutable,
       is_loaded_metadata: this.offChainMetadata ? true : false,
     };
     nftApiResponse.collection = {
@@ -180,14 +182,23 @@ export class NftData {
 
     this.offChainMetadata?.external_url ? (nftDbDto.external_url = this.offChainMetadata?.external_url) : {};
 
-    this.offChainMetadata?.properties?.files
-      ? (nftDbDto.files = this.offChainMetadata?.properties?.files?.map((file: NftFile) => {
-          return {
-            uri: file?.uri,
-            type: file?.type,
-          };
-        }))
-      : {};
+    if (this.offChainMetadata?.properties?.files) {
+      try {
+        this.offChainMetadata?.properties?.files
+          ? (nftDbDto.files = this.offChainMetadata.properties.files.map((file: NftFile) => {
+              return {
+                uri: file?.uri,
+                type: file?.type,
+              };
+            }))
+          : {};
+      } catch (err) {
+        nftDbDto.files = {
+          uri: this.offChainMetadata.properties.files?.uri,
+          type: this.offChainMetadata.properties.files?.type,
+        };
+      }
+    }
 
     if (Array.isArray(this.offChainMetadata?.attributes) && this.offChainMetadata?.attributes?.length > 0) {
       nftDbDto.attributes = {};

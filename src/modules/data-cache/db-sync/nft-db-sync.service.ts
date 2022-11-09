@@ -187,14 +187,13 @@ export class NFtDbSyncService {
       const nfts = event.nfts;
       const network = event.network;
       const owner = event.walletAddress;
-      const nftInfos: NftInfo[] = await Promise.all(
-        nfts?.map(async (nft) => {
-          const info = nft?.getNftInfoDto();
-          info.network = network;
-          info.owner = owner;
-          return info;
-        }),
-      );
+      const nftInfos: NftInfo[] = nfts?.map((nft) => {
+        const info = nft?.getNftInfoDto();
+        info.network = network;
+        info.owner = owner;
+        return info;
+      });
+
       console.log('saving nfts in DB');
       //Update DBs
       try {

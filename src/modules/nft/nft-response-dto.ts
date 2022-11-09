@@ -21,6 +21,8 @@ export interface NftApiResponse {
   files: any;
   external_url: string;
   is_loaded_metadata: boolean;
+  primary_sale_happened: boolean;
+  is_mutable: boolean;
 }
 
 export function getApiResponseFromNftInfo(r: NftInfo): NftApiResponse {
@@ -42,6 +44,8 @@ export function getApiResponseFromNftInfo(r: NftInfo): NftApiResponse {
     files: r.files,
     external_url: r.external_url,
     is_loaded_metadata: r.is_loaded_metadata,
+    primary_sale_happened: r.primary_sale_happened,
+    is_mutable: r.is_mutable,
   };
   if (isObject(r.attributes)) {
     const keys = Object.keys(r.attributes);

@@ -126,7 +126,7 @@ export class UpdateNftController {
   ): Promise<any> {
     const nftInfo = (
       await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDetachDto.network, updateNftDetachDto.token_address))
-    ).getNftInfoDto();
+    ).getNftApiResponse();
 
     const { image, data }: { image: string; data: NftFile } = await this.storageService.uploadFilesAndDataToIPFS(files);
     const imageUri = image ?? nftInfo.image_uri;
@@ -181,7 +181,7 @@ export class UpdateNftController {
     @Body() updateNftDto: UpdateNftDetachV2Dto,
   ): Promise<any> {
     const nftData = await this.dataFetcher.fetchNft(new FetchNftDto(updateNftDto.network, updateNftDto.token_address));
-    const nftInfo = nftData.getNftInfoDto();
+    const nftInfo = nftData.getNftApiResponse();
 
     const { image, data }: { image: string; data: NftFile } = await this.storageService.uploadFilesAndDataToIPFS({
       file: files.image,

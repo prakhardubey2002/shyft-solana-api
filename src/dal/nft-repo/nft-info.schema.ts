@@ -90,8 +90,8 @@ export class NftInfo {
   @Prop({ type: Object, required: false })
   collection_data: collectionData;
 
-  @Prop({ required: false })
-  files: file[];
+  @Prop({ required: false, type: Object })
+  files: file[] | file;
 
   @Prop({ required: false })
   is_loaded_metadata: boolean;
