@@ -34,12 +34,12 @@ export function getApiResponseFromNftInfo(r: NftInfo): NftApiResponse {
     description: r.description,
     mint: r.mint,
     owner: r.owner,
+    update_authority: r.update_authority,
     creators: r.creators,
     collection: r.collection_data ? omitBy(r.collection_data, isNull) : {},
     attributes: r.attributes,
     attributes_array: [],
     files: r.files,
-    update_authority: r.update_authority,
     external_url: r.external_url,
     is_loaded_metadata: r.is_loaded_metadata,
   };
