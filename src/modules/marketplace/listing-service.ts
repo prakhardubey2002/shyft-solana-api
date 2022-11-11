@@ -48,6 +48,7 @@ import { GetStatsDto } from './dto/get-stats.dto';
 import { RemoteDataFetcherService } from '../data-cache/remote-data-fetcher/data-fetcher.service';
 import { ReadNftService } from '../nft/components/read-nft/read-nft.service';
 import { Listing } from 'src/dal/listing-repo/listing.schema';
+import { NftApiResponse } from '../nft/nft-response-dto';
 
 class CreateListingServiceDto {
   apiKeyId: ObjectId;
@@ -435,18 +436,22 @@ export class ListingService {
       );
       const result = await Promise.all(
         dataSet.map(async (listing) => {
+          let nft: NftApiResponse;
           try {
-            const nft = await this.nftReadService.readNft({
+            nft = await this.nftReadService.readNft({
               network: getListingDto.network,
               token_address: listing.nft_address,
             });
+          } catch (err) {
+            newProgramErrorFrom(err).log();
+          } finally {
             const acl: SellerListingsDto = {
               network: listing.network,
               marketplace_address: listing.marketplace_address,
               seller_address: listing.seller_address,
               price: listing.price,
               nft_address: listing.nft_address,
-              nft,
+              nft: nft ?? ({} as NftApiResponse),
               currency_symbol: listing.currency_symbol,
               buyer_address: listing.buyer_address,
               created_at: listing.created_at,
@@ -457,8 +462,6 @@ export class ListingService {
               cancelled_at: listing.cancelled_at,
             };
             return acl;
-          } catch (err) {
-            newProgramErrorFrom(err).log();
           }
         }),
       );
