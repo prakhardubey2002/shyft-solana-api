@@ -1,8 +1,8 @@
 import { Body, Controller, Post, Version } from '@nestjs/common';
 import { ApiTags, ApiSecurity } from '@nestjs/swagger';
-import { TransferNftDto, TransferNftDetachDto } from './dto/transfer.dto';
+import { TransferNftDto, TransferNftDetachDto, TransferMultipleNftDto } from './dto/transfer.dto';
 import { TransferNftService } from './transfer-nft.service';
-import { TransferOpenApi, TransferDetachOpenApi } from './open-api';
+import { TransferOpenApi, TransferDetachOpenApi, TransferMultipleNftsOpenApi } from './open-api';
 
 @ApiTags('NFT')
 @ApiSecurity('api_key', ['x-api-key'])
@@ -32,6 +32,19 @@ export class TransferNftController {
     return {
       success: true,
       message: 'Transfer NFT request generated successfully',
+      result: res,
+    };
+  }
+
+  @TransferMultipleNftsOpenApi()
+  @Post('transfer_many')
+  @Version('1')
+  async transferMultipleNfts(@Body() transferNftDetachDto: TransferMultipleNftDto): Promise<any> {
+    const res = await this.transferService.transferMultipleNfts(transferNftDetachDto);
+
+    return {
+      success: true,
+      message: 'Transfer NFTs request generated successfully',
       result: res,
     };
   }

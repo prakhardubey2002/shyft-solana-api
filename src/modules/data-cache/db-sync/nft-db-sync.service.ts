@@ -5,7 +5,11 @@ import { Utility } from 'src/common/utils/utils';
 import { NftInfoAccessor } from 'src/dal/nft-repo/nft-info.accessor';
 import { NftInfo } from 'src/dal/nft-repo/nft-info.schema';
 import { RemoteDataFetcherService } from '../remote-data-fetcher/data-fetcher.service';
-import { FetchAllNftDto, FetchAllNftByCreatorDto, NftData } from '../remote-data-fetcher/dto/data-fetcher.dto';
+import {
+  FetchAllNftDto,
+  FetchAllNftByCreatorDto,
+  FetchNftsByMintListDto,
+} from '../remote-data-fetcher/dto/data-fetcher.dto';
 import {
   NftCacheEvent,
   NftCreationEvent,
@@ -15,13 +19,14 @@ import {
   NftWalletSyncEvent,
   SaveNftsInDbEvent,
   NftWaitSyncEvent,
+  MultipleNftsWaitSyncEvent,
 } from './db.events';
 import * as fastq from 'fastq';
 import { queueAsPromised } from 'fastq';
 import { WalletDbSyncService } from './wallet-db-sync.service';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { Timer } from 'src/common/utils/timer';
-import { Metadata } from '@metaplex-foundation/js';
+import { Metadata, toPublicKey } from '@metaplex-foundation/js';
 
 const afterNftCreationWaitTime_ms = 12000;
 const afterNftUpdateWaitTime_ms = 12000;
@@ -77,6 +82,12 @@ export class NFtDbSyncService {
   @OnEvent('nft.transfered')
   async handleNftTransferEvent(event: NftWaitSyncEvent): Promise<any> {
     const handler = this.syncNftData.bind(this);
+    Timer.setTimer(handler, event, event.waitTime);
+  }
+
+  @OnEvent('multiple.nfts.transfered')
+  async handleMultipleNftTransferEvent(event: MultipleNftsWaitSyncEvent): Promise<any> {
+    const handler = this.syncMultipleNftData.bind(this);
     Timer.setTimer(handler, event, event.waitTime);
   }
 
@@ -324,6 +335,20 @@ export class NFtDbSyncService {
       return nftDbDto;
     } catch (error) {
       throw error;
+    }
+  }
+
+  async syncMultipleNftData(event: MultipleNftsWaitSyncEvent) {
+    try {
+      const { network, owner, tokenAddresses } = event;
+      const tokenAddressesPubKey = tokenAddresses.map((x) => toPublicKey(x));
+      const fetchNftsDto = new FetchNftsByMintListDto(network, tokenAddressesPubKey);
+      const onchainDatas = await this.remoteDataFetcher.fetchAllNftsByMintList(fetchNftsDto);
+      const nfts = await this.remoteDataFetcher.addOffChainDataAndOwner(onchainDatas, owner);
+      const saveEvent = new SaveNftsInDbEvent(network, owner, nfts);
+      await this.saveWalletNftsInDb(saveEvent);
+    } catch (err) {
+      throw err;
     }
   }
 }

@@ -107,6 +107,19 @@ export class NftWaitSyncEvent extends NftSyncEvent {
   waitTime: number;
 }
 
+export class MultipleNftsWaitSyncEvent {
+  constructor(network: WalletAdapterNetwork, owner: string, tokenAddresses: string[], waitTime: number) {
+    this.network = network;
+    this.owner = owner;
+    this.tokenAddresses = tokenAddresses;
+    this.waitTime = waitTime;
+  }
+  network: WalletAdapterNetwork;
+  owner: string;
+  tokenAddresses: string[];
+  waitTime: number;
+}
+
 export class NftCacheEvent {
   constructor(metadataImageUri: string, mint: string, network: string) {
     this.metadataImageUri = metadataImageUri;

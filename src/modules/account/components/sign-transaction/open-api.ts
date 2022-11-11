@@ -19,3 +19,24 @@ export function SignTransactionOpenApi() {
     }),
   );
 }
+
+export function SignAllTransactionOpenApi() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Multiple transactions signer' }),
+    ApiOkResponse({
+      description: 'Transactions signed successfully',
+      schema: {
+        example: {
+          success: true,
+          message: 'Transactions signed successfully',
+          result: {
+            tx: [
+              '3uLN43pBqTv6MVaNyvsiQEm8KyVw2u8C8AZg2mw4ygBN9FPjv4b6B5MGK3DbPdWPZqBXoNuAQAfLNuEXGdmT5Ec6',
+              '4W9LzEMFtadFWQ7PqG4K2H2Mn53CmgVFBrvqgPUDKptXVSoWnvaRY1bCNGCZw8Csnj4mzfBJejRLZAFduDwvQGB8',
+            ],
+          },
+        },
+      },
+    }),
+  );
+}

@@ -86,6 +86,18 @@ export class RemoteDataFetcherService {
     return accountsWithRawData;
   }
 
+  async fetchAllNftsByMintList(dto: FetchNftsByMintListDto): Promise<Metadata[]> {
+    try {
+      const { network, addresses } = dto;
+      const connection = Utility.connectRpc(network);
+      const metaplex = new Metaplex(connection);
+      const nfts: Metadata[] = await metaplex.nfts().findAllByMintList(addresses).run();
+      return nfts;
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
+    }
+  }
+
   async fetchAllNfts(fetchAllNftDto: FetchAllNftDto): Promise<Metadata[]> {
     try {
       const { network, walletAddress } = fetchAllNftDto;
